@@ -96,8 +96,8 @@ end
 """
 function integrateTransform(f::Function, n0::Int64, mtp::Int64, grid::Radial.Grid)
     newtonCotesCoefficientsOnGrid             = Array{Float64}([2 * 7, 32, 12, 32, 7]) * 2 / 45  # * grid.h
-    ## newtonCotesCoefficientsOnGrid            = Array{Float64}([2 * 41, 216, 27, 272, 27, 216, 41]) * 1 / 140
-    ## newtonCotesCoefficientsOnGrid             = Array{Float64}([2 * 989, 5888, -928, 10496, -4540, 10496, -928, 5888, 989]) * 4 / 14175
+    # newtonCotesCoefficientsOnGrid            = Array{Float64}([2 * 41, 216, 27, 272, 27, 216, 41]) * 1 / 140
+    # newtonCotesCoefficientsOnGrid             = Array{Float64}([2 * 989, 5888, -928, 10496, -4540, 10496, -928, 5888, 989]) * 4 / 14175
     newtonCotesCoefficientsOnGrid *= grid.h
     n      = size(newtonCotesCoefficientsOnGrid, 1)
 

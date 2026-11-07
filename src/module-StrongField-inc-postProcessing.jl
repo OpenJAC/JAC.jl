@@ -1,5 +1,5 @@
 
-## using DelimitedFiles, Plots
+# using DelimitedFiles, Plots
 
 
 """
@@ -126,7 +126,7 @@ function plot(comps::Array{StrongField.Computation,1}, results::Array{Dict{Strin
 
         #p = Plots.plot( #heatmap( pList[:,1], pList[:,2], probList
         #               Plots.GR.polarheatmap( probList 
-                    ##heatmap( probList
+                    #heatmap( probList
         #                 )
         #              )
         
@@ -235,7 +235,7 @@ function exportData(comps::Array{StrongField.Computation,1}, results::Array{Dict
 end
 
 
-#
+
 # TEST: Plot the radial wave functions (JAC + hydrogenic)
 """
 `StrongField.exportRadialWavefunctions(comps::Array{StrongField.Computation,1}, 

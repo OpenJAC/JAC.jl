@@ -142,9 +142,9 @@ function Basics.generate(repType::AtomicState.MeanFieldMultiplet, rep::AtomicSta
                                                              asfSettings; printout=true)
     end
     if output    
-        ## `levels`, not `level` (fixed 06-Aug-2026): this typo made generate(MeanFieldMultiplet, ...) raise a
-        ## FieldError for every call with output=true, i.e. the only useful call. It survived because the one
-        ## example that exercised this path -- the old branch 1 of example-Dh.jl -- had never been run.
+        # `levels`, not `level` (fixed 06-Aug-2026): this typo made generate(MeanFieldMultiplet, ...) raise a
+        # FieldError for every call with output=true, i.e. the only useful call. It survived because the one
+        # example that exercised this path -- the old branch 1 of example-Dh.jl -- had never been run.
         results = Base.merge( results, Dict("mean-field basis" => multiplet.levels[1].basis) )
         results = Base.merge( results, Dict("mean-field multiplet" => multiplet) )          
     end
@@ -172,8 +172,8 @@ function Basics.generate(repType::AtomicState.OneElectronSpectrum, rep::AtomicSt
                  "its reference SCF is there to BUILD the mean potential that the spectrum is then generated in, and a "  *
                  "set of orbitals carries no potential to generate anything in")
     # First perform a SCF+CI computations for the reference configurations below to generate a spectrum of start orbitals
-    asfSettings   = AsfSettings()   ## Use default settings to define a first multiplet from the reference configurations;
-                                    ## all further details are specified for each step
+    asfSettings   = AsfSettings()   # Use default settings to define a first multiplet from the reference configurations;
+                                    # all further details are specified for each step
     refMultiplet  = SelfConsistent.performSCF(rep.refConfigs, nModel, rep.grid, asfSettings; printout=true)
     refBasis      = refMultiplet.levels[1].basis
     Basics.display(stdout, refBasis.orbitals, rep.grid; longTable=false)
@@ -752,14 +752,14 @@ function runRasStep!(istep::Int64, step::AtomicState.RasStep, repType::AtomicSta
     # previous one: taking the previous orbitals and the mixing vector (1,0,...) is a point of this layer's own
     # parameter space.  When it does lie above, something has gone wrong in the HANDOVER rather than in the
     # minimization, and this is the one place that can see it.
-    #
+
     # MEASURED, and it is what this check was written from.  43Ca+ [Ar] 4s with 3s -> 5s,6s singles and nothing
     # frozen: layer 1 converged to -679.5212307 and layer 2 ENTERED at -679.4850961, i.e. 36.1 mHa above it,
     # ending at -679.5184105 -- a correlation layer 2.8 mHa WORSE than its own reference.  The cause is named
     # below and is NOT the optimizer: the second-order route drives |grad| from 1.04 to 0.0016, a factor 640
     # better than the first-order one, and lands HIGHER still (-679.5156563), because a tighter solve converges
     # to the stationary point of whatever basin it is handed.
-    #
+
     # WHY THE HANDOVER LOSES IT.  performSCF runs an AVERAGE-LEVEL pass before the optimized-level solver, and
     # that pass re-optimizes every subshell not named in AsfSettings.frozenSubshells -- for the configuration
     # AVERAGE, which is a different functional from the level energy the layer is supposed to minimize.  So a
@@ -768,7 +768,7 @@ function runRasStep!(istep::Int64, step::AtomicState.RasStep, repType::AtomicSta
     # layer's newShells only, so a reference shell in NEITHER coreShells NOR fromShells is never frozen.  In
     # examples/example-Ai.jl the Be reference 1s^2 2s^2 is exactly coreShells=[1s] plus fromShells=[2s], the
     # two coincide, and this is invisible -- which is why it went unseen.
-    #
+
     # THE CHECK MOVES NO NUMBER.  It compares two energies that were computed anyway and prints;  the remedy is
     # the caller's, and naming the unfrozen reference shells is what makes it actionable, since those are
     # exactly the shells to pass as coreShells.
@@ -835,8 +835,8 @@ function Basics.generate(repType::AtomicState.RasExpansion, rep::AtomicState.Rep
                  "a RAS expansion exists to OPTIMIZE orbitals layer by layer, so freezing the whole set would reduce "  *
                  "every layer to a plain CI and leave the expansion with nothing to vary")
     # First perform a SCF+CI computations for the reference configurations below to generate a spectrum of start orbitals
-    asfSettings    = AsfSettings()  ## Use default settings to define a first multiplet from the reference configurations;
-                                    ## all further details are specified for each step
+    asfSettings    = AsfSettings()  # Use default settings to define a first multiplet from the reference configurations;
+                                    # all further details are specified for each step
     priorMultiplet = SelfConsistent.performSCF(rep.refConfigs, nModel, rep.grid, asfSettings; printout=true)
     nuclearPot     = Nuclear.nuclearPotential(nModel, rep.grid)
     # ITEM 23, FIXED 01-Sep-2026.  The two lines that build a SCREENED potential sat here commented out, and the
@@ -851,9 +851,9 @@ function Basics.generate(repType::AtomicState.RasExpansion, rep::AtomicState.Rep
     # reference multiplet already computed just above as the density for the screening.
     electronicPot  = Basics.computePotential(Basics.DFSField(1.0), rep.grid, priorMultiplet.levels[1].basis)
     meanPot        = Basics.add(nuclearPot, electronicPot)
-    subshellList   = Basics.extractRelativisticSubshellList(rep)             ## extract all subshells that occur in the RAS computation
+    subshellList   = Basics.extractRelativisticSubshellList(rep)             # extract all subshells that occur in the RAS computation
     primitives     = Bsplines.generatePrimitives(rep.grid)
-    startOrbitals  = Bsplines.generateOrbitals(subshellList, meanPot, nModel, primitives, printout=true)  ## generate a spectrum of sufficient size
+    startOrbitals  = Bsplines.generateOrbitals(subshellList, meanPot, nModel, primitives, printout=true)  # generate a spectrum of sufficient size
     if output    results = Base.merge( results, Dict("reference multiplet" => Multiplet("Reference multiplet:", priorMultiplet.levels) ) )  end
 
     # Now, cycle over all steps of the RasExpansion. Each step re-optimizes ONLY the shells newly introduced
@@ -862,7 +862,7 @@ function Basics.generate(repType::AtomicState.RasExpansion, rep::AtomicState.Rep
     # higher-lying states entering the growing space dilute the correlation for the levels actually wanted),
     # freezing every shell already present/optimized in an earlier step -- GRASP's own default behavior
     # (LFIX(:NW)=.TRUE. unless explicitly varied).
-    #
+
     # WHAT THE AL ALTERNATIVE ACTUALLY COSTS, measured 11-Sep-2026, because "dilute" understates it. An average-
     # level field over a correlation expansion optimizes the core for the configurations that carry a core HOLE:
     # on a Cl III basis whose reference is 2s^2 it returns a mean occupation of 1.807 for 2s, so the reference is
@@ -1038,11 +1038,11 @@ function Basics.generate(repType::AtomicState.GreenExpansion, rep::AtomicState.R
     nModel    = rep.nuclearModel
     settings  = repType.settings
     # First perform a SCF+CI computations for the reference configurations below to generate a spectrum of start orbitals
-    ## THE POTENTIAL IS NOW TAKEN FROM settings.scField (07-Aug-2026), not hardcoded. Both places below used to
-    ## be fixed to DFS -- the reference AsfSettings and the mean potential -- so a Green expansion could never be
-    ## matched to the potential of the computation that consumes it. That matters because a Green expansion is
-    ## normally used as the INTERMEDIATE spectrum of a second-order calculation, where gauge invariance requires
-    ## the same one-body Hamiltonian throughout.
+    # THE POTENTIAL IS NOW TAKEN FROM settings.scField (07-Aug-2026), not hardcoded. Both places below used to
+    # be fixed to DFS -- the reference AsfSettings and the mean potential -- so a Green expansion could never be
+    # matched to the potential of the computation that consumes it. That matters because a Green expansion is
+    # normally used as the INTERMEDIATE spectrum of a second-order calculation, where gauge invariance requires
+    # the same one-body Hamiltonian throughout.
     # WHICH ORBITAL SET THE GREEN CHANNELS ARE BUILT ON -- rep.orbitalSource, see Basics.AbstractOrbitalSource.
     # On SeparateOrbitals(), the default, everything below runs as it always has: a reference SCF, a mean potential
     # from it, and a B-spline spectrum generated in that potential.  On GivenOrbitals(...) none of that is wanted --
@@ -1055,8 +1055,8 @@ function Basics.generate(repType::AtomicState.GreenExpansion, rep::AtomicState.R
         refMultiplet  = SelfConsistent.performSCF(rep.refConfigs, nModel, rep.grid, asfSettings; printout=true)
         refBasis      = refMultiplet.levels[1].basis
         nuclearPot    = Nuclear.nuclearPotential(nModel, rep.grid)
-        ## A NuclearField carries no electronic part at all; adding a DFS screening term on top of it would silently
-        ## reintroduce the very mismatch this field exists to remove.
+        # A NuclearField carries no electronic part at all; adding a DFS screening term on top of it would silently
+        # reintroduce the very mismatch this field exists to remove.
         if  typeof(settings.scField) == Basics.NuclearField
             electronicPot = Radial.Potential("zero", zeros(length(rep.grid.r)), rep.grid)
         else
@@ -1077,13 +1077,13 @@ function Basics.generate(repType::AtomicState.GreenExpansion, rep::AtomicState.R
     if  settings.printBefore    Basics.displayConfigurations(stdout, confList)    end
     
     # Generate shell list abd a full single-electron spectrum for this potential
-    subshellList = Basics.extractRelativisticSubshellList(confList)                      ## extract all subshells that occur in confList
+    subshellList = Basics.extractRelativisticSubshellList(confList)                      # extract all subshells that occur in confList
     if  isnothing(frozenOrbitals)
         primitives   = Bsplines.generatePrimitives(rep.grid)
         # generate a spectrum of sufficient size
         orbitals     = Bsplines.generateOrbitals(subshellList, meanPot, nModel, primitives, printout=true)
     else
-        ## The given set must SPAN the Green space, or the CI below fails with a bare KeyError from inside Dict.
+        # The given set must SPAN the Green space, or the CI below fails with a bare KeyError from inside Dict.
         BasicsAZ.checkFrozenOrbitalsSpan(frozenOrbitals, confList, "the Green-space configurations", "rep.orbitalSource")
         orbitals     = frozenOrbitals
     end
@@ -1292,7 +1292,7 @@ function Basics.generate(::OrderedShellList, confs::Array{Configuration,1})
     shells = Shell[]
 
     wa = Defaults.getDefaults("ordered shell list: non-relativistic", 11)
-    ## wa = Defaults.getDefaults("ordered shell list: non-relativistic", 19)
+    # wa = Defaults.getDefaults("ordered shell list: non-relativistic", 19)
     for  a in wa
         for  cf in 1:length(confs)
             ks = keys(confs[cf].shells)
@@ -1346,15 +1346,15 @@ function Basics.generate(::OrderedSubshellList, basisA::Basis, basisB::Basis)
             else  push!( subshells, basisA.subshells[i])
             end
         end
-        #
+
         if       length(basisA.subshells) > nx   
             for  i = nx+1:length(basisA.subshells)    push!(subshells, basisA.subshells[i])    end
         elseif   length(basisB.subshells) > nx   
             for  i = nx+1:length(basisB.subshells)    push!(subshells, basisB.subshells[i])    end
         end
     else
-        ## println("basisA.subshells = $(basisA.subshells)")
-        ## println("basisB.subshells = $(basisB.subshells)")
+        # println("basisA.subshells = $(basisA.subshells)")
+        # println("basisB.subshells = $(basisB.subshells)")
         # If subshell order is NOT equal, all subshell in basisA and basisB must follow standard order
         standardList = Defaults.getDefaults("ordered subshell list: relativistic", 7)
         na = 0;  nb = 0
@@ -1411,7 +1411,7 @@ end
         without a valid representation of the radial orbitals.
 """
 function Basics.generateBasis(confList::Array{Configuration,1}, symmetries::Array{LevelSymmetry,1})
-    #
+
     relconfList = ConfigurationR[]
     for  conf in confList
         wa = Basics.generateConfigurations(Basics.RelativisticConfigurations(), conf)
@@ -1426,7 +1426,7 @@ function Basics.generateBasis(confList::Array{Configuration,1}, symmetries::Arra
         newCsfs = Basics.generateCsfRs(relconf, subshellList)
         for  csf in newCsfs     if  LevelSymmetry(csf.J, csf.parity) in symmetries   push!(csfList, csf)   end   end
     end
-    #
+
     if length(csfList) == 0     error("There are no CSF with $symmetries in the given configuration list.")      end
 
     # Determine the number of electrons and the list of coreSubshells
@@ -1491,7 +1491,7 @@ function Basics.generateBasis(refConfigs::Array{Configuration,1}, symmetries::Ar
         if  addTo    push!(confList, confa)     end
     end
     for  i = 1:length(confList)    println(">> include ", confList[i])    end
-    #
+
     relconfList = ConfigurationR[]
     for  conf in confList
         wa = Basics.generateConfigurations(Basics.RelativisticConfigurations(), conf)
@@ -1550,7 +1550,7 @@ function Basics.generateConfigurations(refConfigs::Array{Configuration,1}, fromS
                             end
                         else      newShells = Base.merge( newShells, Dict( k => v))
                         end
-                        #
+
                         if  addShell                              newShells = Base.merge( newShells, Dict( toShell => 1))      end
                     end
                     if  addConfiguration   push!(confList, Configuration(newShells, config.NoElectrons ))          end
@@ -1614,7 +1614,7 @@ function Basics.generateConfigurationsForExcitationScheme(confs::Array{Configura
                                                         nMax::Int64, lValues::Array{Int64,1})
     @warn(  "No excitations are included if exScheme::NoExcitationScheme. ")
     println("No excitations are included if exScheme::NoExcitationScheme. ")
-    #
+
     newConfList = confs
     return( newConfList )
 end
@@ -1658,10 +1658,10 @@ function Basics.generateConfigurationsForExcitationScheme(confs::Array{Configura
 
     nbefore     = length(confList)
     confList = unique(confList)
-    ## newConfList = Configuration[]
-    ## for  conf  in  confList
-    ##     if  conf in newConfList    continue;    else    push!( newConfList,  conf)    end
-    ## end
+    # newConfList = Configuration[]
+    # for  conf  in  confList
+    #     if  conf in newConfList    continue;    else    push!( newConfList,  conf)    end
+    # end
     nafter      = length(confList)
     println(">> Number of generated configurations for $exScheme is: $nbefore (before) and $nafter (after).")
 
@@ -1698,7 +1698,7 @@ function Basics.generateConfigurationsForExcitationScheme(confs::Array{Configura
     NoElectrons = confs[1].NoElectrons
     confList    = Basics.generateConfigurations(confs, fromShells, toShells, noex)
     shellList   = Basics.extractNonrelativisticShellList(confList)
-    #
+
     # Now add one electron to the intoShells
     newConfList = Configuration[]
     for  conf in confList
@@ -1732,7 +1732,7 @@ end
         A list::Array{...FieldValue{Type},1} is returned.
 """
 function Basics.generateFieldCoordinates(mesh::Basics.AbstractMesh)
-    #
+
     if      typeof(mesh) == Basics.Cartesian2DMesh
         fValues = Basics.Cartesian2DFieldValue{Float64}[]
         xs      = Basics.generateMeshCoordinates(mesh.xMesh)
@@ -1973,10 +1973,10 @@ end
     ... generates a list of coordinates for the given  (1D)mesh; a list::Array{Float64,1} is returned.
         Note: No 'weights' for integration are returned in the present form ... though this could be done readily.
 """
-## function Basics.generateMeshCoordinates(mesh::Basics.GLegenreMesh)
+# function Basics.generateMeshCoordinates(mesh::Basics.GLegenreMesh)
 function Basics.generateMeshCoordinates(mesh::Basics.AbstractMesh)
-    #
-    ## using  QuadGK
+
+    # using  QuadGK
     if      typeof(mesh) == Basics.GLegenreMesh
         # The weights of the GL coordinates are determined here ... but not returned in the present version.
         wax  = QuadGK.gauss(mesh.NoZeros);    t = wax[1];     wt = wax[2]        
@@ -2131,7 +2131,7 @@ function Basics.generateShellList(nMin::Int64, nMax::Int64, lMax::Int64)
             if  n >= l + 1  && Shell(n,l) in shellList    push!( newShellList, Shell(n,l))     end    
         end
     end
-    ## println(">> Generated shell list $newShellList ")
+    # println(">> Generated shell list $newShellList ")
     
     return( newShellList )
 end
@@ -2196,7 +2196,7 @@ function Basics.generateSpectrumLorentzian(xIntensities::Array{Tuple{Float64,Flo
     function normalLorentzian(en::Float64, ga::Float64)
         gaover2 = ga /2.0;  wa = gaover2 / (en^2 + gaover2^2);      wa = wa / pi
     end
-    #
+
     # Convert energies and determine their range 
     wc = Defaults.convertUnits("energy: from atomic", 1.0);  xwidths = widths * wc
     energies = Float64[];     intensities = Float64[]

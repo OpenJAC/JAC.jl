@@ -21,13 +21,13 @@ function computeSteps(scheme::Cascade.PhotoIonizationScheme, comp::Cascade.Compu
                                                 "up to $nc photoionization lines (without selection rules): ")   end 
                                                 
         if  step.process == Basics.Photo() 
-            ## scheme.initialLevelSelection is HONOURED again.  It used to be commented out here and replaced by a
-            ## hard-wired LevelSelection(true, indices=[1]), so that ONLY the ground level was ever ionized however
-            ## the user had set the field -- accepted in the constructor, printed back by Base.show, and then
-            ## ignored.  Note what the default now means: LevelSelection(false) is INACTIVE, and Basics.selectLevel
-            ## returns true for every level of an inactive selection, so a scheme left at its default ionizes ALL
-            ## initial levels rather than only the first.  A computation that wants the old behaviour must ask for
-            ## it, which is the right way round.
+            # scheme.initialLevelSelection is HONOURED again.  It used to be commented out here and replaced by a
+            # hard-wired LevelSelection(true, indices=[1]), so that ONLY the ground level was ever ionized however
+            # the user had set the field -- accepted in the constructor, printed back by Base.show, and then
+            # ignored.  Note what the default now means: LevelSelection(false) is INACTIVE, and Basics.selectLevel
+            # returns true for every level of an inactive selection, so a scheme left at its default ionizes ALL
+            # initial levels rather than only the first.  A computation that wants the old behaviour must ask for
+            # it, which is the right way round.
             newLines = PhotoIonization.computeLinesCascade(step.finalMultiplet, step.initialMultiplet, comp.nuclearModel, comp.grid, 
                                                            step.settings, scheme.initialLevelSelection, output=true, printout=false) 
             append!(linesP, newLines);    nt = length(linesP)
@@ -38,7 +38,7 @@ function computeSteps(scheme::Cascade.PhotoIonizationScheme, comp::Cascade.Compu
         if  printSummary   println(iostream, "\n*    Step $st:: A total of $(length(newLines)) $(string(step.process)) lines are calculated, " *
                                                 "giving now rise to a total of $nt $(string(step.process)) photoionization lines." )   end      
     end
-    #
+
     return( linesP )
 end
 
@@ -53,7 +53,7 @@ end
 """
 function determineSteps(scheme::Cascade.PhotoIonizationScheme, comp::Cascade.Computation, 
                         initialList::Array{Cascade.Block,1}, ionizedList::Array{Cascade.Block,1})
-    #
+
     stepList = Cascade.Step[]
     if  comp.approach  in  [Cascade.AverageSCA(), Cascade.SCA()]
         for  initialBlock in initialList
@@ -69,7 +69,7 @@ function determineSteps(scheme::Cascade.PhotoIonizationScheme, comp::Cascade.Com
                 end
             end
         end
-            #
+
     else  error("Unsupported cascade approach.")
     end
     return( stepList )
@@ -85,7 +85,7 @@ end
 function generateBlocks(scheme::Cascade.PhotoIonizationScheme, comp::Cascade.Computation, confs::Array{Configuration,1}; printout::Bool=true)
     blockList = Cascade.Block[]
     printSummary, iostream = Defaults.getDefaults("summary flag/stream")
-    #
+
     if    comp.approach == AverageSCA()
         if  printout
         println("\n* Generate blocks for photoabsorption computations:")
@@ -101,7 +101,7 @@ function generateBlocks(scheme::Cascade.PhotoIonizationScheme, comp::Cascade.Com
         println(iostream, "    + only E1 excitations are considered. \n")
         end
         end     # printout
-        #
+
         for  confa  in confs
             print("  Multiplet computations for $(string(confa)[1:end])   with $(confa.NoElectrons) electrons ... ")
             if  printSummary   println(iostream, "\n*  Multiplet computations for $(string(confa)[1:end])   with $(confa.NoElectrons) electrons ... ")   end
@@ -133,12 +133,12 @@ function generateConfigurationsForPhotoionization(multiplets::Array{Multiplet,1}
         confList = Basics.extractConfigurations(Basics.FromBasis(), mp.levels[1].basis)
         for  conf in confList   if  conf in initialConfList   nothing   else   push!(initialConfList, conf)      end      end
     end
-    # 
+
     # Generate all photoionized configurations if photoionization is to be considered; no configuration need to be excluded
     # since parity is give by the partial waves.
     ionConfList = Basics.generateConfigurations(Basics.RemoveElectrons(1, scheme.excitationFromShells), initialConfList)
     ionConfList = unique(ionConfList)
-    #
+
     return( initialConfList, ionConfList )
 end
 
@@ -159,7 +159,7 @@ function perform(scheme::PhotoIonizationScheme, comp::Cascade.Computation; outpu
     ##
     if  output    results = Dict{String, Any}()    else    results = nothing    end
     printSummary, iostream = Defaults.getDefaults("summary flag/stream")
-    #
+
     # Perform the SCF and CI computation for the intial-state multiplets if initial configurations are given
     if  comp.initialConfigs != Configuration[]
         multiplet  = SelfConsistent.performSCF(comp.initialConfigs, comp.nuclearModel, comp.grid, comp.asfSettings; printout=false)
@@ -170,12 +170,12 @@ function perform(scheme::PhotoIonizationScheme, comp::Cascade.Computation; outpu
     # Print out initial configurations and levels 
     Cascade.displayLevels(stdout, multiplets, sa="initial ")
     if  printSummary   Cascade.displayLevels(iostream, multiplets, sa="initial ")                            end
-    #
+
     # Generate subsequent cascade configurations as well as display and group them together
     wa  = Cascade.generateConfigurationsForPhotoionization(multiplets, comp.scheme, comp.nuclearModel)
     wb1 = Basics.displayConfigurations(comp.nuclearModel.Z, wa[1], sa="(initial part of the) photoionization ")
     wb2 = Basics.displayConfigurations(comp.nuclearModel.Z, wa[2], sa="(generated part of the) photoionization ")
-    #
+
     # Determine first all configuration 'blocks' and from them the individual steps of the cascade
     wc1 = Cascade.generateBlocks(scheme, comp::Cascade.Computation, wb1)
     wc2 = Cascade.generateBlocks(scheme, comp::Cascade.Computation, wb2, printout=false)
@@ -185,7 +185,7 @@ function perform(scheme::PhotoIonizationScheme, comp::Cascade.Computation; outpu
                         Cascade.displayBlocks(iostream, wc2, sa="for the (photo-ionized part of the) photoionization cascade ")    end      
     # Determine, modify and compute the transition data for all steps, ie. the PhotoIonization.Line's, etc.
     gMultiplets = Multiplet[];     for block in wc2  push!(gMultiplets, block.multiplet)    end
-    #
+
     we = Cascade.determineSteps(scheme, comp, wc1, wc2)
     Cascade.displaySteps(stdout, we, sa="ionized ")
     if  printSummary   Cascade.displaySteps(iostream, we, sa="ionized ")    end      
@@ -199,7 +199,7 @@ function perform(scheme::PhotoIonizationScheme, comp::Cascade.Computation; outpu
         results = Base.merge( results, Dict("generated multiplets:"         => gMultiplets) )    
         results = Base.merge( results, Dict("photoionization lines:"        => linesP) )
         results = Base.merge( results, Dict("cascade data:"                 => data ) )
-        #
+
         #  Write out the result to file to later continue with simulations on the cascade data
         if  outputToFile
             filename = "zzz-cascade-photoionization-computations-" * string(Dates.now())[1:13] * ".jld"

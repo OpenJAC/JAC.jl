@@ -131,4 +131,4 @@ function subshellStateString                                    end
 function tabulate                                               end
 function tabulateKappaSymmetryEnergiesDirac                     end
 
-end  ## module
+end  # module

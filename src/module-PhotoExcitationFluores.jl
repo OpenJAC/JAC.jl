@@ -329,7 +329,7 @@ function  computePathways(finalMultiplet::Multiplet, intermediateMultiplet::Mult
     PhotoExcitationFluores.displayResults(stdout, newPathways, settings)
     printSummary, iostream = Defaults.getDefaults("summary flag/stream")
     if  printSummary   PhotoExcitationFluores.displayResults(iostream, newPathways, settings)     end
-    #
+
     # Calculate the photon density matrix of the fluorescence photon if needed and display all requested properties
     # These calculations are done in turn for all selected pathways
     if  settings.calcPhotonDm  ||  settings.calcAngular  ||  settings.calcStokes
@@ -387,7 +387,7 @@ function  displayPhotonDm(stream::IO, pathway::PhotoExcitationFluores.Pathway, d
     isym = LevelSymmetry( pathway.initialLevel.J,      pathway.initialLevel.parity)
     msym = LevelSymmetry( pathway.intermediateLevel.J, pathway.intermediateLevel.parity)
     fsym = LevelSymmetry( pathway.finalLevel.J,        pathway.finalLevel.parity)
-    #
+
     println(stream, "\n\n  Properties of the fluorescence photon related to its density matrix for pathway:" * 
             TableStrings.levels_imf(pathway.initialLevel.index, pathway.intermediateLevel.index, pathway.finalLevel.index) *
                         "\n  --------------------------------------------------------------------------------")
@@ -396,7 +396,7 @@ function  displayPhotonDm(stream::IO, pathway::PhotoExcitationFluores.Pathway, d
     println(stream, "  + Excitation and fluorescence energies of pathway " * TableStrings.inUnits("energy") * ":  " *
             @sprintf("%.4e", Defaults.convertUnits("energy: from atomic", pathway.excitEnergy))             * ",  " *
             @sprintf("%.4e", Defaults.convertUnits("energy: from atomic", pathway.fluorEnergy))  )
-    #
+
     # Display the density matrix of the fluorescence photon if requested
     if  settings.calcPhotonDm
         nx = 119
@@ -415,7 +415,7 @@ function  displayPhotonDm(stream::IO, pathway::PhotoExcitationFluores.Pathway, d
         end
         println(stream, "  ", TableStrings.hLine(nx))
     end
-    #
+
     # Display the angular distribution of the fluorescence photon if requested
     if  settings.calcAngular
         nx = 44
@@ -430,7 +430,7 @@ function  displayPhotonDm(stream::IO, pathway::PhotoExcitationFluores.Pathway, d
         end
         println(stream, "  ", TableStrings.hLine(nx))
     end
-    #
+
     # Display the Stokes parameters of the fluorescence photon if requested
     if  settings.calcStokes
         nx = 67
@@ -471,7 +471,7 @@ function  displayPathways(stream::IO, pathways::Array{PhotoExcitationFluores.Pat
     sa = sa * TableStrings.flushleft(30, "Multipoles"; na=0);        
     sb = sb * TableStrings.flushleft(30, "i--e           e--f  "; na=2)
     println(stream, sa);    println(stream, sb);    println(stream, "  ", TableStrings.hLine(nx)) 
-    #   
+
     for  pathway in pathways
         sa  = " ";     isym = LevelSymmetry( pathway.initialLevel.J,      pathway.initialLevel.parity)
                         msym = LevelSymmetry( pathway.intermediateLevel.J, pathway.intermediateLevel.parity)
@@ -481,14 +481,14 @@ function  displayPathways(stream::IO, pathways::Array{PhotoExcitationFluores.Pat
         sa = sa * TableStrings.center(23, TableStrings.symmetries_imf(isym, msym, fsym);  na=4)
         sa = sa * @sprintf("%.4e", Defaults.convertUnits("energy: from atomic", pathway.excitEnergy))      * "   "
         sa = sa * @sprintf("%.4e", Defaults.convertUnits("energy: from atomic", pathway.fluorEnergy))      * "     "
-        #
+
         multipoles = EmMultipole[]
         for  ech in pathway.excitChannels
             multipoles = push!( multipoles, ech.multipole)
         end
         multipoles = unique(multipoles);   mpString = TableStrings.multipoleList(multipoles)            * "                   "
         sa = sa * TableStrings.flushleft(14, mpString[1:14];  na=1)
-        #
+
         multipoles = EmMultipole[]
         for  fch in pathway.fluorChannels
             multipoles = push!( multipoles, fch.multipole)
@@ -498,12 +498,12 @@ function  displayPathways(stream::IO, pathways::Array{PhotoExcitationFluores.Pat
         println(stream, sa)
     end
     println(stream, "  ", TableStrings.hLine(nx))
-    #
+
     println(stream, "\n  + Given solid angles:  $(settings.solidAngles) ")
     if settings.calcPhotonDm  println(stream, "  + Calculate the photon density matrix of the fluorescence photon at the given solid angles.")    end
     if settings.calcAngular   println(stream, "  + Calculate the angular distribution of the fluorescence photon at the given solid angles.")     end
     if settings.calcStokes    println(stream, "  + Calculate the Stokes parameters of the fluorescence photon at the given solid angles.")        end
-    #
+
     return( nothing )
 end
 
@@ -531,7 +531,7 @@ function  displayResults(stream::IO, pathways::Array{PhotoExcitationFluores.Path
     sb = sb * TableStrings.center(30, TableStrings.inUnits("cross section") * "      " * 
                                         TableStrings.inUnits("cross section"); na=2)
     println(stream, sa);    println(stream, sb);    println(stream, "  ", TableStrings.hLine(nx)) 
-    #   
+
     for  pathway in pathways
         sa  = " ";     isym = LevelSymmetry( pathway.initialLevel.J,      pathway.initialLevel.parity)
                         msym = LevelSymmetry( pathway.intermediateLevel.J, pathway.intermediateLevel.parity)
@@ -541,14 +541,14 @@ function  displayResults(stream::IO, pathways::Array{PhotoExcitationFluores.Path
         sa = sa * TableStrings.center(23, TableStrings.symmetries_imf(isym, msym, fsym);  na=4)
         sa = sa * @sprintf("%.4e", Defaults.convertUnits("energy: from atomic", pathway.excitEnergy))      * "   "
         sa = sa * @sprintf("%.4e", Defaults.convertUnits("energy: from atomic", pathway.fluorEnergy))      * "     "
-        #
+
         multipoles = EmMultipole[]
         for  ech in pathway.excitChannels
             multipoles = push!( multipoles, ech.multipole)
         end
         multipoles = unique(multipoles);   mpString = TableStrings.multipoleList(multipoles)            * "                   "
         sa = sa * TableStrings.flushleft(14, mpString[1:14];  na=1)
-        #
+
         multipoles = EmMultipole[]
         for  fch in pathway.fluorChannels
             multipoles = push!( multipoles, fch.multipole)
@@ -560,7 +560,7 @@ function  displayResults(stream::IO, pathways::Array{PhotoExcitationFluores.Path
         println(stream, sa)
     end
     println(stream, "  ", TableStrings.hLine(nx))
-    #
+
     return( nothing )
 end
 

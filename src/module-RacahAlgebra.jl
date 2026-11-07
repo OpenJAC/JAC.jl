@@ -79,8 +79,7 @@ function Kronecker(i::AngMomentum, k::AngMomentum)
 end
 
 
-# `Base.show(io::IO, delta::Kronecker)`  ... prepares a proper printout of the variable delta::Kronecker.
-    function Base.show(io::IO, delta::Kronecker)
+function Base.show(io::IO, delta::Kronecker)
     print(io, "delta($(delta.i), $(delta.k))")
 end
 
@@ -118,8 +117,7 @@ function Triangle(ja::AngMomentum, jb::AngMomentum, jc::AngMomentum)
 end
 
 
-# `Base.show(io::IO, delta::Triangle)`  ... prepares a proper printout of the variable delta::Triangle.
-    function Base.show(io::IO, delta::Triangle)
+function Base.show(io::IO, delta::Triangle)
     print(io, "delta ($(delta.ja), $(delta.jb), $(delta.jc))")
 end
 
@@ -165,8 +163,7 @@ function W3j(ja::AngMomentum, jb::AngMomentum, jc::AngMomentum,
 end
 
 
-# `Base.show(io::IO, w::W3j)`  ... prepares a proper printout of the variable  w3j::W3j.
-    function Base.show(io::IO, w::W3j)
+function Base.show(io::IO, w::W3j)
     print(io, "W3j($(w.ja), $(w.jb), $(w.jc); $(w.ma), $(w.mb), $(w.mc))")
 end
 
@@ -835,7 +832,7 @@ function  evaluate(rx::RacahExpression; special::Bool=false)
             wa = RacahAlgebra.sumRulesForTwoW6jOneW9j(newrex);       if    wa[1]  newrex = wa[2];   cont = true  end
             wa = RacahAlgebra.sumRulesForOneW6jTwoW9j(newrex);       if    wa[1]  newrex = wa[2];   cont = true  end
             wa = RacahAlgebra.sumRulesForFourW6j(newrex);            if    wa[1]  newrex = wa[2];   cont = true  end
-            #
+
             wa = RacahAlgebra.sumRulesForOneW3j(newrex);             if    wa[1]  newrex = wa[2];   cont = true  end
             wa = RacahAlgebra.sumRulesForOneW6j(newrex);             if    wa[1]  newrex = wa[2];   cont = true  end
             wa = RacahAlgebra.sumRulesForOneW9j(newrex);             if    wa[1]  newrex = wa[2];   cont = true  end
@@ -854,8 +851,8 @@ function  evaluate(rx::RacahExpression; special::Bool=false)
             wa = RacahAlgebra.sumRulesForFiveW3j(newrex);            if    wa[1]  newrex = wa[2];   cont = true  end
             wa = RacahAlgebra.sumRulesForSixW3j(newrex);             if    wa[1]  newrex = wa[2];   cont = true  end
             
-            ## wa = RacahAlgebra.integralRulesForOneYlm(newrex);        if    wa[1]  newrex = wa[2];   cont = true  end
-            ## wa = RacahAlgebra.integralRulesForTwoYlm(newrex);        if    wa[1]  newrex = wa[2];   cont = true  end
+            # wa = RacahAlgebra.integralRulesForOneYlm(newrex);        if    wa[1]  newrex = wa[2];   cont = true  end
+            # wa = RacahAlgebra.integralRulesForTwoYlm(newrex);        if    wa[1]  newrex = wa[2];   cont = true  end
             
             newrex = RacahAlgebra.simplifyDeltas(newrex)
             newrex = RacahAlgebra.simplifyTriangles(newrex)
@@ -879,19 +876,19 @@ function  evaluate(leftCsq::RacahAlgebra.Csq, rightCsq::RacahAlgebra.Csq)
     function prsim(rx::RacahExpression)
         println(">> Simplification found for recoupling coefficient     < $leftCsq | $rightCsq > = $rx ")
     end
-    #
+
     if  leftCsq.c != rightCsq.c     
         println("Recoupling coefficients vanishs because of different total angular momenta $(leftCsq.c) != $(rightCsq.c)")
         return( Basic(0) )
     end
-    #
+
     # Rewrite coupling string as Racah expression and combine(multiply) both sides
     lrex = RacahAlgebra.rewriteCsq(leftCsq, "m");       println(">> Lhs-sequence     = $lrex ")
     rrex = RacahAlgebra.rewriteCsq(rightCsq, "m");      println(">> Rhs-sequence     = $rrex ")
     rex  = lrex * rrex
     summations = unique(rex.summations);    rex = RacahExpression(rex, summations=summations)
     println(">> Total recoupling = $rex")
-    #
+
     wa = RacahAlgebra.evaluate(rex)
     return( wa )
 end
@@ -1156,18 +1153,18 @@ end
     ... applies a given recursion rules to w3j; an rexList::Array{RacahAlgebra.RacahExpression,1} is returned.
 """
 function recursionW3j(w3j::W3j, rule::AbstractRecursionW3j)
-    #
+
     rexList = RacahExpression[]
     if      rule == RecursionW3jHalfStep()
-        #
+
         # Half-step rule:   Rotenberg et al. (1959), Eq. (1.45).
         # ---------------
         #                  1/2  ( j1  j2  j3 )                    1/2  ( j1  j2-1/2  j3-1/2 )                    1/2  ( j1  j2-1/2  j3-1/2 )
         #   [(J+1)(J-2*j1)]     (            )  = [(j2+m2)(j3-m3)]     (                    )  - [(j2-m2)(j3+m3)]     (                    )
         #                       ( m1  m2  m3 )                         ( m1  m2-1/2  m3+1/2 )                         ( m1  m2+1/2  m3-1/2 )
-        #
+
         #   with  J = j1+j2+j3
-        #
+
         J = w3j.ja + w3j.jb + w3j.jc;    wa = sqrt( (J+1)*(J-2*w3j.ja) )
         rex = RacahExpression( Basic[], Integral[], 0, sqrt( (w3j.jb+w3j.mb)*(w3j.jc-w3j.mc) )/wa, Kronecker[], Triangle[], 
                                 [W3j(w3j.ja, w3j.jb-1//2, w3j.jc-1//2, w3j.ma, w3j.mb-1//2, w3j.mc+1//2)], W6j[], W9j[], Ylm[], Djpq[])
@@ -1176,21 +1173,21 @@ function recursionW3j(w3j::W3j, rule::AbstractRecursionW3j)
                                 [W3j(w3j.ja, w3j.jb-1//2, w3j.jc-1//2, w3j.ma, w3j.mb+1//2, w3j.mc-1//2)], W6j[], W9j[], Ylm[], Djpq[])
         push!( rexList, rex)
         return( rexList )
-        #
+
     elseif  rule == RecursionW3jLouck()
-        #
+
         # Louck's rule:   Rotenberg et al. (1959), Eq. (1.46).
         # -------------
         #          1/2          (  j1     j2   j3 )                                1/2  (   j1    j2-1/2  j3-1/2 )
         #   (j2+m2)   (2*j3+1)  (                 ) == - [(J-2*j1)(J+1)(j3+m3)]     (                        )
         #                       ( m2-m3  -m2   m3 )                                     ( m2-m3  -m2+1/2  m3-1/2 )
-        #                                             
+
         #                                                                                  1/2  (   j1    j2-1/2  j3+1/2 )
         #                                              - [(J-2*j3)(J-2*j2+1)(J+1)(j3-m3+1)]     (                        )
         #                                                                                       ( m2-m3  -m2+1/2  m3-1/2 )
-        #
+
         #  with  J = j1+j2+j3
-        #
+
         J = w3j.ja + w3j.jb + w3j.jc;    wa = sqrt( (w3j.jb+w3j.mb) ) * (2*w3j.jc+1)
         rex = RacahExpression( Basic[], Integral[], 0, -sqrt( (J-2*w3j.ja)* (J+1) * (w3j.jc+w3j.mc) )/wa, Kronecker[], Triangle[], 
                                 [W3j(w3j.ja, w3j.jb-1//2, w3j.jc-1//2, w3j.mb-w3j.mc, -w3j.mb+1//2, w3j.mc-1//2)], W6j[], W9j[], Ylm[], Djpq[])
@@ -1199,21 +1196,21 @@ function recursionW3j(w3j::W3j, rule::AbstractRecursionW3j)
                                 [W3j(w3j.ja, w3j.jb-1//2, w3j.jc+1//2, w3j.mb-w3j.mc, -w3j.mb+1//2, w3j.mc-1//2)], W6j[], W9j[], Ylm[], Djpq[])
         push!( rexList, rex)
         return( rexList )
-        #
+
     elseif  rule == RecursionW3jOneStep()
-        #
+
         # One-step rule:   Rotenberg et al. (1959), Eq. (1.47).
         # --------------
         #                                    1/2  ( j1  j2  j3 )                                      1/2  ( j1   j2   j3-1 )
         #   [(J+1)(J-2*j1)(J-2*j2)(J-2*j3+1)]     (            ) == [(j2-m2)(j2+m2+1)(j3+m3)(j3+m3-1)]     (                )
         #                                         ( m1  m2  m3 )                                           ( m1  m2+1  m3-1 )
-        #
+
         #                                         1/2  ( j1  j2  j3-1 )                                     1/2  ( j1   j2   j3-1 )
         #                  - 2*m2 [(j3+m3)(j3-m3)]     (              ) - [(j2+m2)(j2-m2+1)(j3-m3)(j3-m3-1)]     (                )
         #                                              ( m1  m2   m3  )                                          ( m1  m2-1  m3+1 )
-        #
+
         #    with  J = j1+j2+j3
-        #
+
         J = w3j.ja + w3j.jb + w3j.jc;    wa = sqrt( (J+1) * (J-2*w3j.ja) * (J-2*w3j.jb) * (J-2*w3j.jc+1) )
         rex = RacahExpression( Basic[], Integral[], 0, sqrt( (w3j.jb-w3j.mb) * (w3j.jb+w3j.mb+1) * (w3j.jc+w3j.mc) * (w3j.jc+w3j.mc-1))/wa, 
                                 Kronecker[], Triangle[], [W3j(w3j.ja, w3j.jb, w3j.jc-1, w3j.ma, w3j.mb+1, w3j.mc-1)], W6j[], W9j[], Ylm[], Djpq[])
@@ -1225,17 +1222,17 @@ function recursionW3j(w3j::W3j, rule::AbstractRecursionW3j)
                                 Kronecker[], Triangle[], [W3j(w3j.ja, w3j.jb, w3j.jc-1, w3j.ma, w3j.mb-1, w3j.mc+1)], W6j[], W9j[], Ylm[], Djpq[])
         push!( rexList, rex)
         return( rexList )
-        #
+
     elseif  rule == RecursionW3jMagnetic()
-        #
+
         # Magnetic rule:   Rotenberg et al. (1959), Eq. (1.47).
         # --------------
         #                            1/2   (  j1  j2    j3  )                     1/2   (  j1   j2   j3  )                     1/2   (  j1   j2   j3  )
         #   -[(j3+m1+m2+1)(j3-m1-m2)]      (                ) = [(j1+m1+1)(j1-m1)]      (                ) + [(j2+m2+1)(j2-m2)]      (                )
         #                                  (  m1  m2  -m3+1 )                           (  m1  m2+1  -m3 )                           ( m1+1  m2  -m3  )
-        #
+
         #    with  J = j1+j2+j3
-        #
+
         J = w3j.ja + w3j.jb + w3j.jc;    wa = - sqrt( (w3j.jc+w3j.ma+w3j.mb+1) * (w3j.jc-w3j.ma-w3j.mb) )
         rex = RacahExpression( Basic[], Integral[], 0, sqrt( (w3j.ja+w3j.ma+1) * (w3j.ja-w3j.ma) )/wa, Kronecker[], Triangle[], 
                                 [W3j(w3j.ja, w3j.jb, w3j.jc, w3j.ma, w3j.mb+1, w3j.mc-1)], W6j[], W9j[], Ylm[], Djpq[])
@@ -1244,7 +1241,7 @@ function recursionW3j(w3j::W3j, rule::AbstractRecursionW3j)
                                 [W3j(w3j.ja, w3j.jb, w3j.jc, w3j.ma+1, w3j.mb, w3j.mc-1)], W6j[], W9j[], Ylm[], Djpq[])
         push!( rexList, rex)
         return( rexList )
-        #
+
     else    error("Unrecognized recursion rule of Wigner 3j symbols.")
     end
 end
@@ -1320,7 +1317,7 @@ function rewriteCsq(csq::RacahAlgebra.Csq, ms::String)
         sx = Basic[];   sx = push!( sx, Basic(ms * string(a)));         sx = push!( sx, Basic(ms * string(b)))
         return( sx )
     end
-    #
+
     function  appendW3j(a::RacahAlgebra.Csq, b::RacahAlgebra.Csq, c::Basic)
         wx = W3j[];   wx = append!( wx, appendW3j(a.a, a.b, a.c));   wx = append!( wx, appendW3j(b.a, b.b, b.c))
         wx = append!( wx, [W3j(a.c,b.c,c, Basic(ms * string(a.c)),  Basic(ms * string(b.c)),  -Basic(ms * string(c))) ] )
@@ -1340,7 +1337,7 @@ function rewriteCsq(csq::RacahAlgebra.Csq, ms::String)
         wx = W3j[];   wx = append!( wx, [W3j(a,b,c, Basic(ms * string(a)),  Basic(ms * string(b)),  -Basic(ms * string(c)) )] )
         return( wx )
     end
-    #
+
     summations = Basic[];   phase = Basic(0);   weight = Basic(1);   w3js = W3j[]
     summations = appendSummation( csq.a, csq.b)
     w3js       = appendW3j( csq.a, csq.b, csq.c)
@@ -1350,7 +1347,7 @@ function rewriteCsq(csq::RacahAlgebra.Csq, ms::String)
     end
     
     rex = RacahExpression( summations, Integral[], phase, weight, Kronecker[], Triangle[], w3js, W6j[], W9j[], Ylm[], Djpq[] )    
-    ## println("***** rex = $rex")
+    # println("***** rex = $rex")
     return( rex )
 end
 
@@ -1394,7 +1391,7 @@ end
         A modified Racah expression is returned if the re-writing was successful, and nothing is changed otherwise.
 """
 function rewritePhase(rex::RacahExpression, zeroTerms::Array{SymEngine.Basic,1}; printout::Bool=false, from::String="Unspecified source")
-    #
+
     function rewritePhaseObsolete(phase::Basic)
         if  vars != Basic[]
             purePhase = RacahAlgebra.purifyPhase(phase)
@@ -1417,7 +1414,7 @@ function rewritePhase(rex::RacahExpression, zeroTerms::Array{SymEngine.Basic,1};
         end
         return( false, phase )
     end
-    #
+
     function rewritePhaseShorter(phase::Basic)
         Nofs = length(SymEngine.free_symbols(phase))
         if  Nofs > 0
@@ -1437,9 +1434,9 @@ function rewritePhase(rex::RacahExpression, zeroTerms::Array{SymEngine.Basic,1};
         end
         return( false, phase )
     end
-    #
+
     hasChanged1 = false;    hasChanged2 = false
-    #
+
     # (i)  Try to remove obsolete indices; simply try to add/substract multiples of each zeroTerm and see whether this solves the issue
     # (ii) Try to shorten/reduce the number of phase variables
     vars = RacahAlgebra.obsoletePhaseVars(rex)
@@ -1451,7 +1448,7 @@ function rewritePhase(rex::RacahExpression, zeroTerms::Array{SymEngine.Basic,1};
     else 
         rey = rex
     end
-    #
+
     return( rey )
 end
 
@@ -1761,12 +1758,12 @@ end
 """
 function simplifyDeltas(rex::RacahExpression)
     nrex = rex
-    #
+
     for  delta  in  rex.deltas     
         newSummations = nrex.summations;    newPhase = nrex.phase;     newWeight    = nrex.weight;     newDeltas = nrex.deltas;    
         newTriangles  = nrex.triangles;     newW3js  = nrex.w3js;      newW6js      = nrex.w6js;       newW9js   = nrex.w9js
         newYlms       = nrex.ylms;          newDjpqs = nrex.djpqs;     newIntegrals = nrex.djpqs
-        #
+
         if  delta.i == delta.k  &&  (delta.i in newSummations  ||   -delta.i in newSummations)
             newDeltas = Kronecker[]
             for dt in nrex.deltas   if  dt == delta   else   push!(newDeltas, RacahAlgebra.subs(dt, delta.i, delta.k))   end    end
@@ -1833,7 +1830,7 @@ function simplifyDeltas(rex::RacahExpression)
             newSummations = RacahAlgebra.subs(newSummations,delta.k, delta.i)
             newPhase      = SymEngine.subs(newPhase,        delta.k, delta.i)
             newWeight     = SymEngine.subs(newWeight,       delta.k, delta.i)
-            ## newDeltas     = RacahAlgebra.subs(newDeltas,    delta.k, delta.i)
+            # newDeltas     = RacahAlgebra.subs(newDeltas,    delta.k, delta.i)
             newDeltas = Kronecker[]
             for dt in nrex.deltas   
                 if     dt == delta    push!(newDeltas, dt)   
@@ -2380,7 +2377,7 @@ function testRecursions(; short::Bool=true)
     nwnjList =        [  0,  0,  0,  0,  0,  0,  0,  0,  0,  1,  0,  0,  2,  2,  0,  0,  1,  2,  2,  2,  1,  1,  0,  1,  1,  1,  1,  3,  1,  1]
     append!(nnList,   [ 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47])
     append!(nwnjList, [  1,  4,  3,  2,  1,  2,  1,  2,  0,  2,  2,  2,  2,  3,  3,  6,  8])
-    #
+
     for (n, nn) in enumerate(nnList)
         rex = RacahAlgebra.selectRacahExpression(nn);    nrex = RacahAlgebra.evaluate(rex);      nwnjs = RacahAlgebra.countWignerSymbols(nrex)
         if  nwnjs != nwnjList[n]   println(">> Test fails for rule  $nn :");    @show rex;    @show nrex;    @show nwnjs     end
@@ -2412,7 +2409,7 @@ end
 """
 function testSpecialValuesW3j(; short::Bool=true)
     success  = true;
-    #
+
     for n = 2:16
         w3j = RacahAlgebra.selectW3j(n);;    nrex = RacahAlgebra.evaluate(w3j);      nwnjs = RacahAlgebra.countWignerSymbols(nrex)
         if  nwnjs != 0   println(">> Test fails for special value rule  $n :");      @show w3j;    @show nrex;    @show nwnjs     end
@@ -2430,7 +2427,7 @@ end
 """
 function testSpecialValuesW6j(; short::Bool=true)
     success  = true;
-    #
+
     for n = 1:22
         w6j = RacahAlgebra.selectW6j(n);;    nrex = RacahAlgebra.evaluate(w6j);      nwnjs = RacahAlgebra.countWignerSymbols(nrex)
         if  nwnjs != 0   println(">> Test fails for special value rule  $n :");      @show w6j;    @show nrex;    @show nwnjs     end
@@ -2448,7 +2445,7 @@ end
 """
 function testSpecialValuesW9j(; short::Bool=true)
     success  = true;
-    #
+
     for n = 1:2
         w9j = RacahAlgebra.selectW6j(n);;    nrex = RacahAlgebra.evaluate(w9j);      nwnjs = RacahAlgebra.countWignerSymbols(nrex)
         if  nwnjs != 0   println(">> Test fails for special value rule  $n :");      @show w6j;    @show nrex;    @show nwnjs     end
@@ -2466,7 +2463,7 @@ end
 """
 function testSpecialValuesYlm(; short::Bool=true)
     success  = true;   
-    #
+
     for n = 1:2
         error("Not yet implemented.")
         w9j = RacahAlgebra.selectW6j(n);;    nrex = RacahAlgebra.evaluate(w9j);      nwnjs = RacahAlgebra.countWignerSymbols(nrex)
@@ -2485,7 +2482,7 @@ end
 """
 function testSpecialValuesDjpq(; short::Bool=true)
     success  = true;   
-    #
+
     for n = 1:2
         error("Not yet implemented.")
         w9j = RacahAlgebra.selectW6j(n);;    nrex = RacahAlgebra.evaluate(w9j);      nwnjs = RacahAlgebra.countWignerSymbols(nrex)
@@ -2509,7 +2506,7 @@ function testSumRules(; short::Bool=true)
     nwnjList =        [  0,  0,  0,  0,  0,  0,  0,  0,  0,  1,  0,  0,  2,  2,  0,  0,  1,  2,  2,  2,  1,  1,  0,  1,  1,  1,  1,  3,  1,  1]
     append!(nnList,   [ 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47])
     append!(nwnjList, [  1,  4,  3,  2,  1,  2,  1,  0,  0,  2,  2,  2,  2,  3,  3,  6,  8])
-    #
+
     for (n, nn) in enumerate(nnList)
         if  n in [46,47]    continue    end
         rex = RacahAlgebra.selectRacahExpression(nn);    nrex = RacahAlgebra.evaluate(rex);      nwnjs = RacahAlgebra.countWignerSymbols(nrex)
@@ -2535,7 +2532,7 @@ function testIntegralRules(; short::Bool=true)
     nwnjList =        [  0,  0,  0,  0,  0,  0,  0,  0,  0,  1,  0,  0,  2,  2,  0,  0,  1,  2,  2,  2,  1,  1,  0,  1,  1,  1,  1,  3,  1,  1]
     append!(nnList,   [ 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47])
     append!(nwnjList, [  1,  4,  3,  2,  1,  2,  1,  0,  0,  2,  2,  2,  2,  3,  3,  6,  8])
-    #
+
     for (n, nn) in enumerate(nnList)
         if  n in [46,47]    continue    end
         rex = RacahAlgebra.selectRacahExpression(nn);    nrex = RacahAlgebra.evaluate(rex);      nwnjs = RacahAlgebra.countWignerSymbols(nrex)
@@ -2555,7 +2552,7 @@ end
 """
 function zeroPhases(rex::RacahAlgebra.RacahExpression)
     phaseList = Basic[]
-    #
+
     # Add such 'zero' phase in turn for the triangular deltas, the Wigner 3-j and 6-j symbols and, perhaps,
     # later for others
     for  triangle in rex.triangles    push!(phaseList, 2triangle.ja + 2triangle.jb + 2triangle.jc)        end

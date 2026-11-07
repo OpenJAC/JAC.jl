@@ -1,47 +1,47 @@
 
 # FINE-STRUCTURE RESOLVED DIELECTRONIC RECOMBINATION
-#
+
 # Dielectronic recombination is physically a TWO-step process, and this file represents it as such:
-#
+
 #      capture          i + e^-  -->  m        described by a CaptureLine, one per (i,m)
 #      stabilization    m        -->  f + hv   described by a PhotonLine,  one per (m,f)
-#
+
 # What matters is WHERE the coupling between the two steps lives. The two total widths
-#
+
 #      Gamma_a(m) = sum_i A_a(m --> i)         Gamma_r(m) = sum_f A_r(m --> f)
-#
+
 # are properties of the intermediate level m alone. They are accumulated ONCE, in setTotalRates(), and then
 # STORED on every CaptureLine, so that nothing downstream re-derives them by scanning a list -- which is where
 # an aggregation error would otherwise hide.
-#
+
 # The resonance strength then factorizes cleanly. With
-#
+
 #      C(i,m) = pi^2 / k^2 * A_a(m --> i) * (2J_m+1) / (2J_i+1)        [ k = wave number of the captured e^- ]
-#
+
 # one has, per gauge,      S(i,m) = C(i,m) * Gamma_r(m) / ( Gamma_a(m) + Gamma_r(m) )
-#
+
 # and the intensity of the individual DR satellite line (i,m,f) follows by combining the two objects:
-#
+
 #      I(i,m,f) = S(i,m) * A_r(m --> f) / Gamma_r(m)
-#
+
 # which is what settings.calcPhotonSpectrum makes available.
-#
+
 # This file is a COMPOSITE: it has no channel type of its own, and its two line types are built out of the
 # other modules' --
-#
+
 #     CaptureLine.capturePartialWaves ::Array{AutoIonization.PartialWave,1}
 #     PhotonLine.photonAmplitudes     ::Array{MultipoleAmplitude,1}
-#
+
 # WHERE EmPropertyC BELONGS, AND WHERE IT DOES NOT. The photon AMPLITUDES are complex and gauge-paired, so they
 # are EmPropertyC -- and they arrive already so, inside the embedded PhotoEmission type, rather than as a field
 # declared here. The four observables of this file are RATES and STRENGTHS: captureRate and totalAugerRate are
 # real and gauge-free (the Auger operator has no gauge), while totalPhotonRate and resonanceStrength are real
 # and gauge-dependent. Float64 and EmProperty are therefore right for all four, and an EmPropertyC would be
 # wrong -- they are not complex quantities.
-#
+
 # The gauge machinery itself is not duplicated here: determinePhotonChannels calls into PhotoEmission for the
 # gauge loop and the hasMagnetic flag, and computePhotonAmplitudes reduces to one abs2 on an EmPropertyC.
-#
+
 # checkConsistentMultiplets, checkOrbitalRepresentation, determineCaptureChannels, determinePhotonChannels and
 # isResonanceToBeExcluded are route-independent helpers; the last of them is used by
 # module-Cascade-inc-simulations.jl.
@@ -473,7 +473,7 @@ function  computeHydrogenicRate(ni::Int64, li::Int64, nf::Int64, lf::Int64,  Zef
         return ( A )
     end
     # Compute I(n,l; n',l') integral in the recursion formulas.
-    #
+
     # MEMOIZED, 16-Sep-2026.  The recursion branches into TWO calls on every rung and terminates only
     # when lp reaches n, so without a cache one rate costs O(2^n) calls and the routine is unusable
     # beyond n ~ 25 -- measured 0.004 s at n = 16, 0.26 s at n = 20, 0.94 s at n = 24, roughly tripling
@@ -523,21 +523,21 @@ function  computeHydrogenicRate(ni::Int64, li::Int64, nf::Int64, lf::Int64,  Zef
         # memoized, so one rate cost O(2^nf) -- 0.004 s at nf = 16, 0.26 s at nf = 20, 0.94 s at nf = 24.
         # `computeI` is now cached and that cost is gone (nf = 40 went from unreachable to 0.0000 s, with
         # bit-identical values against an independent transcription).
-        #
+
         # BUT A SECOND, GENUINE LIMIT WAS FOUND UNDERNEATH IT, and it is an ACCURACY limit.  The ladder
         # relations combine terms by subtraction, and as nf approaches ni those terms become nearly equal
         # and cancellation eats the result.  A(ni -> nf) must fall monotonically with nf, since the
         # transition energy collapses; instead it flattens and TURNS BACK UP.  Measured for l = 0, Z = 83:
-        #
+
         #        ni        first rise at nf      ni - nf      nf/ni
         #       100              92                  8         0.920
         #       140             129                 11         0.921
         #       183             165                 18         0.902
-        #
+
         # so the breakdown is RELATIVE (nf/ni ~ 0.90-0.92) and NOT at a fixed nf, which is why the guard
         # is written as a fraction of ni rather than as a constant.  A `nf > const` guard is the wrong
         # SHAPE: raised far enough to be useful at ni = 183 it would already be unsafe at ni = 100.
-        #
+
         # 0.90 is set just below the lowest measured onset.  The omitted tail is negligible for the high-n
         # radiative rates this is used for: A(183 -> nf p) falls from 1.19e9 at nf = 2 to 3.9e5 near the
         # limit, four orders down, so the last few per cent of shells carry a vanishing share of the total.
@@ -867,12 +867,12 @@ function  computeRydbergTailLines(captureLines::Array{DielectronicRecombination.
     else
         report = report * "\n  + n-scaling exponent:  MEASURED p = " * @sprintf("%.3f", pMeasured) *
                           "   vs   assumed p = " * @sprintf("%.2f", pUsed) * details
-        ## A measured exponent BELOW the assumed one is the expected signature of inter-shell CI mixing, not of a
-        ## broken scaling law: the shells that make the measurement possible are in one basis and therefore mix,
-        ## which moves strength upward in n and flattens the ratio.  Measured 02-Sep-2026 on H-like C5+ at n = 8, 9:
-        ## p = 1.27 in a shared basis against 3.066 with each shell computed alone.  So the advice that stood here
-        ## until then -- "set nExponent to the measured one if the deviation is believed" -- was exactly backwards
-        ## and would have inflated the tail.  The two directions are therefore reported differently.
+        # A measured exponent BELOW the assumed one is the expected signature of inter-shell CI mixing, not of a
+        # broken scaling law: the shells that make the measurement possible are in one basis and therefore mix,
+        # which moves strength upward in n and flattens the ratio.  Measured 02-Sep-2026 on H-like C5+ at n = 8, 9:
+        # p = 1.27 in a shared basis against 3.066 with each shell computed alone.  So the advice that stood here
+        # until then -- "set nExponent to the measured one if the deviation is believed" -- was exactly backwards
+        # and would have inflated the tail.  The two directions are therefore reported differently.
         if  abs(pMeasured - pUsed) > 0.3
             report = report * "\n    >>> WARNING: measured and assumed exponent differ by " *
                               @sprintf("%.2f", abs(pMeasured-pUsed)) * ". The extrapolation uses the ASSUMED value."
@@ -918,7 +918,7 @@ function  computeRydbergTailLines(captureLines::Array{DielectronicRecombination.
         scale = (n0/n)^pUsed
         for  (l, cLine, coreR)  in  refs
             eEnergy = cLine.electronEnergy + bind(n0) - bind(n)
-            if  eEnergy <= 0.    continue    end       ## no longer a resonance: the shell has dropped below threshold
+            if  eEnergy <= 0.    continue    end       # no longer a resonance: the shell has dropped below threshold
             # the spectator's own radiative decay IS recomputed at the new shell -- it is n-dependent
             gammaR  = coreR + DielectronicRecombination.hydrogenicRateAt(n, l, eEnergy, empTreatment)
             push!( tailLines, DielectronicRecombination.buildTailLine(cLine, eEnergy, cLine.captureRate * scale,
@@ -1061,14 +1061,14 @@ function determineEmpiricalTreatment(finalMultiplet::Multiplet, intermediateMult
         end
     end
     # n^(final) = the highest n treated explicitly in the final levels, EXCLUDING the captured Rydberg shell.
-    #
+
     # n^(final) must NOT be taken as maximum(finalNs) over the whole final basis. A DR final level is |core> nl
     # with the SAME captured electron, so the Rydberg shell is always present in that basis and the maximum would
     # come out equal to n^(lowest-captured) -- 19 rather than the intended 3 for the Be-like gold case. That
     # contradicts the hierarchy this struct documents,
-    #
+
     #      n^(core)  <  n^(final)  <  n^(hydrogenic)  <  n^(lowest-captured),
-    #
+
     # and would make the correction range nFinal+1 : nHydrogenic start ABOVE the Rydberg shell, where the
     # hydrogenic rate is identically zero.  See also the note on computeHydrogenicPhotonRate.
     if  nLowestCaptured > 0    finalNs = filter(n -> n < nLowestCaptured, finalNs)    end

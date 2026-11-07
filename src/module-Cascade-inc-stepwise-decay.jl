@@ -20,9 +20,9 @@ function computeSteps(scheme::Cascade.StepwiseDecayScheme, comp::Cascade.Computa
         if  printSummary   println(iostream, "\n* $st) Perform $(string(step.process)) amplitude computations for " *
                                                 "up to $nc decay lines (without selection rules): ")   end 
                                                 
-        ## Which continuum orbitals to use is the approach's CONDITION (4), not its name: StepAveragedContinuum
-        ## takes the shared set computed here at the step's mean energy, TransitionResolvedContinuum falls
-        ## through to computeLinesCascade below, which generates one orbital per fine-structure transition.
+        # Which continuum orbitals to use is the approach's CONDITION (4), not its name: StepAveragedContinuum
+        # takes the shared set computed here at the step's mean energy, TransitionResolvedContinuum falls
+        # through to computeLinesCascade below, which generates one orbital per fine-structure transition.
         if      step.process == Basics.Auger()  &&
                 Cascade.conditions(comp.approach).continuum == Cascade.StepAveragedContinuum()
             # First determine the `mean' free-electron energy for this Auger block and calculate a common set of continuum orbital
@@ -40,10 +40,10 @@ function computeSteps(scheme::Cascade.StepwiseDecayScheme, comp::Cascade.Computa
                     sh           = Subshell(101, kappa);     nrContinuum = Continuum.gridConsistency(meanEn, comp.grid)
                     contSettings = Continuum.Settings(false, nrContinuum);   
                     npot         = Nuclear.nuclearPotential(comp.nuclearModel, comp.grid)
-                    ## wp1 = compute("radial potential: core-Hartree", grid, wLevel)
-                    ## wp2 = compute("radial potential: Hartree-Slater", grid, wLevel)
-                    ## wp3 = compute("radial potential: Kohn-Sham", grid, wLevel)
-                    ## wp           = Basics.compute("radial potential: Dirac-Fock-Slater", comp.grid, step.finalMultiplet.levels[1].basis)
+                    # wp1 = compute("radial potential: core-Hartree", grid, wLevel)
+                    # wp2 = compute("radial potential: Hartree-Slater", grid, wLevel)
+                    # wp3 = compute("radial potential: Kohn-Sham", grid, wLevel)
+                    # wp           = Basics.compute("radial potential: Dirac-Fock-Slater", comp.grid, step.finalMultiplet.levels[1].basis)
                     wp           = Basics.computePotential(Basics.DFSField(), comp.grid, step.finalMultiplet.levels[1])
                     pot          = Basics.add(npot, wp)
                     cOrbital, phase, normF  = Continuum.generateOrbitalLocalPotential(meanEn, sh, pot, contSettings)
@@ -71,7 +71,7 @@ function computeSteps(scheme::Cascade.StepwiseDecayScheme, comp::Cascade.Computa
         if  printSummary   println(iostream, "\n*    Step $st:: A total of $(length(newLines)) $(string(step.process)) lines are calculated, " *
                                                 "giving now rise to a total of $nt $(string(step.process)) decay lines." )   end      
     end
-    #
+
     data = [ Cascade.Data{PhotoEmission.Line}(linesR), Cascade.Data{AutoIonization.Line}(linesA) ]
 end
 
@@ -206,8 +206,8 @@ end
 """
 function determineSteps(scheme::Cascade.StepwiseDecayScheme, comp::Cascade.Computation, blockList::Array{Cascade.Block,1})
     stepList = Cascade.Step[]
-    ## Every approach determines its steps the same way; the approach only governs HOW each step is then
-    ## computed. Listing approach names here silently rejected any newly added approach (RefinedSCA).
+    # Every approach determines its steps the same way; the approach only governs HOW each step is then
+    # computed. Listing approach names here silently rejected any newly added approach (RefinedSCA).
     if  true
         for  a = 1:length(blockList)
             for  b = 1:length(blockList)
@@ -236,7 +236,7 @@ function determineSteps(scheme::Cascade.StepwiseDecayScheme, comp::Cascade.Compu
                 end
             end
         end
-        #
+
     else  error("Unsupported cascade approach.")
     end
     return( stepList )
@@ -259,7 +259,7 @@ end
 function perform(scheme::StepwiseDecayScheme, comp::Cascade.Computation; output::Bool=false, outputToFile::Bool=true, outputDirectory::String="")
     if  output    results = Dict{String, Any}()    else    results = nothing    end
     printSummary, iostream = Defaults.getDefaults("summary flag/stream")
-    #
+
     # Perform the SCF and CI computation for the intial-state multiplets if initial configurations are given
     if  comp.initialConfigs != Configuration[]
         multiplet  = SelfConsistent.performSCF(comp.initialConfigs, comp.nuclearModel, comp.grid, comp.asfSettings; printout=false)
@@ -272,11 +272,11 @@ function perform(scheme::StepwiseDecayScheme, comp::Cascade.Computation; output:
     # Print out initial configurations and levels 
     Cascade.displayLevels(stdout, multiplets, sa="initial ")
     if  printSummary   Cascade.displayLevels(iostream, multiplets, sa="initial ")          end
-    #
+
     # Generate subsequent cascade configurations as well as display and group them together
     initialConfigs  = Basics.extractConfigurations(Basics.FromMultiplet(), multiplets)
-    ## wax = Cascade.generateConfigurationList(multiplets, comp.scheme.maxElectronLoss, comp.scheme.NoShakeDisplacements)
-    ## wbx = Basics.displayConfigurations(comp.nuclearModel.Z, wax, sa="OLD decay ")
+    # wax = Cascade.generateConfigurationList(multiplets, comp.scheme.maxElectronLoss, comp.scheme.NoShakeDisplacements)
+    # wbx = Basics.displayConfigurations(comp.nuclearModel.Z, wax, sa="OLD decay ")
     # scheme.decayShells is handed over here; until 16-Aug-2026 the field was stored, documented and printed
     # but never read, so naming a shell that the initial configurations lacked had no effect whatsoever.
     decayConfigs    = Basics.generateConfigurations(Basics.ForStepwiseDecay(comp.scheme.maxElectronLoss,
@@ -284,7 +284,7 @@ function perform(scheme::StepwiseDecayScheme, comp::Cascade.Computation; output:
     append!(decayConfigs, initialConfigs)
     NoElectrons     = unique( Basics.extractFromConfigurations(Basics.NumberOfElectrons(), decayConfigs) )
     Basics.displayConfigurations(stdout, Basics.ByNumber(NoElectrons), decayConfigs, details="decay configurations")
-    #
+
     # Determine first all configuration 'blocks' and from them the individual steps of the cascade
     wc = Cascade.generateBlocks(comp, decayConfigs, basis.orbitals, sa="for the decay cascade:")
     Cascade.displayBlocks(stdout, wc, sa="for the decay cascade ")
@@ -304,11 +304,11 @@ function perform(scheme::StepwiseDecayScheme, comp::Cascade.Computation; output:
         results = Base.merge( results, Dict("photoemission lines:"  => data[1].lines) ) 
         results = Base.merge( results, Dict("autoionization lines:" => data[2].lines) ) 
         results = Base.merge( results, Dict("cascade data:"         => data) )
-        #
+
         #  Write out the result to file to later continue with simulations on the cascade data
         if outputToFile
-            ## outputDirectory keeps the cascade data out of the working directory; it is created if missing.
-            ## "" (the default) preserves the previous behaviour of writing next to wherever JAC was started.
+            # outputDirectory keeps the cascade data out of the working directory; it is created if missing.
+            # "" (the default) preserves the previous behaviour of writing next to wherever JAC was started.
             if  outputDirectory != ""    mkpath(outputDirectory)    end
             filename = joinpath(outputDirectory,
                                 "zzz-cascade-decay-computations-" * string(Dates.now())[1:13] * ".jld")

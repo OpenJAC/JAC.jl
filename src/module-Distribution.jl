@@ -66,6 +66,7 @@ function Base.show(io::IO, dist::PhotonBremsstrahlungThin)
     print(io, sa)
 end
         
+
 """
 `struct  PhotonBremsstrahlungThick  <:  Distribution.AbstractPhotonDistribution`  
     ... to apply a free-free bremsstrahlungs photon spectrum of a hot, optically-thick plasma 
@@ -253,7 +254,7 @@ end
 #################################################################################################################################
 #################################################################################################################################
 
-## Distribution.ElectronMaxwell
+# Distribution.ElectronMaxwell
 
 """
 `Distribution.electronEnergyDistribution(dist::Distribution.ElectronMaxwell, energy::Float64)`  
@@ -282,7 +283,7 @@ end
 #################################################################################################################################
 #################################################################################################################################
 
-## Distribution.ElectronFermiDirac
+# Distribution.ElectronFermiDirac
 
 """
 `Distribution.electronEnergyDistribution(dist::Distribution.ElectronFermiDirac, energy::Float64)`  
@@ -311,7 +312,7 @@ end
 #################################################################################################################################
 #################################################################################################################################
 
-## Distribution.PhotonDilute
+# Distribution.PhotonDilute
 
 """
 `Distribution.photonNumberDensity(dist::Distribution.PhotonDilute, omega::Float64)`  
@@ -327,7 +328,7 @@ end
 #################################################################################################################################
 #################################################################################################################################
 
-## Distribution.PhotonPlanck
+# Distribution.PhotonPlanck
 
 """
 `Distribution.photonNumberDensity(dist::Distribution.PhotonPlanck, omega::Float64)`  
@@ -343,7 +344,7 @@ end
 #################################################################################################################################
 #################################################################################################################################
 
-## Distribution.PhotonPowerLaw
+# Distribution.PhotonPowerLaw
 
 """
 `Distribution.photonNumberDensity(dist::Distribution.PhotonPowerLaw, omega::Float64)`  
@@ -361,7 +362,7 @@ end
 #################################################################################################################################
 #################################################################################################################################
 
-## Distribution.PhotonVacuumField
+# Distribution.PhotonVacuumField
 
 """
 `Distribution.photonNumberDensity(dist::Distribution.PhotonVacuumField, omega::Float64)`  

@@ -963,7 +963,7 @@ function warnOnContactObservable(outcomes::Array{Hfs.Outcome,1})
     for  outcome  in  outcomes
         level = outcome.Jlevel;    basis = level.basis
         isempty(basis.csfs)  &&  continue
-        csf = basis.csfs[ argmax(abs.(level.mc)) ]          ## the dominant CSF of this level
+        csf = basis.csfs[ argmax(abs.(level.mc)) ]          # the dominant CSF of this level
         for  (k, sh)  in  enumerate(basis.subshells)
             if  Basics.subshell_l(sh) == 0  &&  k <= length(csf.occupation)  &&  isodd(csf.occupation[k])
                 hasUnpairedS = true;    break
@@ -1209,7 +1209,7 @@ end
         from the nuclear model. A neat table is printed but nothing is returned otherwise.
 """
 function  displayResults(stream::IO, outcomes::Array{Hfs.Outcome,1}, nm::Nuclear.Model, settings::Hfs.Settings)
-    ## 2 + (10+2) + (10+4) + (14+10) + (54+8) = 114 after the g_J column was removed on 18-Aug-2026; it was 128.
+    # 2 + (10+2) + (10+4) + (14+10) + (54+8) = 114 after the g_J column was removed on 18-Aug-2026; it was 128.
     nx = 114
     println(stream, " ")
     println(stream, "  HFS amplitudes:")
@@ -1345,10 +1345,10 @@ function  displayResults(stream::IO, outcomes::Array{Hfs.Outcome,1}, nm::Nuclear
             sa = sa * TableStrings.center(10, TableStrings.level(outcome.Jlevel.index); na=2)
             sa = sa * TableStrings.center(10, string(sym); na=6);    na = length(sa)
             sa = sa * "        "
-            ## The field names here were those of an older HfMultiplet/HfLevel: a multiplet carries `hfLevels`
-            ## and not `levelFs`, and a level carries `hfBasisVectors` and not `basis.vectors`.  This block
-            ## therefore raised a FieldError the moment it was reached -- which never happened, because
-            ## computeAmplitudesProperties raised first (repaired 16-Aug-2026).
+            # The field names here were those of an older HfMultiplet/HfLevel: a multiplet carries `hfLevels`
+            # and not `levelFs`, and a level carries `hfBasisVectors` and not `basis.vectors`.  This block
+            # therefore raised a FieldError the moment it was reached -- which never happened, because
+            # computeAmplitudesProperties raised first (repaired 16-Aug-2026).
             if   length(outcome.hfsMultiplet.hfLevels) == 0  sa = sa * "No IJF levels";   println(stream, sa);    continue    end
             nvecs = min( length(outcome.hfsMultiplet.hfLevels[1].hfBasisVectors), 6)
             for  nvec = 1:nvecs
@@ -1480,9 +1480,9 @@ end
     ... tabulates the energies of all hyperfine levels of the given multiplet; nothing is returned.
 """
 function Basics.tabulate(stream::IO, ::HfEnergies, multiplet::Hfs.HfMultiplet)
-    ## `.levelFs` and `.I` are fields of a type that no longer exists; a multiplet carries `hfLevels` and the
-    ## nuclear spin is reached through the isomer of a basis vector (repaired 16-Aug-2026, with the same
-    ## defect as Basics.sortByEnergy carried until 06-Aug).
+    # `.levelFs` and `.I` are fields of a type that no longer exists; a multiplet carries `hfLevels` and the
+    # nuclear spin is reached through the isomer of a basis vector (repaired 16-Aug-2026, with the same
+    # defect as Basics.sortByEnergy carried until 06-Aug).
     println(stream, "\n  Eigenenergies for nuclear spin I = $(multiplet.hfLevels[1].hfBasisVectors[1].isomer.spinI):")
     sb = "  Level  F Parity          Hartrees       " * "             eV                   " * TableStrings.inUnits("energy")
     println(stream, "\n", sb, "\n")

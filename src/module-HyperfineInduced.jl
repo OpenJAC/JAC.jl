@@ -291,18 +291,18 @@ function  amplitude(::Emission, mp::EmMultipole, gauge::EmGauge, omega::Float64,
     # THE MULTIPOLE FIELD FACTOR, derived 06-Aug-2026 rather than assumed, and verified against the bare
     # nucleus. It puts a nuclear reduced matrix element on the same footing as PhotoEmission's electronic
     # amplitude, i.e. it is fixed by demanding that the rate below reproduce the standard result
-    #
+
     #     A(sigma L)  =  8 pi (L+1) / (L [(2L+1)!!]^2) * (omega/c)^(2L+1) * B(sigma L)
-    #
+
     # Inserting A = 8 pi alpha omega/(2 F_i + 1) |elementM * fld|^2 with elementM = sqrt((2 I_i + 1) B), the
     # degeneracies cancel identically and everything collapses to
-    #
+
     #     fld  =  sqrt( (L+1)/L ) * (alpha omega)^L / (2L+1)!!
-    #
+
     # with NO 4 pi, no (2L+1), and -- the point -- no dependence on the nuclear spin. An earlier version had
     # sqrt((L+1)(2L+1)/(4 pi L)) and was too fast by ~9300; the spurious spin dependence needed to repair it
     # was what revealed that the manuscript's elementM convention, not this factor, was the real error.
-    #
+
     # THE EXTRA alpha FOR MAGNETIC MULTIPOLES is the 1/c of the magnetic multipole radiation operator. JAC
     # stores nuclear moments with mu_N = 5.446170e-4/2 (the mu_B = 1/2 convention), which is correct for the
     # hyperfine INTERACTION -- V11 and V22 match Shabaev to 5 % -- whereas the radiation formula is written in
@@ -325,7 +325,7 @@ function  amplitude(::Emission, mp::EmMultipole, gauge::EmGauge, omega::Float64,
                 end
             end
             # (2) ELECTRONIC radiation: the isomer is untouched, the electrons radiate.
-            #
+
             # NO CONDITION on the electronic level, and this matters (corrected 06-Aug-2026): requiring the
             # electronic level to CHANGE looks natural, but it silently discards the dominant channel of nuclear
             # hyperfine mixing. In H-like 229Th89+ every basis vector carries the same 1s level, so that
@@ -429,7 +429,7 @@ function  determineLines(finalMultiplet::Hfs.HfMultiplet, initialMultiplet::Hfs.
     eShift = Defaults.convertUnits("energy: to atomic", settings.photonEnergyShift)
     # The selection is done on indices and F^P here, NOT through Basics.selectLevelPair: that method dispatches
     # on ManyElectron.Level, and an Hfs.HfLevel is not one.
-    #
+
     # THE INDEX USED IS `lev.index`, the stable energy-ordered label that Hfs.computeHyperfineRepresentation
     # assigns to the FULL diagonalized multiplet -- not the position in this loop. The two differ whenever
     # restricting mixingLevels or the F values changes the size of the multiplet, and it is the stable index
@@ -693,7 +693,7 @@ function  displayHyperfineComposition(stream::IO, hfMultiplet::Hfs.HfMultiplet, 
     # second and hid the very admixture that makes the transition possible. Hence 1e-7 -- and, in addition, the
     # nAlways largest contributions are printed whatever their size, because a composition table that shows only
     # the parent has failed at its one job.
-    #
+
     # What the Be-like table then shows is worth the space: 3P_1 contributes 1.8e-4, 1P_1 only 3e-6 (sixty
     # times less, being ~25 eV away instead of 0.59 eV), and 3P_2 appears at 1e-6 solely because hfMultipoles
     # includes E2, which connects J = 0 to J = 2 where M1 cannot. None of that is guessable from the input.
@@ -707,7 +707,7 @@ function  displayHyperfineComposition(stream::IO, hfMultiplet::Hfs.HfMultiplet, 
         sym = LevelSymmetry(hfLevel.F, hfLevel.parity)
         println(stream, "     hyperfine level " * string(hfLevel.index) * ":   F^P = " * string(sym) * ",  E = " *
                 @sprintf("%.6e", Defaults.convertUnits("energy: from atomic", hfLevel.energy)) * " " *
-                TableStrings.inUnits("energy"))   ## absolute; differences are what matter
+                TableStrings.inUnits("energy"))   # absolute; differences are what matter
         perm = sortperm(abs.(hfLevel.mc), rev=true)
         for  (rank, p)  in  enumerate(perm)
             if  abs(hfLevel.mc[p]) <= threshold  &&  rank > nAlways    continue    end

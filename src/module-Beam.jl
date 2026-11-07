@@ -360,7 +360,7 @@ end
 # amplitude once that is built. PhotonScattering.besselAmplitude still carries its own copy of this logic inline
 # (predating this file); unifying the two is a later refactor, deliberately not done here to avoid touching an already
 # validated, dated example (example-Pd.jl) while adding this machinery's first caller.
-#
+
 # THREE BEAM TYPES ARE COVERED, in two families. Beam.BesselBeam has a SINGLE, sharp transverse momentum kappa =
 # k sin(openingAngle), so its cone collapses to a one-dimensional azimuthal integral (`Beam.coneIntegrate`, below).
 # Beam.BesselGauss and Beam.LaguerreGauss both have a continuous transverse-momentum SPREAD instead -- a Gaussian ring
@@ -370,7 +370,7 @@ end
 # Beam-module menu). The physics differs (a caller's `amplitudeAt` must now take `(kappa, phiK)`, not `phiK` alone,
 # since a continuous-spectrum beam gives it an elevation degree of freedom the sharp cone does not have), so the two
 # families are NOT drop-in replacements for each other -- but they share the same displacement/OAM conventions.
-#
+
 # k IS PASSED IN EXPLICITLY, NEVER READ FROM beam.kz (fixed 12-Oct-2026, priority item 63). The first real caller,
 # PhotonScattering.besselAmplitude, computes its own kappa = k*sin(thetaK) from the real photon wavenumber and never
 # touches beam.kz; example-Pe.jl even constructs its BesselBeam with an arbitrary kz, commented "kz (unused here)".
@@ -481,7 +481,7 @@ end
 """
 function  redefineEnergy(energy::Float64, beam::AbstractBeamType)
     k = sqrt(2*energy)
-    #
+
     if      typeof(beam) == Beam.PlaneWave
         if  beam.kx != 0  ||   beam.ky != 0   error("stop a")   end
         newBeam = Beam.PlaneWave(0., 0., k)
@@ -543,7 +543,7 @@ end
 # one-dimensional azimuthal integral above becomes a two-dimensional one, (kappa, phiK), and `amplitudeAt` must take
 # BOTH coordinates -- `amplitudeAt(kappa::Float64, phiK::Float64)::ComplexF64` -- since a continuous-spectrum beam
 # gives the caller a genuine elevation degree of freedom that a sharp Bessel cone does not have.
-#
+
 # NORMALISATION. `radialAmplitude` need not be normalised by its own type's method: coneIntegrateContinuous divides
 # the coherent radial-times-azimuthal integral by M1 = Int_0^infty dkappa kappa radialAmplitude(kappa), the first
 # radial MOMENT of the weight (linear in radialAmplitude, like the weight itself -- NOT its square). This is the
@@ -555,7 +555,7 @@ end
 # integration variable to be probability-normalised, so that analogy does not transfer. The M1 moment is also what
 # makes coneIntegrateContinuous reduce EXACTLY to Beam.coneIntegrate's own sharp-cone formula as a beam's spread
 # narrows (verified where each continuous-spectrum beam's own coneIntegrate method is checked, below).
-#
+
 # THE KAPPA INTEGRAL USES QuadGK (adaptive), not a fixed trapezoid: both radial profiles below are smooth and decay
 # like a Gaussian, which QuadGK handles over [0, Inf) without a hand-picked cutoff or node count: the error risked by
 # guessing a cutoff too small is exactly the kind of silent mistake this module's own history (item 63) warns against.

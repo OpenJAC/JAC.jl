@@ -34,6 +34,7 @@ function Base.string(env::InfiniteEnvelope)
     return( sa )
 end
 
+
 function Base.show(io::IO, env::InfiniteEnvelope)
     sa = string(env);       print(io, sa, "\n")
 end
@@ -48,10 +49,12 @@ struct   RectangularEnvelope       <: Pulse.AbstractEnvelope
     cycles        ::Int64
 end
 
+
 function Base.string(env::RectangularEnvelope)
     sa = "rectangular pulse of $(env.cycles) cycles"
     return( sa )
 end
+
 
 function Base.show(io::IO, env::RectangularEnvelope)
     sa = string(env);       print(io, sa, "\n")
@@ -73,6 +76,7 @@ function Base.string(env::SinSquaredEnvelope)
     return( sa )
 end
 
+
 function Base.show(io::IO, env::SinSquaredEnvelope)
     sa = string(env);       print(io, sa, "\n")
 end
@@ -92,6 +96,7 @@ function Base.string(env::GaussianEnvelope)
     sa = "Gaussian pulse with pulse duration or FWHM = $(env.fwhm)"
     return( sa )
 end
+
 
 function Base.show(io::IO, env::GaussianEnvelope)
     sa = string(env);       print(io, sa, "\n")
@@ -137,6 +142,7 @@ function Base.string(beam::PlaneWaveBeam)
     sa = "Plane-wave beam/pulse with amplitude A0=$(beam.A0), frequency omega=$(beam.omega) a.u. and carrier-envelope phase cep=$(beam.cep)"
     return( sa )
 end
+
 
 function Base.show(io::IO, beam::PlaneWaveBeam)
     sa = string(beam);       print(io, sa, "\n")
@@ -443,13 +449,13 @@ function pulseShapeIntegral(plus::Bool, envelope::Pulse.InfiniteEnvelope, beam::
     wa = 0. * im;                            
     phiCep = beam.cep;       a = beam.A0 * sqrt(2*energyp) * sin(thetap) / sqrt(2) / beam.omega;   Up = beam.A0^2 / 4
     lambda = Basics.determinePolarizationLambda(polarization)
-    #
+
     # Compute the summation over the Bessel functions first; start with value for s = 0
     for  s = -10:10
         if  plus   wb = Basics.diracDelta((s-1)*beam.omega + energyp - initialEn + Up, 1.0e-3)
         else       wb = Basics.diracDelta((s+1)*beam.omega + energyp - initialEn + Up, 1.0e-3)       
         end
-        #
+
         if  wb != 0.
             wa = wa + GSL.sf_bessel_Jn(s, a) * exp(im*s * (phiCep - lambda*phip)) * wb
         end
@@ -476,13 +482,13 @@ function pulseShapeIntegral(plus::Bool, envelope::Pulse.RectangularEnvelope, bea
     phiCep = beam.cep;       a = beam.A0 * sqrt(2*energyp) * sin(thetap) / ( sqrt(2) * beam.omega );   Up = beam.A0^2 / 4
     lambda = Basics.determinePolarizationLambda(polarization)
     phaseConstant = phiCep - lambda*phip
-    #
+
     # Compute the summation over the Bessel functions first; start with value for s = 0
     for  s = -20:20
         if  plus   wb = (s-1)*beam.omega + energyp - initialEn + Up
         else       wb = (s+1)*beam.omega + energyp - initialEn + Up       
         end
-        #
+
         if  wb != 0.
             wa = wa + GSL.sf_bessel_Jn(s, a) * exp(im*s * phaseConstant) / wb * ( exp(im*wb*Tp) - 1 )
         end
@@ -685,11 +691,11 @@ if orderSFA == 0
     wa = 0. * im;                            
     phiCep = beam.cep;       a = beam.A0 * sqrt(2*energyp) * sin(thetap) / sqrt(2) / beam.omega;   Up = beam.A0^2 / 4
     lambda = Basics.determinePolarizationLambda(polarization)
-    #
+
     # Compute the summation over the Bessel functions first; start with value for s = 0
     for  s = -10:10
         wb = Basics.diracDelta(s*beam.omega + energyp - initialEn + Up, 1.0e-3)
-        #
+
         if  wb != 0.    wa = wa + GSL.sf_bessel_Jn(s, a) * exp(im*s * (phiCep - lambda*phip)) * wb     
         end
     end
@@ -716,7 +722,7 @@ function pulseShapeQuadIntegral(envelope::Pulse.RectangularEnvelope, beam::Abstr
     # Compute the summation over the Bessel functions first; start with value for s = 0
     for  s = -20:20
         wb = s*beam.omega + energyp - initialEn + Up
-        #
+
         if  wb != 0.    wa = wa + GSL.sf_bessel_Jn(s, a) * exp(im*s * phaseConstant) / wb * ( exp(im*wb*Tp) - 1 )   
         end
     end
@@ -846,6 +852,7 @@ function pulseShapeQuadIntegral(envelope::Pulse.GaussianEnvelope, beam::Abstract
     return( wa )
 end  
 
+
 """
 `Pulse.pulseShapeQuadIntegral(envelope::Pulse.AbstractEnvelope, beam::AbstractBeam, polarization::Basics.AbstractPolarization,
                                     thetap::Float64, phip::Float64, energyp::Float64, initialEn::Float64, orderSFA::Int)`  
@@ -860,13 +867,13 @@ function pulseShapeQuadIntegral(envelope::Pulse.AbstractEnvelope, beam::Abstract
     if       typeof(envelope) == SinSquaredEnvelope
     elseif   typeof(envelope) == GaussianEnvelope
     end
-    #
+
     # Determine first the integrant; the timeGrid must still be adapted to thos
     timeGrid = [0.1i for i = 1:10]
     for   t  in  timeGrid 
-        phase = Pulse.volkovPhase(t, envelope) ## , ...)
+        phase = Pulse.volkovPhase(t, envelope) # , ...)
     end
-    #
+
     error("Not yet implemented.")
 end
 return( wa )

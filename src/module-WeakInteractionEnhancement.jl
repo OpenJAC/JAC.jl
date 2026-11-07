@@ -212,15 +212,15 @@ function computeOutcomes(multiplet::Multiplet, nm::Nuclear.Model, grid::Radial.G
                 color=:light_green)
     printstyled("--------------------------------------------------------------------------------------------------------------------- \n",
                 color=:light_green)
-    #
+
     if  length(settings.gMultiplet.levels) == 0
         error("WeakInteractionEnhancement.computeOutcomes(): settings.gMultiplet is empty. Both observables of this module are sums over " *
               "intermediate states, so the caller must supply the opposite-parity levels to be summed over; there is no default.")
     end
-    #
+
     outcomes = WeakInteractionEnhancement.determineOutcomes(multiplet, settings)
     if  settings.printBefore    WeakInteractionEnhancement.displayOutcomes(stdout, outcomes, settings)    end
-    #
+
     newOutcomes = WeakInteractionEnhancement.Outcome[]
     for  outcome in outcomes
         edm = 0.;   pncs = Tuple{Level,ComplexF64}[]
@@ -238,11 +238,11 @@ function computeOutcomes(multiplet::Multiplet, nm::Nuclear.Model, grid::Radial.G
         end
         push!( newOutcomes, WeakInteractionEnhancement.Outcome(outcome.level, edm, pncs) )
     end
-    #
+
     WeakInteractionEnhancement.displayResults(stdout, newOutcomes, settings)
     printSummary, iostream = Defaults.getDefaults("summary flag/stream")
     if  printSummary    WeakInteractionEnhancement.displayResults(iostream, newOutcomes, settings)   end
-    #
+
     if    output    return( newOutcomes )
     else            return( nothing )
     end
@@ -271,7 +271,7 @@ function computePncE1Amplitude(finalLevel::Level, initialLevel::Level, gMultiple
     wa = ComplexF64(0.)
     for  nLevel  in  gMultiplet.levels
         if  nLevel.parity == initialLevel.parity    continue    end
-        #
+
         # first term: the weak interaction acts on the INITIAL level, the dipole on the admixture
         if  nLevel.J == initialLevel.J
             dE = initialLevel.energy - nLevel.energy
@@ -281,7 +281,7 @@ function computePncE1Amplitude(finalLevel::Level, initialLevel::Level, gMultiple
                 wa   = wa + WeakInteractionEnhancement.dipoleReducedMe(finalLevel, nLevel, grid) * wOrd / dE
             end
         end
-        #
+
         # second term: the weak interaction acts on the FINAL level
         if  nLevel.J == finalLevel.J
             dE = finalLevel.energy - nLevel.energy
@@ -335,7 +335,7 @@ function computePncE1AmplitudeNsd(finalLevel::Level, Ff::AngularJ64, initialLeve
     wa = ComplexF64(0.)
     for  nLevel  in  gMultiplet.levels
         if  nLevel.parity == initialLevel.parity    continue    end
-        #
+
         # first term: the anapole acts on the INITIAL level, which fixes the admixture to F_i, and the dipole on the admixture
         dE = initialLevel.energy - nLevel.energy
         if  abs(dE) > 1.0e-12
@@ -346,7 +346,7 @@ function computePncE1AmplitudeNsd(finalLevel::Level, Ff::AngularJ64, initialLeve
                           WeakInteractionMoment.anapoleAmplitude(nLevel, initialLevel, nm, grid; kappaAnapole=kappaAnapole) / dE
             end
         end
-        #
+
         # second term: the anapole acts on the FINAL level, which fixes the admixture to F_f
         dE = finalLevel.energy - nLevel.energy
         if  abs(dE) > 1.0e-12
@@ -439,7 +439,7 @@ function displayOutcomes(stream::IO, outcomes::Array{WeakInteractionEnhancement.
     sa = sa * TableStrings.center(14, "Energy"; na=4)
     sb = sb * TableStrings.center(14, TableStrings.inUnits("energy"); na=4)
     println(stream, sa);    println(stream, sb);    println(stream, "  ", TableStrings.hLine(nx))
-    #
+
     for  outcome in outcomes
         sa  = "  ";    sym = LevelSymmetry( outcome.level.J, outcome.level.parity)
         sa = sa * TableStrings.center(10, TableStrings.level(outcome.level.index); na=2)
@@ -475,7 +475,7 @@ function displayResults(stream::IO, outcomes::Array{WeakInteractionEnhancement.O
         sa = sa * TableStrings.center(18, "J^P (f) -- J^P (i)"; na=4)
         sa = sa * TableStrings.center(30, "Re  and  Im  of  E1_PNC"; na=2)
         println(stream, sa);    println(stream, "  ", TableStrings.hLine(nx))
-        #
+
         for  outcome in outcomes
             for  (iLevel, amp)  in  outcome.pncAmplitudes
                 symf = LevelSymmetry( outcome.level.J, outcome.level.parity);    symi = LevelSymmetry( iLevel.J, iLevel.parity)
@@ -492,7 +492,7 @@ function displayResults(stream::IO, outcomes::Array{WeakInteractionEnhancement.O
         println(stream, "  It is convergence-limited by the choice of gMultiplet -- run more than one and compare before quoting a value.")
         println(stream, " ")
     end
-    #
+
     if  settings.calcEdmEnhancement
         nx = 60
         println(stream, " ")
@@ -504,7 +504,7 @@ function displayResults(stream::IO, outcomes::Array{WeakInteractionEnhancement.O
         sa = sa * TableStrings.center(10, "J^P";    na=4)
         sa = sa * TableStrings.center(20, "R (unconverged)"; na=2)
         println(stream, sa);    println(stream, "  ", TableStrings.hLine(nx))
-        #
+
         for  outcome in outcomes
             sym = LevelSymmetry( outcome.level.J, outcome.level.parity)
             sa  = "  "
@@ -558,7 +558,7 @@ function edmAmplitude(finalLevel::Level, initialLevel::Level, nm::Nuclear.Model,
         end
         amplitude = WeakInteractionMoment.oneParticleAmplitude(0, kernel, finalLevel, initialLevel)
     end
-    #
+
     if  display
         sa = @sprintf("%.5e", amplitude.re) * "  " * @sprintf("%.5e", amplitude.im)
         println("    < level=$(finalLevel.index) [J=$(finalLevel.J)$(string(finalLevel.parity))] || H^(EDM) ||" *

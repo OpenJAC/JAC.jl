@@ -7,8 +7,8 @@
 module ElectronCapture
 
 
-## ..AutoIonization is imported because the capture amplitude IS the complex conjugate of the Auger amplitude; the
-## module is included immediately before this one in JenaAtomicCalculator.jl, so the dependency is well ordered.
+# ..AutoIonization is imported because the capture amplitude IS the complex conjugate of the Auger amplitude; the
+# module is included immediately before this one in JenaAtomicCalculator.jl, so the dependency is well ordered.
 using  Printf, ..AngularMomentum, ..AutoIonization, ..Basics, ..Beam, ..Bsplines, ..Continuum, ..Defaults, ..InteractionStrength,
                 ..ManyElectron, ..Nuclear, ..Radial, ..TableStrings
 
@@ -208,17 +208,17 @@ function computeAmplitudesProperties(line::ElectronCapture.Line, nm::Nuclear.Mod
     newChannels = ElectronCapture.Channel[]
     contSettings = Continuum.Settings(isnothing(settings.continuumExchange) ? false : settings.continuumExchange, nrContinuum);   rate = 0.
     nucPot      = isnothing(nuclearPot) ? Nuclear.nuclearPotential(nm, grid) : nuclearPot
-    ## BOTH levels must be expressed in ONE ordered subshell list before anything is contracted; taking the final
-    ## level's own list, as this function did until 02-Sep-2026, leaves the initial ion's 1s appended at the end and
-    ## the contraction raises "Improper subshell order".  This mirrors AutoIonization.computeAmplitudesProperties.
+    # BOTH levels must be expressed in ONE ordered subshell list before anything is contracted; taking the final
+    # level's own list, as this function did until 02-Sep-2026, leaves the initial ion's 1s appended at the end and
+    # the contraction raises "Improper subshell order".  This mirrors AutoIonization.computeAmplitudesProperties.
     subshellList = Basics.generate(OrderedSubshellList(), line.finalLevel.basis, line.initialLevel.basis)
     redILevel    = Basics.generateLevelWithSymmetryReducedBasis(line.initialLevel, subshellList)
     newfLevel    = Basics.generateLevelWithSymmetryReducedBasis(line.finalLevel,   subshellList)
     for channel in line.channels
-        ## The free electron approaches the INITIAL ion, so its orbital is generated in that field, and the
-        ## scattering state (ion + electron) carries the symmetry of the resonance it forms.
-        ## The empty 101 subshell goes onto the RESONANCE and the captured electron onto the ION -- two DIFFERENT
-        ## levels.  Putting both on one level appends 101s twice and the contraction refuses.
+        # The free electron approaches the INITIAL ion, so its orbital is generated in that field, and the
+        # scattering state (ion + electron) carries the symmetry of the resonance it forms.
+        # The empty 101 subshell goes onto the RESONANCE and the captured electron onto the ION -- two DIFFERENT
+        # levels.  Putting both on one level appends 101s twice and the contraction refuses.
         newdLevel = Basics.generateLevelWithExtraSubshell(Subshell(101, channel.kappa), newfLevel)
         cOrbital, phase = Continuum.generateOrbitalForLevel(line.electronEnergy, Subshell(101, channel.kappa),
                                                             redILevel, nm, grid, contSettings; nuclearPot=nucPot,
@@ -229,19 +229,19 @@ function computeAmplitudesProperties(line::ElectronCapture.Line, nm::Nuclear.Mod
         rate       = rate + conj(amplitude) * amplitude
         push!( newChannels, ElectronCapture.Channel(newChannel.kappa, newChannel.symmetry, newChannel.phase, amplitude) )
     end
-    ## Fritzsche, Kabachnik & Surzhykov, PRA 78, 032703 (2008), Eq. (3):
+    # Fritzsche, Kabachnik & Surzhykov, PRA 78, 032703 (2008), Eq. (3):
     ##
-    ##     P_cap(0 -> d) = 2pi / (2(2J_0+1)) * SUM_lj |<a_d J_d || V || a_0 J_0, lj : J_d>|^2
-    ##                   = (2J_d+1) / (2(2J_0+1)) * P_A(d -> 0)
+    #     P_cap(0 -> d) = 2pi / (2(2J_0+1)) * SUM_lj |<a_d J_d || V || a_0 J_0, lj : J_d>|^2
+    #                   = (2J_d+1) / (2(2J_0+1)) * P_A(d -> 0)
     ##
-    ## WHERE THE (2J_d+1) COMES FROM, since this is a Rule 18 site and was got wrong once.  AutoIonization forms its
-    ## Auger rate as 2pi * SUM |A|^2 with NO 1/(2J_d+1), and that is CORRECT: for autoionization the scattering state
-    ## (f + eps kappa) is coupled to exactly J_i, so the full and the reduced matrix element coincide and no such
-    ## factor arises.  Comparing with Eq. (3) therefore fixes the relation between the two normalizations,
-    ## <...>_paper = sqrt(2J_d+1) * A_JAC, and the capture rate must carry the (2J_d+1) explicitly.
+    # WHERE THE (2J_d+1) COMES FROM, since this is a Rule 18 site and was got wrong once.  AutoIonization forms its
+    # Auger rate as 2pi * SUM |A|^2 with NO 1/(2J_d+1), and that is CORRECT: for autoionization the scattering state
+    # (f + eps kappa) is coupled to exactly J_i, so the full and the reduced matrix element coincide and no such
+    # factor arises.  Comparing with Eq. (3) therefore fixes the relation between the two normalizations,
+    # <...>_paper = sqrt(2J_d+1) * A_JAC, and the capture rate must carry the (2J_d+1) explicitly.
     ##
-    ## The ALIGNMENT below is untouched by this: Eq. (4) carries the same amplitudes in its numerator and in N, so
-    ## the factor cancels exactly and A_k0 is the same either way.  Only the RATE changes.
+    # The ALIGNMENT below is untouched by this: Eq. (4) carries the same amplitudes in its numerator and in N, so
+    # the factor cancels exactly and A_k0 is the same either way.  Only the RATE changes.
     totalRate = 2pi * rate * (Basics.twice(line.finalLevel.J) + 1) / (2 * (Basics.twice(line.initialLevel.J) + 1))
     newLine   = ElectronCapture.Line(line.initialLevel, line.finalLevel, line.electronEnergy, totalRate, Float64[], newChannels)
     if  settings.calcAlignment    newLine = ElectronCapture.Line(newLine.initialLevel, newLine.finalLevel,
@@ -308,7 +308,7 @@ end
 function alignmentParameters(line::ElectronCapture.Line)
     Jd = Basics.twice(line.finalLevel.J) / 2.0;    J0 = Basics.twice(line.initialLevel.J) / 2.0
     if  Jd < 1.0    return( Float64[] )    end
-    ## the partial wave (l, j) of each channel follows from its Dirac quantum number kappa
+    # the partial wave (l, j) of each channel follows from its Dirac quantum number kappa
     lOf(kappa) = kappa < 0  ?  -kappa - 1  :  kappa
     jOf(kappa) = abs(kappa) - 0.5
     norm = 0.
@@ -470,7 +470,7 @@ function  displayRates(stream::IO, lines::Array{ElectronCapture.Line,1}, setting
     sa = sa * TableStrings.flushleft(32, "Alignment A_20, A_40, ..."; na=2)
     sb = sb * TableStrings.flushleft(32, "of the captured state"; na=2)
     println(stream, sa);    println(stream, sb);    println(stream, "  ", TableStrings.hLine(nx)) 
-    #   
+
     for  line in lines
         sa  = "  ";    isym = LevelSymmetry( line.initialLevel.J, line.initialLevel.parity)
                         fsym = LevelSymmetry( line.finalLevel.J,   line.finalLevel.parity)
@@ -479,14 +479,14 @@ function  displayRates(stream::IO, lines::Array{ElectronCapture.Line,1}, setting
         sa = sa * @sprintf("%.6e", Defaults.convertUnits("energy: from atomic", line.initialLevel.energy))  * "    "
         sa = sa * @sprintf("%.6e", Defaults.convertUnits("energy: from atomic", line.electronEnergy))       * "    "
         sa = sa * @sprintf("%.6e", Defaults.convertUnits("rate: from atomic", line.totalRate))              * "    "
-        ## No alignment is printed where none exists: a J_d < 1 resonance cannot be aligned, whatever the capture.
+        # No alignment is printed where none exists: a J_d < 1 resonance cannot be aligned, whatever the capture.
         if  length(line.alignment) == 0    sa = sa * "-- (J_d < 1)"
         else                               sa = sa * join([@sprintf("%9.5f", a) for a in line.alignment], "  ")
         end
         println(stream, sa)
     end
     println(stream, "  ", TableStrings.hLine(nx))
-    #
+
     return( nothing )
 end
 

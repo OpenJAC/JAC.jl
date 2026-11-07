@@ -78,7 +78,7 @@ function determineSharings_3p(energy::Float64, noSharings::Int64)
     sharings = MultiPhotonTransition.Sharing_3p[]
     xx, ww   = GaussQuadrature.legendre(noSharings)
     for  (iu, xu) in enumerate(xx)
-        u  = (xu + 1.) / 2;    wu = ww[iu] / 2       ## map [-1,1] -> [0,1]
+        u  = (xu + 1.) / 2;    wu = ww[iu] / 2       # map [-1,1] -> [0,1]
         for  (iv, xv) in enumerate(xx)
             v  = (xv + 1.) / 2;    wv = ww[iv] / 2
             omega1 = energy * u
@@ -293,6 +293,7 @@ end
 function allIntermediateLevels(mp::Multiplet)
     return( mp.levels )
 end
+
 
 """
 `MultiPhotonTransition.allIntermediateLevels(gChannels::Array{AtomicState.GreenChannel,1})`

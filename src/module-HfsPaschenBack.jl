@@ -234,7 +234,7 @@ function recoupledElectronicMe(reducedMeOf::Function, levi::Hfs.HfLevel, levj::H
             lhsLevel = Basics.generateLevelWithSymmetryReducedBasis(lhsLevel, subshellList)
             rhsLevel = Basics.generateLevelWithSymmetryReducedBasis(rhsLevel, subshellList)
         end
-        redMe = reducedMeOf(rhsLevel, lhsLevel)                        ## <rhsLevel(bra) || op || lhsLevel(ket)>
+        redMe = reducedMeOf(rhsLevel, lhsLevel)                        # <rhsLevel(bra) || op || lhsLevel(ket)>
         redMe == zero(redMe)   &&   continue
 
         recpl = Hfs.recouplingElectronicOperator(vk.isomer.spinI, vk.levelJ.J, vk.F, vl.levelJ.J, vl.F, 1)
@@ -400,7 +400,7 @@ function  displayOutcomes(hfMultiplets::Array{Hfs.HfMultiplet,1})
     sa = sa * TableStrings.center(14, "Energy"; na=4);
     sb = sb * TableStrings.center(14, TableStrings.inUnits("energy"); na=4)
     println(sa);    println(sb);    println("  ", TableStrings.hLine(nx))
-    #
+
     for  hfLevel in HfsPaschenBack.expandMSublevels(hfMultiplets)
         sa  = "  "
         sa = sa * TableStrings.center(10, string(hfLevel.index); na=2)
@@ -409,7 +409,7 @@ function  displayOutcomes(hfMultiplets::Array{Hfs.HfMultiplet,1})
         println( sa )
     end
     println("  ", TableStrings.hLine(nx))
-    #
+
     return( nothing )
 end
 
@@ -431,7 +431,7 @@ function  displayResults(stream::IO, outcomes::Array{HfsPaschenBack.Outcome,1})
     sb = sb * TableStrings.center(16, TableStrings.inUnits("energy"); na=4)
     sa = sa * TableStrings.center(66, "Dominant zero-field (HfLevel, F^P, M) components [weight]"; na=4)
     println(stream, sa);    println(stream, sb);    println(stream, "  ", TableStrings.hLine(nx))
-    #
+
     for  (k,outcome) in enumerate(outcomes)
         sa  = "  "
         sa = sa * TableStrings.center(8, string(k); na=2)
@@ -445,7 +445,7 @@ function  displayResults(stream::IO, outcomes::Array{HfsPaschenBack.Outcome,1})
         println(stream, sa )
     end
     println(stream, "  ", TableStrings.hLine(nx))
-    #
+
     return( nothing )
 end
 

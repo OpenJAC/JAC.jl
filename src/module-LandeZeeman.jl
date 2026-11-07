@@ -211,7 +211,7 @@ function  amplitude(::ZeemanN1, rLevel::Level, sLevel::Level, grid::Radial.Grid)
     nr = length(rLevel.basis.csfs);    ns = length(sLevel.basis.csfs);    matrix = zeros(ComplexF64, nr, ns)
     printstyled("Compute Zeeman N^(1) matrix of dimension $nr x $ns ... ", color=:light_green)
     if  rLevel.parity != sLevel.parity   return( ComplexF64(0.) )   end
-    #
+
     for  r = 1:nr
         for  s = 1:ns
             me = 0.
@@ -243,7 +243,7 @@ function  amplitude(::ZeemanDeltaN1, rLevel::Level, sLevel::Level, grid::Radial.
     nr = length(rLevel.basis.csfs);    ns = length(sLevel.basis.csfs);    matrix = zeros(ComplexF64, nr, ns)
     printstyled("Compute Zeeman ΔN^(1) matrix of dimension $nr x $ns ... ", color=:light_green)
     if  rLevel.parity != sLevel.parity   return( ComplexF64(0.) )   end
-    #
+
     for  r = 1:nr
         for  s = 1:ns
             me = 0.
@@ -275,15 +275,15 @@ end
 function  computeAmplitudesProperties(outcome::LandeZeeman.Outcome, grid::Radial.Grid, settings::LandeZeeman.Settings)
     LandeJ = 0.0;   amplitudeN1 = ComplexF64(0.);   amplitudeDeltaN1 = ComplexF64(0.)
     J = AngularMomentum.oneJ(outcome.Jlevel.J) 
-    #
+
     if       J == 0.                        LandeJ = 0.
     elseif   settings.calcLandeJ
         amplitudeN1 = LandeZeeman.amplitude(ZeemanN1(), outcome.Jlevel, outcome.Jlevel, grid)
-        #
+
         if  settings.includeSchwinger
             amplitudeDeltaN1 = LandeZeeman.amplitude(ZeemanDeltaN1(), outcome.Jlevel, outcome.Jlevel, grid)
         end
-        #       
+
         LandeJ = 2*(amplitudeN1 + amplitudeDeltaN1) / sqrt(J*(J+1))    
     end
     
@@ -490,7 +490,7 @@ function computeOutcomes(multiplet::Multiplet, nm::Nuclear.Model, grid::Radial.G
     LandeZeeman.displayResults(stdout, newOutcomes, nm, settings)
     printSummary, iostream = Defaults.getDefaults("summary flag/stream")
     if  printSummary    LandeZeeman.displayResults(iostream, newOutcomes, nm, settings)   end
-    #
+
     if    output    return( newOutcomes )
     else            return( nothing )
     end
@@ -540,7 +540,7 @@ function  displayOutcomes(outcomes::Array{LandeZeeman.Outcome,1})
     sa = sa * TableStrings.center(14, "Energy"; na=4);              
     sb = sb * TableStrings.center(14, TableStrings.inUnits("energy"); na=4)
     println(sa);    println(sb);    println("  ", TableStrings.hLine(nx)) 
-    #  
+
     for  outcome in outcomes
         sa  = "  ";    sym = LevelSymmetry( outcome.Jlevel.J, outcome.Jlevel.parity)
         sa = sa * TableStrings.center(10, TableStrings.level(outcome.Jlevel.index); na=2)
@@ -549,7 +549,7 @@ function  displayOutcomes(outcomes::Array{LandeZeeman.Outcome,1})
         println( sa )
     end
     println("  ", TableStrings.hLine(nx))
-    #
+
     return( nothing )
 end
 
@@ -596,7 +596,7 @@ end
         returned otherwise.
 """
 function  displayResults(stream::IO, outcomes::Array{LandeZeeman.Outcome,1}, nm::Nuclear.Model, settings::LandeZeeman.Settings)
-    #
+
     if  settings.calcLandeJ
         nx = 135
         println(stream, " ")
@@ -612,7 +612,7 @@ function  displayResults(stream::IO, outcomes::Array{LandeZeeman.Outcome,1}, nm:
         sa = sa * TableStrings.center(62, "N1   -- Zeeman Amplitudes --   Delta N1"    ; na=4) 
         sb = sb * TableStrings.center(62, "   Re              Im                 Re              Im"; na=5)
         println(stream, sa);    println(stream, sb);    println(stream, "  ", TableStrings.hLine(nx)) 
-        #  
+
         for  outcome in outcomes
             sa  = "  ";    sym = LevelSymmetry( outcome.Jlevel.J, outcome.Jlevel.parity)
             sa = sa * TableStrings.center(10, TableStrings.level(outcome.Jlevel.index); na=2)
@@ -628,7 +628,7 @@ function  displayResults(stream::IO, outcomes::Array{LandeZeeman.Outcome,1}, nm:
         end
         println(stream, "  ", TableStrings.hLine(nx))
     end
-    #
+
     if  settings.calcLandeF
         nx = 80
         println(stream, " ")
@@ -643,7 +643,7 @@ function  displayResults(stream::IO, outcomes::Array{LandeZeeman.Outcome,1}, nm:
         sa = sa * TableStrings.center(10, "F^P";   na=4);                             sb = sb * TableStrings.hBlank(14)
         sa = sa * TableStrings.center(12, "Lande-F"; na=8);                           sb = sb * TableStrings.hBlank(20)          
         println(stream, sa);    println(stream, sb);    println(stream, "  ", TableStrings.hLine(nx)) 
-        #
+
         for  outcome in outcomes
             sa  = "  ";    sym = LevelSymmetry( outcome.Jlevel.J, outcome.Jlevel.parity)
             sa = sa * TableStrings.center(10, TableStrings.level(outcome.Jlevel.index); na=2)
@@ -651,7 +651,7 @@ function  displayResults(stream::IO, outcomes::Array{LandeZeeman.Outcome,1}, nm:
             energy = 1.0
             sa = sa * @sprintf("%.8e", Defaults.convertUnits("energy: from atomic", energy))                    * "    "
             println(stream, sa )
-            #
+
             sc = TableStrings.hBlank( length(sa) + 1 )
             Flist = oplus(nm.spinI, outcome.Jlevel.J)
             for  F in Flist
@@ -666,8 +666,8 @@ function  displayResults(stream::IO, outcomes::Array{LandeZeeman.Outcome,1}, nm:
         end
         println(stream, "  ", TableStrings.hLine(nx))
     end
-    #
-    #
+
+
     if  settings.calcZeeman
         nx = 100
         println(stream, " ")
@@ -677,8 +677,8 @@ function  displayResults(stream::IO, outcomes::Array{LandeZeeman.Outcome,1}, nm:
         println(stream, "  Here, we should display the Zeeman splittings of (hyper-) fine-structure levels. ")
         println(stream, "  ", TableStrings.hLine(nx))
     end
-    #
-    #
+
+
     if  settings.calcQZScoeff
         nx = 78
         println(stream, " ")
@@ -729,7 +729,7 @@ function  displayResults(stream::IO, outcomes::Array{LandeZeeman.Outcome,1}, nm:
             println(stream, "  ", TableStrings.hLine(nx))
         end
     end
-    #
+
     return( nothing )
 end
 

@@ -2,7 +2,7 @@
 # How the target is represented to the projectile. This is the axis along which ELSEPA is organised, and it is kept
 # separate from the projectile and the beam: a further model is one new subtype of AbstractInteractionModel plus one
 # new method of ParticleScattering.scatteringPotential below.
-#
+
 # The potentials are taken from JAC's own machinery rather than from tabulated Dirac-Fock densities, which is what
 # makes the input "typically for JAC": Basics.CHField() is the static field of the target density without exchange,
 # and Basics.DFSField(1.0) is that field plus the local Slater exchange term.

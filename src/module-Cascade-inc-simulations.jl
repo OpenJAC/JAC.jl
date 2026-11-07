@@ -211,7 +211,7 @@ function displayFinalLevelDistribution(stream::IO, sc::String, levels::Array{Cas
         sa = "            " * string(n);        sa  = sa[end-10:end]
         for  en in enIndices
             saa = "            " * string(en);  saa = saa[end-12:end]
-            if  n == levels[en].NoElectrons  ##    &&  levels[en].relativeOcc > 0
+            if  n == levels[en].NoElectrons  #    &&  levels[en].relativeOcc > 0
                 sx = "    " * string( LevelSymmetry(levels[en].J, levels[en].parity) )                       * "           "
                 sb = sa * saa * sx[1:15]
                 sb = sb * @sprintf("%.6e", Defaults.convertUnits("energy: from atomic", levels[en].energy))  * "      "
@@ -294,7 +294,7 @@ function displayLevelTree(stream::IO, levels::Array{Cascade.Level,1}; extended::
                     sc = TableStrings.hBlank( length(sb) ) * wa[i];    println(stream,  sc )
                 end
                 else    println(stream,  sb )
-                end  ## extended
+                end  # extended
                 sa = "      "
             end
         end
@@ -2182,13 +2182,13 @@ function simulateExpansionOpacities(photoexcitationData::Array{Cascade.Data,1}, 
     dependence = property.opacityDependence;                   
     exptime_au = exptime / convertUnits("time: from atomic to sec", 1.0)
     T          = property.temperature;                                
-    rho        = property.massDensity          ## [g/cm^3], enters the 1/(rho c t) prefactor
+    rho        = property.massDensity          # [g/cm^3], enters the 1/(rho c t) prefactor
     eshift     = property.transitionEnergyShift
     # The ion number density enters the Sobolev optical depth and must be in ATOMIC units there (1/a_0^3).
     # It used to be hard-wired as `ne = 1.0` with a "??" comment, so the input density never reached tau and
     # the absolute scale of every opacity was arbitrary.
     a0_in_cm   = convertUnits("length: from atomic to fm", 1.0) * 1.0e-13
-    nion_au    = property.ionNumberDensity * a0_in_cm^3          ## [1/cm^3] -> [1/a_0^3]
+    nion_au    = property.ionNumberDensity * a0_in_cm^3          # [1/cm^3] -> [1/a_0^3]
     NoValues   = length(values);                                      
     kappas     = Basics.EmProperty[];    for  i = 1:NoValues     push!(kappas, Basics.EmProperty(0.))   end
     # Determine c in cm/s
@@ -2732,8 +2732,8 @@ function spectralOpacityContribution(contribution::Cascade.BoundFreeOpacity, pho
                                      property::Cascade.MeanOpacities, nion::Float64, rho::Float64, T::Float64,
                                      ulist::Array{Float64,1})
     kT       = Defaults.convertUnits("temperature: from Kelvin to (Hartree) units", T)
-    omegas   = [ u * kT   for u in ulist ]                                          ## [Hartree]
-    a0_in_cm = Defaults.convertUnits("length: from atomic to fm", 1.0) * 1.0e-13     ## [cm]
+    omegas   = [ u * kT   for u in ulist ]                                          # [Hartree]
+    a0_in_cm = Defaults.convertUnits("length: from atomic to fm", 1.0) * 1.0e-13     # [cm]
     kappas   = Basics.EmProperty[ Basics.EmProperty(0.)  for i = 1:length(ulist) ]
     zOld = Defaults.getDefaults("nuclear: charge")
     Defaults.setDefaults("nuclear: charge", contribution.nuclearCharge)
@@ -2741,7 +2741,7 @@ function spectralOpacityContribution(contribution::Cascade.BoundFreeOpacity, pho
         for  (iConf, fConf)  in  contribution.ionizationPairs
             css = Empirical.photoionizationCrossSection(omegas, iConf, fConf, Empirical.ScaledHydrogenic())
             for  i = 1:length(ulist)
-                wa = nion * css[i] * a0_in_cm^2 / rho                                ## [cm^2/g]
+                wa = nion * css[i] * a0_in_cm^2 / rho                                # [cm^2/g]
                 kappas[i] = kappas[i] + Basics.EmProperty(wa, wa)
             end
         end
@@ -2763,8 +2763,8 @@ end
 function spectralOpacityContribution(contribution::Cascade.ScatteringOpacity, photoexcitationData::Array{Cascade.Data,1},
                                      property::Cascade.MeanOpacities, nion::Float64, rho::Float64, T::Float64,
                                      ulist::Array{Float64,1})
-    sigmaThomson = 6.6524587321e-25                              ## [cm^2]
-    kappaSc      = contribution.electronNumberDensity * sigmaThomson / rho       ## [cm^2/g]
+    sigmaThomson = 6.6524587321e-25                              # [cm^2]
+    kappaSc      = contribution.electronNumberDensity * sigmaThomson / rho       # [cm^2/g]
     return( Basics.EmProperty[ Basics.EmProperty(kappaSc, kappaSc)  for i = 1:length(ulist) ] )
 end
 

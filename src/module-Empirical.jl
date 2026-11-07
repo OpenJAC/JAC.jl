@@ -404,7 +404,7 @@ function Basics.perform(computation::Empirical.Computation; output::Bool=false)
         # from this basis, B = -orbital.energy, and the cross section scales as 1/B^2 -- so the field chosen
         # here sets the absolute scale of every cross section the module returns, and it must be a field whose
         # eigenvalues ARE binding energies in the Koopmans sense.
-        #
+
         # MEASURED (work/diag-eii-bindingenergy.jl), eigenvalue against the experimental binding energy:
         #                     He 1s              Ne 2p
         #     DFSField      14.07 eV (0.57x)   12.01 eV (0.56x)      <- the old default
@@ -416,7 +416,7 @@ function Basics.perform(computation::Empirical.Computation; output::Bool=false)
         # the 1/B^2 dependence that inflated every EII cross section by roughly a factor 3. For He I the peak
         # sat at 9.7e-17 cm^2 against a measured ~3.5e-17 cm^2, and the ionization threshold at 14 eV instead
         # of 24.6 eV.
-        #
+
         # This is the same systematic underbinding of DFS orbitals found in the DF/AL work; the conclusion drawn
         # there -- use the AL-Field wherever INDIVIDUAL orbital energies matter -- applies to BEB exactly.
         eiiSettings = AsfSettings(asfSettings; scField = Basics.ALField())

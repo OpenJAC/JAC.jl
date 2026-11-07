@@ -282,7 +282,7 @@ end
 
 #################################################################################################################################
 #################################################################################################################################
-## Angular (B_if) and radial (R_if) machinery, Rysavy & Dragoun, arXiv:nucl-ex/0006009, Eqs. (1)-(6).
+# Angular (B_if) and radial (R_if) machinery, Rysavy & Dragoun, arXiv:nucl-ex/0006009, Eqs. (1)-(6).
 
 
 """
@@ -326,7 +326,7 @@ function reducedBif(mp::EmMultipole, kappaInitial::Int64, kappaFinal::Int64)
     lf, jf = kappaToLJ(kappaFinal)
     lUse   = mp.electric ? lf : (Basics.twice(jf) - lf)
     if  rem(li + lUse + mp.L, 2) != 0   return 0.0   end
-    #
+
     CG    = AngularMomentum.ClebschGordan(AngularJ64(li), AngularM64(0), AngularJ64(lUse), AngularM64(0), AngularJ64(mp.L), AngularM64(0))
     W     = racahW(AngularJ64(li), ji, AngularJ64(lUse), jf, AngularJ64(1//2), AngularJ64(mp.L))
     phase = (-1.0)^Int64( Basics.twice(jf)/2 + 1//2 + mp.L )
@@ -471,8 +471,8 @@ end
 
 #################################################################################################################################
 #################################################################################################################################
-## Many-electron amplitude and standard process pipeline (mirrors AutoIonization.jl's shape,
-## PhotoEmission.jl's one-particle spin-angular machinery).
+# Many-electron amplitude and standard process pipeline (mirrors AutoIonization.jl's shape,
+# PhotoEmission.jl's one-particle spin-angular machinery).
 
 
 """
@@ -508,7 +508,7 @@ function amplitude(mp::EmMultipole, gammaEnergy::Float64, finalLevel::Level, ini
                 bindingEnergy = -orbInitial.energy
                 electronEnergy = gammaEnergy - bindingEnergy
                 if  electronEnergy <= 0.   continue    end
-                k    = gammaEnergy / Defaults.getDefaults("speed of light: c")   ## the PHOTON wavenumber, not the electron's
+                k    = gammaEnergy / Defaults.getDefaults("speed of light: c")   # the PHOTON wavenumber, not the electron's
                 Bif  = reducedBif(mp, orbInitial.subshell.kappa, orbFinal.subshell.kappa)
                 if  Bif == 0.   continue    end
                 Rif  = reducedRif(mp, orbInitial.subshell.kappa, orbFinal.subshell.kappa, k, orbInitial, orbFinal, grid)
@@ -594,7 +594,7 @@ function computeAmplitudesProperties(line::InternalConversion.Line, nm::Nuclear.
     alfa        = Defaults.getDefaults("alpha")
     subshellList = Basics.generate(OrderedSubshellList(), line.finalLevel.basis, line.initialLevel.basis)
     Defaults.setDefaults("relativistic subshell list", subshellList; printout=false)
-    #
+
     for  channel in line.channels
         newiLevel = Basics.generateLevelWithSymmetryReducedBasis(line.initialLevel, subshellList)
         newfLevel = Basics.generateLevelWithSymmetryReducedBasis(line.finalLevel,   subshellList)

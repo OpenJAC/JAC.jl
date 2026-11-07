@@ -2,12 +2,12 @@
 # How the projectile is prepared. The partial waves are computed once and are independent of the beam; the beam enters
 # only in how they are superposed into an observable, which is why this is a dispatch layer over the same data rather
 # than a second calculation.
-#
+
 # The twisted beams are NOT implemented today, deliberately. The expressions this module carried for them were
 # nonrelativistic -- one phase shift per l, sin(delta_l) exp(i delta_l) -- and have to be re-derived over both signs of
 # kappa before they can be used with the Dirac partial waves. Until then they raise, rather than returning a number from
 # a different theory than the one the rest of the module now uses.
-#
+
 # WHERE THE RE-DERIVATION BELONGS, so it is not started here by mistake (noted 11-Oct-2026, out of
 # the twisted-electron DR study). A twisted beam's own decomposition into plane waves -- its transverse-momentum
 # amplitude, and how displacing the target by an impact parameter translates that decomposition -- is GENERIC: every

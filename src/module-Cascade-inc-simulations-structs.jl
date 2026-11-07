@@ -1312,12 +1312,12 @@ function  Base.:(==)(leva::Cascade.Level, levb::Cascade.Level)
     end
 end
 
-## Cascade.IonizingResonance is defined HERE, and not beside the simulation properties above, for a reason that only
-## shows itself at load time: its `level` field is a Cascade.Level, and Cascade also does `using ManyElectron`, which
-## exports a Level of its own.  Naming Cascade.Level ANYWHERE ABOVE the definition below resolves the name `Level`
-## inside Cascade to the imported one, and the definition then fails with "cannot assign a value to imported variable
-## ManyElectron.Level".  The package does not load at all -- loudly, and on every use.  A forward reference to a type
-## defined later in the same module is what to look for if that message ever returns.
+# Cascade.IonizingResonance is defined HERE, and not beside the simulation properties above, for a reason that only
+# shows itself at load time: its `level` field is a Cascade.Level, and Cascade also does `using ManyElectron`, which
+# exports a Level of its own.  Naming Cascade.Level ANYWHERE ABOVE the definition below resolves the name `Level`
+# inside Cascade to the imported one, and the definition then fails with "cannot assign a value to imported variable
+# ManyElectron.Level".  The package does not load at all -- loudly, and on every use.  A forward reference to a type
+# defined later in the same module is what to look for if that message ever returns.
 
 """
 `struct  Cascade.IonizingResonance`

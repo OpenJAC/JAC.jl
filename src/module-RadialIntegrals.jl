@@ -44,6 +44,7 @@ function GrantIab(a::Radial.Orbital, b::Radial.Orbital, grid::Radial.Grid, poten
     return( wa )
 end
 
+
 """
 `RadialIntegrals.GrantIabDamped(tau::Float64, a::Radial.Orbital, b::Radial.Orbital, grid::Radial.Grid, potential::Radial.Potential)`  
     ... computes the (radial) single-electron energy integral:
@@ -68,6 +69,7 @@ function GrantIabDamped(tau::Float64, a::Radial.Orbital, b::Radial.Orbital, grid
     return( wa )
 end
 
+
 """
 `RadialIntegrals.GrantILminus(L::Int64, q::Float64, a::Radial.Orbital, b::Radial.Orbital, grid::Radial.Grid)`  
     ... computes Grant's (radial) integral for two relativistic orbitals:  
@@ -80,6 +82,7 @@ function GrantILminus(L::Int64, q::Float64, a::Radial.Orbital, b::Radial.Orbital
     for  i = 2:mtp   wa = wa + (a.P[i] * b.Q[i] - a.Q[i] * b.P[i]) * GSL.sf_bessel_jl(L, q * grid.r[i]) * grid.wr[i]   end
     return( wa )
 end
+
 
 """
 `RadialIntegrals.GrantILplus(L::Int64, q::Float64, a::Radial.Orbital, b::Radial.Orbital, grid::Radial.Grid)`  
@@ -94,6 +97,7 @@ function GrantILplus(L::Int64, q::Float64, a::Radial.Orbital, b::Radial.Orbital,
     return( wa )
 end
 
+
 """
 `RadialIntegrals.GrantIL0(L::Int64, q::Float64, a::Radial.Orbital, b::Radial.Orbital, grid::Radial.Grid)`  
     ... computes Grant's (radial) integral for two relativistic orbitals:  
@@ -106,6 +110,7 @@ function GrantIL0(L::Int64, q::Float64, a::Radial.Orbital, b::Radial.Orbital, gr
     for  i = 2:mtp   wa = wa + (a.P[i] * b.Q[i]) * GSL.sf_bessel_jl(L, q * grid.r[i]) * grid.wr[i]   end
     return( wa )
 end
+
 
 """
 `RadialIntegrals.GrantJL(L::Int64, q::Float64, a::Radial.Orbital, b::Radial.Orbital, grid::Radial.Grid)`  
@@ -135,6 +140,7 @@ function isotope_boson(a::Orbital, b::Orbital, potential::Array{Float64,1}, grid
     return( wa )
 end
 
+
 """
 `RadialIntegrals.isotope_field(a::Orbital, b::Orbital, deltaPotential::Array{Float64,1}, grid::Radial.Grid)`  
     ... computes the field-shift radial integral int_o^infty ... A value::Float64 is returned.
@@ -148,6 +154,7 @@ function isotope_field(a::Orbital, b::Orbital, deltaPotential::Array{Float64,1},
     end
     return( wa )
 end
+
 
 """
 `RadialIntegrals.isotope_nms(a::Orbital, b::Orbital, Z::Float64, grid::Radial.Grid)`  
@@ -168,6 +175,7 @@ function isotope_nms(a::Orbital, b::Orbital, Z::Float64, grid::Radial.Grid)
     return( wa / 2. )
 end
 
+
 """
 `RadialIntegrals.isotope_smsB(a::Orbital, c::Orbital, Z::Float64, grid::Radial.Grid)`  
     ... computes the specific mass shift radial integral int_o^infty ... A value::Float64 is returned.
@@ -186,6 +194,7 @@ function isotope_smsB(a::Orbital, c::Orbital, Z::Float64, grid::Radial.Grid)
     return( wa )
 end
 
+
 """
 `RadialIntegrals.isotope_smsC(a::Orbital, c::Orbital, Z::Float64, grid::Radial.Grid)`  
     ... computes the specific mass shift radial integral int_o^infty ... A value::Float64 is returned.
@@ -199,6 +208,7 @@ function isotope_smsC(a::Orbital, c::Orbital, Z::Float64, grid::Radial.Grid)
     end
     return( wa )
 end
+
 
 """
 `RadialIntegrals.overlap(orbital1::Radial.Orbital, orbital2::Radial.Orbital, grid::Radial.Grid)`
@@ -217,6 +227,7 @@ function overlap(orbital1::Radial.Orbital, orbital2::Radial.Orbital, grid::Radia
     end
     return( wa )
 end
+
 
 """
 + (p1List::Array{Float64,1}, p2List::Array{Float64,1}, grid::Radial.Grid)`  
@@ -247,6 +258,7 @@ function qedDampedOverlap(lambda::Float64, a::Radial.Orbital, b::Radial.Orbital,
     return( wa )
 end
 
+
 """
 `RadialIntegrals.qedLowFrequency(a::Radial.Orbital, b::Radial.Orbital, nm::Nuclear.Model, grid::Radial.Grid, qgrid::Radial.GridGL)` 
     ... computes the (radial) integral for the low-frequency QED potential for the radial orbitals a, b on the given grid. 
@@ -262,6 +274,7 @@ function qedLowFrequency(a::Radial.Orbital, b::Radial.Orbital, nm::Nuclear.Model
     println("QED single-electron strength <$(a.subshell)| h^(SE, low-frequency) | $(b.subshell)> = $wa ")
     return( wa )
 end
+
 
 """
 `RadialIntegrals.qedUehling(a::Radial.Orbital, b::Radial.Orbital, nm::Nuclear.Model,
@@ -296,6 +309,7 @@ function qedUehling(a::Radial.Orbital, b::Radial.Orbital, nm::Nuclear.Model, gri
     println("QED single-electron strength <$(a.subshell)| h^(Uehling) | $(b.subshell)> = $wa ")
     return( wa )
 end
+
 
 """
 `RadialIntegrals.qedUehlingSimple(a::Radial.Orbital, b::Radial.Orbital, pot::Radial.Potential,
@@ -461,6 +475,7 @@ function rkDiagonal(k::Int64, a::Radial.Orbital, b::Radial.Orbital, grid::Radial
     return( wa )
 end
 
+
 """
 + (k::Int64, p1List::Array{Float64,1}, p2List::Array{Float64,1}, grid::Radial.Grid)`
     ... computes this integral for two non-relativistic orbitals:   < r^k >_ab = int_0^\\infty  dr  [P_a P_b]  r^k
@@ -472,6 +487,7 @@ function rkDiagonal(k::Int64, p1List::Array{Float64,1}, p2List::Array{Float64,1}
     for  i = 2:mtp   wa = wa + p1List[i] * p2List[i] * (grid.r[i]^k) * grid.wr[i]   end
     return( wa )
 end
+
 
 """
 `RadialIntegrals.rkNonDiagonal(k::Int64, a::Radial.Orbital, b::Radial.Orbital, grid::Radial.Grid)` 
@@ -497,6 +513,7 @@ function rkNonDiagonal(k::Int64, a::Radial.Orbital, b::Radial.Orbital, grid::Rad
     for  i = m0:mtp   wa = wa + (a.P[i] * b.Q[i] + a.Q[i] * b.P[i]) * (grid.r[i]^k) * grid.wr[i]   end
     return( wa )
 end
+
 
 """
 `RadialIntegrals.SlaterRkComponent(k::Int64, Ba::Array{Float64,1}, Bb::Array{Float64,1}, 
@@ -527,6 +544,7 @@ function SlaterRkComponent(k::Int64, Ba::Array{Float64,1}, Bb::Array{Float64,1},
     return( wa )
 end
 
+
 """
 `RadialIntegrals.SlaterRk(k::Int64, a::Radial.Orbital, b::Radial.Orbital, c::Radial.Orbital, d::Orbital, grid::Radial.Grid)`  
     ... computes the (relativistic) Slater integral
@@ -541,14 +559,14 @@ function SlaterRk(k::Int64, a::Radial.Orbital, b::Radial.Orbital, c::Radial.Orbi
     wac = zeros(mtp_ac);   wbd = zeros(mtp_bd)
     for  r = 2:mtp_ac   wac[r] = (a.P[r] * c.P[r] + a.Q[r] * c.Q[r]) * grid.wr[r]  end
     for  s = 2:mtp_bd   wbd[s] = (b.P[s] * d.P[s] + b.Q[s] * d.Q[s]) * grid.wr[s]  end
-    ## The two powers r^k and r^(k+1) depend only on the grid point, not on the pair (r,s), yet the
-    ## closure ul() above recomputed both inside the N^2 loop -- N ~ 1000, so ~10^6 calls to ^ per
-    ## Slater integral where 2N suffice.  Hoisting them costs O(N) and leaves the arithmetic of each
-    ## term untouched: the same two numbers are formed and the same division is taken, so the result is
-    ## BITWISE identical and no approved reference can move.  Measured 4.7x / 6.5x / 9.4x on three real
-    ## cases; SlaterRk and its ul() closure were ~16 % of an Auger rate computation.
-    ## ul() itself was kept at the time because the MeshGrasp branch above still called it; that branch is
-    ## gone (12-Aug-2026) and the closure with it, since nothing in this function called it any more.
+    # The two powers r^k and r^(k+1) depend only on the grid point, not on the pair (r,s), yet the
+    # closure ul() above recomputed both inside the N^2 loop -- N ~ 1000, so ~10^6 calls to ^ per
+    # Slater integral where 2N suffice.  Hoisting them costs O(N) and leaves the arithmetic of each
+    # term untouched: the same two numbers are formed and the same division is taken, so the result is
+    # BITWISE identical and no approved reference can move.  Measured 4.7x / 6.5x / 9.4x on three real
+    # cases; SlaterRk and its ul() closure were ~16 % of an Auger rate computation.
+    # ul() itself was kept at the time because the MeshGrasp branch above still called it; that branch is
+    # gone (12-Aug-2026) and the closure with it, since nothing in this function called it any more.
     mtp = max(mtp_ac, mtp_bd)
     rPk = zeros(mtp);   rPk1 = zeros(mtp)
     for  i = 2:mtp      rPk[i] = grid.r[i]^k;    rPk1[i] = grid.r[i]^(k+1)    end
@@ -563,11 +581,11 @@ function SlaterRk(k::Int64, a::Radial.Orbital, b::Radial.Orbital, c::Radial.Orbi
 end
 
 
-## Fixed Gauss-Legendre nodes for the per-cell quadratures of the screened-potential sweeps.  Built once.
-## 8 points integrate a polynomial of degree 15 exactly, which comfortably covers a cubic spline times
-## s^k over ONE grid cell -- the sweeps never integrate across a cell boundary, so there is nothing for
-## adaptivity to discover and QuadGK's 15-point Gauss-Kronrod rule (plus its subdivision logic and its
-## error estimate) is simply paid for nothing.
+# Fixed Gauss-Legendre nodes for the per-cell quadratures of the screened-potential sweeps.  Built once.
+# 8 points integrate a polynomial of degree 15 exactly, which comfortably covers a cubic spline times
+# s^k over ONE grid cell -- the sweeps never integrate across a cell boundary, so there is nothing for
+# adaptivity to discover and QuadGK's 15-point Gauss-Kronrod rule (plus its subdivision logic and its
+# error estimate) is simply paid for nothing.
 const GBL_GaussLegendreCell = FastGaussQuadrature.gausslegendre(8)
 
 
@@ -772,18 +790,18 @@ end
 """
 function SlaterRkKinkAware(k::Int64, a::Radial.Orbital, b::Radial.Orbital, c::Radial.Orbital, d::Radial.Orbital,
                              grid::Radial.Grid; rtol::Float64=1.0e-9)
-    ## mtpOut MUST be passed (fixed 13-Aug-2026).  Without it buildScreenedPotential tabulates V_k only
-    ## out to the (b,d) SOURCE's own extent, and the outer integral over r was then cut at
-    ## min(mtp_ac, length(Vk)) -- dropping the whole r > r_max(bd) tail, where V_k(r) is not zero but falls off
-    ## as the multipole const/r^(k+1).  That is the exact trap the docstring of buildScreenedPotential
-    ## warns about, and this was its one caller that walked into it.
+    # mtpOut MUST be passed (fixed 13-Aug-2026).  Without it buildScreenedPotential tabulates V_k only
+    # out to the (b,d) SOURCE's own extent, and the outer integral over r was then cut at
+    # min(mtp_ac, length(Vk)) -- dropping the whole r > r_max(bd) tail, where V_k(r) is not zero but falls off
+    # as the multipole const/r^(k+1).  That is the exact trap the docstring of buildScreenedPotential
+    # warns about, and this was its one caller that walked into it.
     ##
-    ## IT WAS INVISIBLE FOR AS LONG AS THIS FUNCTION SERVED ONLY THE SCF, where (a,c) and (b,d) are both bound
-    ## and of comparable extent, so the truncation removed almost nothing.  It surfaced the moment the
-    ## function was put on the Auger path, where (a,c) may contain a CONTINUUM orbital reaching the box
-    ## boundary while (b,d) are bound and short: the approved AutoIonization reference then moved by 100% and
-    ## the stepwise-decay cascade by 150%, which is what a dropped tail looks like -- not what a 2e-4
-    ## quadrature refinement looks like.
+    # IT WAS INVISIBLE FOR AS LONG AS THIS FUNCTION SERVED ONLY THE SCF, where (a,c) and (b,d) are both bound
+    # and of comparable extent, so the truncation removed almost nothing.  It surfaced the moment the
+    # function was put on the Auger path, where (a,c) may contain a CONTINUUM orbital reaching the box
+    # boundary while (b,d) are bound and short: the approved AutoIonization reference then moved by 100% and
+    # the stepwise-decay cascade by 150%, which is what a dropped tail looks like -- not what a 2e-4
+    # quadrature refinement looks like.
     mtp_ac = min(size(a.P, 1), size(c.P, 1))
     Vk     = buildScreenedPotential(k, b, d, grid; rtol=rtol, mtpOut=mtp_ac)
 
@@ -1079,9 +1097,10 @@ function SlaterRkReference(k::Int64, a::Radial.Orbital, b::Radial.Orbital, c::Ra
         for  s = 2:mtp_bd   wa = wa + (a.P[r] * c.P[r] + a.Q[r] * c.Q[r]) * ul(grid.r[r], grid.r[s]) * 
                                         (b.P[s] * d.P[s] + b.Q[s] * d.Q[s]) * grid.wr[r] * grid.wr[s]   end
     end
-    ## println("Test: SlaterRk(); wa = $wa")
+    # println("Test: SlaterRk(); wa = $wa")
     return( wa )
 end
+
 
 """
 `RadialIntegrals.SlaterRkDamped(tau::Float64, k::Int64, a::Radial.Orbital, b::Radial.Orbital, c::Radial.Orbital, d::Orbital, grid::Radial.Grid)`  
@@ -1107,7 +1126,7 @@ function SlaterRkDamped(tau::Float64, k::Int64, a::Radial.Orbital, b::Radial.Orb
                                         (b.P[s] * d.P[s] + b.Q[s] * d.Q[s]) * grid.wr[r] * grid.wr[s]  *
                                         exp(- tau * grid.r[r] - tau * grid.r[s] )                         end
     end
-    ## println("Test: SlaterRk(); wa = $wa")
+    # println("Test: SlaterRk(); wa = $wa")
     return( wa )
 end
 
@@ -1155,6 +1174,7 @@ function SlaterRkDebyeHueckel(k::Int64, a::Radial.Orbital, b::Radial.Orbital, c:
     return( wa )
 end
 
+
 """
 `RadialIntegrals.Vinti(a::Radial.Orbital, b::Radial.Orbital, grid::Radial.Grid)` 
     ... computes the (radial) Vinti integral for the two radia integrals a and b:
@@ -1177,6 +1197,7 @@ function  Vinti(a::Radial.Orbital, b::Radial.Orbital, grid::Radial.Grid)
     return( wa )
 end
 
+
 """
 `RadialIntegrals.V0(wa::Array{Float64,1}, mtp::Int64, grid::Radial.Grid)` 
     ... computes the (radial) integral int_0^infty dr wa; a value::Float64 is returned.
@@ -1187,6 +1208,7 @@ function V0(wa::Array{Float64,1}, mtp::Int64, grid::Radial.Grid)
     for  i = 1:mtp   wb = wb + wa[i] * grid.wr[i]   end
     return( wb )
 end
+
 
 """
 `RadialIntegrals.W5_Integral(mu::Int64, nu::Int64, a::Radial.Orbital, b::Radial.Orbital,  
@@ -1215,6 +1237,7 @@ function W5_Integral(mu::Int64, nu::Int64, a::Radial.Orbital, b::Radial.Orbital,
     end
     return( wa )
 end
+
 
 """
 `RadialIntegrals.Yk_ab(k::Int64, r::Float64, rho_ab::Array{Float64,1}, mtp::Int64, grid::Radial.Grid)`  

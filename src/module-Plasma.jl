@@ -403,7 +403,7 @@ struct LineShiftScheme  <:  Plasma.AbstractPlasmaScheme
     initialConfigs     ::Array{Configuration,1}
     finalConfigs       ::Array{Configuration,1}
     settings           ::AbstractLineShiftSettings    
-    ## NoBoundElectrons   ::Int64
+    # NoBoundElectrons   ::Int64
 end 
 
 

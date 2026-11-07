@@ -194,12 +194,12 @@ function Basics.analyzeGrid(shells::Array{Shell,1}, nm::Nuclear.Model, grid::Rad
     subshells = Basics.generateSubshellList(shells::Array{Shell,1})
     ns = length(subshells);    sortedSubshells = sort(subshells);    isCalculated = falses(ns)
     sortedLines = String[];    for n = 1:ns   push!(sortedLines, "aa")   end
-    #
+
     # Calculate the hydrogenic orbitals for all requested shells and take over the results for this shell
     # as well as all other shells of the same symmetry
     wa = Bsplines.generatePrimitives(grid)
     wb = Bsplines.generateOrbitalsHydrogenic(wa, nm, subshells, printout=true) 
-    #
+
     # Print the table in a neat format
     nx = 67
     println("  ", TableStrings.hLine(nx))
@@ -209,7 +209,7 @@ function Basics.analyzeGrid(shells::Array{Shell,1}, nm::Nuclear.Model, grid::Rad
     sa = sa * TableStrings.center(17, "Dirac-E  [a.u.]";  na=2)
     sa = sa * TableStrings.center(17, "Delta-E / |E|";    na=2)
     println(sa)
-    #
+
     for subsh in subshells
         sa = "" *  TableStrings.flushright(10, string(subsh); na=6)
         en = Basics.computeDiracEnergy(subsh, nm.Z)
@@ -288,7 +288,7 @@ function Basics.determineEnergySharings(energy::Float64, NoEnergySharings::Int64
     sharings = Tuple{Float64,Float64,Float64}[]
     for  (ix, x) in enumerate(xx)
         xrel = (x+1.) / 2
-        ## the 1/2 is the Jacobian of the map [-1,1] -> [0, energy]; it was missing until 08-Aug-2026
+        # the 1/2 is the Jacobian of the map [-1,1] -> [0, energy]; it was missing until 08-Aug-2026
         push!(sharings, (xrel*energy, energy - xrel*energy, ww[ix]*energy/2) )
     end
     return( sharings )
@@ -575,7 +575,7 @@ end
 #    else   return( 0 )
 #    end
 #end
-#
+
 #function Basics.determinePolarizationVector(q::Int64, kind::Basics.LeftCircular; star::Bool=false)
 #    if  q == 1   return( -1. )   else   return( 0. )                end
 #end
@@ -598,7 +598,8 @@ function Basics.determinePolarizationVector(q::Int64, kind::Basics.LinearPolariz
         end
     end
 end
-#
+
+
 function Basics.determinePolarizationVector(q::Int64, kind::Basics.LeftCircular; star::Bool)
     if  star == false
         if  q == 1   return( -1. )   else   return( 0. )                end
@@ -606,7 +607,8 @@ function Basics.determinePolarizationVector(q::Int64, kind::Basics.LeftCircular;
         if  q == -1   return( 1. )   else   return( 0. )                end
     end
 end
-#
+
+
 function Basics.determinePolarizationVector(q::Int64, kind::Basics.RightCircular; star::Bool)
     if  star == false
         if  q == -1  return( 1. )   else   return( 0. )                end
@@ -614,7 +616,8 @@ function Basics.determinePolarizationVector(q::Int64, kind::Basics.RightCircular
         if  q == 1  return( -1. )   else   return( 0. )                end
     end
 end
-#
+
+
 function Basics.determinePolarizationVector(q::Int64, kind::Basics.LeftElliptical; star::Bool)
     epsilon = kind.ellipticity
     if  star == false
@@ -623,7 +626,8 @@ function Basics.determinePolarizationVector(q::Int64, kind::Basics.LeftElliptica
         if  q == -1   return( 1/sqrt(2*(1. + epsilon^2)) * (1. - epsilon) )   else   return( -1/sqrt(2*(1. + epsilon^2)) * (1. + epsilon) )               end
     end
 end
-#
+
+
 function Basics.determinePolarizationVector(q::Int64, kind::Basics.RightElliptical; star::Bool)
     epsilon = kind.ellipticity
     if  star == false
@@ -632,6 +636,7 @@ function Basics.determinePolarizationVector(q::Int64, kind::Basics.RightElliptic
         if  q == 1  return( -1/sqrt(2*(1. + epsilon^2)) * (1. - epsilon) )   else   return( 1/sqrt(2*(1. + epsilon^2)) * (1. + epsilon) )                end
     end
 end
+
 
 """
 `Basics.determinePolarizationLambda(kind::Basics.LeftCircular)`  
@@ -851,7 +856,7 @@ function  Basics.display(stream::IO, orbitals::Dict{Subshell, Orbital}, grid::Ra
         println(stream, "   Subshell   isBound   energy [a.u.]     energy " * TableStrings.inUnits("energy") * 
                         "   st-grid   r_max [a.u.]    <r> [a.u.]    <r^2> [a.u.]  ")
         println(stream, "  ", TableStrings.hLine(nx))
-        #
+
         for  sh  in Defaults.GBL_STANDARD_SUBSHELL_LIST
             if haskey(orbitals, sh)
                 v = orbitals[sh]
@@ -877,7 +882,7 @@ function  Basics.display(stream::IO, orbitals::Dict{Subshell, Orbital}, grid::Ra
         println(stream, "  ", TableStrings.hLine(nx))
         println(stream, "   Subshell   isBound   energy [a.u.]     energy " * TableStrings.inUnits("energy") * "   st-grid ")
         println(stream, "  ", TableStrings.hLine(nx))
-        #
+
         for  sh  in Defaults.GBL_STANDARD_SUBSHELL_LIST
             if haskey(orbitals, sh)
                 v = orbitals[sh]
@@ -936,7 +941,7 @@ function Basics.displayLevels(stream::IO, multiplets::Array{Multiplet,1}; N::Int
         if  n > N   break   end
         mc2  = level.mc .* level.mc;   index = findmax(mc2)[2]
         conf = Basics.extractConfiguration(Basics.FromBasis(), level.basis, level.basis.csfs[index])
-        #
+
         sa   = TableStrings.flushright(12, string(LevelSymmetry(level.J, level.parity)))  * 
                 TableStrings.flushright(12, string(conf.NoElectrons))                      * 
                 TableStrings.flushright(20, @sprintf("%.6e", Defaults.convertUnits("energy: from atomic", level.energy - energy0))) * "       " *
@@ -988,7 +993,7 @@ function Basics.displayMeanEnergies(stream::IO, multiplets::Array{Multiplet,1}; 
         conf = Basics.extractConfiguration(Basics.FromBasis(), level.basis, level.basis.csfs[index])
         push!(leadingConfigs, conf)
     end
-    #
+
     configs = Configuration[];   meanEnergies = Float64[];   minEnergies = Float64[];   maxEnergies = Float64[];   noLevels = Int64[]
     emin = emax = emean = 0.
     for  (na, aLevel)  in  enumerate(sortedLevels)
@@ -1006,7 +1011,7 @@ function Basics.displayMeanEnergies(stream::IO, multiplets::Array{Multiplet,1}; 
             push!(configs, selectedConf);  push!(noLevels, ne)
         end 
     end
-    #
+
     nx = 150
     println(stream, ">> All energies are shown in:  " * TableStrings.inUnits("energy") * "\n") 
     println(stream, "  ", TableStrings.hLine(nx))
@@ -1014,7 +1019,7 @@ function Basics.displayMeanEnergies(stream::IO, multiplets::Array{Multiplet,1}; 
     println(stream, "  ", TableStrings.hLine(nx))
     for  (n, nconf)  in  enumerate(configs)
         if  n > N   break   end
-        #
+
         sa = " " * 
         TableStrings.flushright( 8, string(nconf.NoElectrons)) * "   " *
         TableStrings.flushright( 2, string( Basics.extractFromConfiguration(Basics.GetParity(), nconf) ))                      * "   " *
@@ -1042,7 +1047,7 @@ function Basics.displayOrbitalOverlap(stream::IO, leftOrbitals::Dict{Subshell, O
     nx = 150
     println(stream, "\n  Orbital overlaps") 
     println(stream,   "  ================") 
-    #
+
     for kappa in kappas
         sa = "\n  "
         for  (kl,vl) in leftOrbitals
@@ -1057,7 +1062,7 @@ function Basics.displayOrbitalOverlap(stream::IO, leftOrbitals::Dict{Subshell, O
         end
         println(stream, sa)
     end
-    ## println(stream, "  ", TableStrings.hLine(nx))
+    # println(stream, "  ", TableStrings.hLine(nx))
     
     return( nothing )
 end
@@ -1143,7 +1148,7 @@ function Basics.expandOrbital(orbital::Orbital, boundOrbitals::Dict{Subshell, Or
                 newOrb = Orbital(orb.subshell, orb.isBound, orb.useStandardGrid, orb.energy, ovl * orb.P, ovl * orb.Q, 
                                     ovl * orb.Pprime, ovl * orb.Qprime, orb.grid)
                 push!(expansion, newOrb)
-                ## println(">>>> $subsh [$(newOrb.subshell)] with overlap $ovl appended to expansion of $(orbital.subshell).")   
+                # println(">>>> $subsh [$(newOrb.subshell)] with overlap $ovl appended to expansion of $(orbital.subshell).")   
             end
         end
     end
@@ -1273,9 +1278,9 @@ function Basics.extractOpenShellQNfromCsfR(csfR::CsfR, basis::Basis)
         end
         # Now collect the quantum numbers into tuples
         if  l == 0   &&   0 < occ < 2
-            ## wa = Base.merge( wa, Dict( shell => ( (s, csfR.occupation[s], csfR.seniorityNr[s], 
-            ##                                        Basics.twice(csfR.subshellJ[s]), Basics.twice(csfR.subshellX[s]) ), 
-            ##                                        (-9, 0, -9, 0, Basics.twice(csfR.subshellX[s]) ) ) ) )
+            # wa = Base.merge( wa, Dict( shell => ( (s, csfR.occupation[s], csfR.seniorityNr[s], 
+            #                                        Basics.twice(csfR.subshellJ[s]), Basics.twice(csfR.subshellX[s]) ), 
+            #                                        (-9, 0, -9, 0, Basics.twice(csfR.subshellX[s]) ) ) ) )
             wa = Base.merge( wa, Dict( shell => ( (-9, 0, -9, 0, 0 ),
                                                 (s, csfR.occupation[s], csfR.seniorityNr[s], 
                                                 Basics.twice(csfR.subshellJ[s]), Basics.twice(csfR.subshellX[s]) ) ) ) )
@@ -1452,7 +1457,7 @@ function Basics.extractShellList(confList::Array{Configuration,1})
     
     shellList = unique(shellList)
     shellList = sort(shellList)
-    ## println(">> Generated shell list:  $shellList ")
+    # println(">> Generated shell list:  $shellList ")
     
     return( shellList )
 end

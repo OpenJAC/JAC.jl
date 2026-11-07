@@ -174,7 +174,7 @@ end
 function amplitude(::Emission, Mp::EmMultipole, gauge::EmGauge, omega::Float64, finalLevel::Level, initialLevel::Level,
                     gMultiplet::Multiplet, kind::AbstractEeInteraction, grid::Radial.Grid,
                     nuclearPotential::Radial.Potential; display::Bool=false, printout::Bool=false)
-    #
+
     # Always ensure the same subshell list for all initial, intermediate and final levels. The gMultiplet must take
     # part in this merge: a physically-motivated Green-function space generally introduces orbitals that occur in
     # neither the initial nor the final configurations (e.g. the 2p of the near-degenerate 1s2p4s partner for the
@@ -189,7 +189,7 @@ function amplitude(::Emission, Mp::EmMultipole, gauge::EmGauge, omega::Float64, 
     ni = length(iLevel.basis.csfs);    symi = LevelSymmetry(iLevel.J, iLevel.parity);    eni = iLevel.energy
     nn = length(nMultiplet.levels[1].basis.csfs)
     efinal = eni - omega
-    #
+
     # Second-order perturbation theory requires the intermediate (Green-function) level n to be genuinely
     # DIFFERENT from the initial or final level itself; a formally coincident n -- which can occur if the
     # gMultiplet's reference configurations overlap with the initial- or final-state configurations -- would
@@ -199,14 +199,14 @@ function amplitude(::Emission, Mp::EmMultipole, gauge::EmGauge, omega::Float64, 
     if  printout   printstyled("Compute TEOP $(Mp) amplitude for the transition [$(iLevel.index)-$(fLevel.index)] ... ",
                                 color=:light_green)    end
     amplitude = ComplexF64(0.)
-    #
+
     for  r = 1:nf
         symr = LevelSymmetry(fLevel.basis.csfs[r].J, fLevel.basis.csfs[r].parity);      if  symr != symf    continue    end
         for  s = 1:ni
             syms = LevelSymmetry(iLevel.basis.csfs[s].J, iLevel.basis.csfs[s].parity);  if  syms != symi    continue    end
             for  nLevel in nMultiplet.levels
                 symn = LevelSymmetry(nLevel.J, nLevel.parity);    enn = nLevel.energy
-                #
+
                 #   Compute <alpha_f J_f || O^(Mp, kind) || alpha_n J_i> <alpha_n J_i || H - E || alpha_i J_i>
                 #   The intermediate Green-function level is, in general, multi-configurational; the two matrix
                 #   elements therefore run over two INDEPENDENT CSF indices t, tp of that same level.
@@ -224,7 +224,7 @@ function amplitude(::Emission, Mp::EmMultipole, gauge::EmGauge, omega::Float64, 
                         end
                     end
                 end
-                #
+
                 #   Compute <alpha_f J_f || H - E || alpha_n J_f> <alpha_n J_f || O^(Mp, kind) || alpha_i J_i>
                 if  symn == symf  &&  abs(enn - efinal) > selfTolerance
                     for  t = 1:nn
@@ -345,19 +345,19 @@ function  computeAmplitudesProperties(line::TwoElectronOnePhoton.Line, nm::Nucle
     nucPot = isnothing(nuclearPot) ? Nuclear.nuclearPotential(nm, grid) : nuclearPot
     newChannels = TwoElectronOnePhoton.Channel[];    rateC = 0.;    rateB = 0.
     for channel in line.channels
-        #
+
         amplitude = TwoElectronOnePhoton.amplitude(Emission(), channel.multipole, channel.gauge, line.omega,
                                                     line.finalLevel, line.initialLevel, settings.gMultiplet,
                                                     settings.eeInteraction, grid, nucPot, printout=printout)
-        #
+
         push!( newChannels, TwoElectronOnePhoton.Channel( channel.multipole, channel.gauge, amplitude) )
-        #
+
         if       channel.gauge == Basics.Coulomb     rateC = rateC + abs(amplitude)^2
         elseif   channel.gauge == Basics.Babushkin   rateB = rateB + abs(amplitude)^2
         elseif   channel.gauge == Basics.Magnetic    rateB = rateB + abs(amplitude)^2;   rateC = rateC + abs(amplitude)^2
         end
     end
-    #     
+
     # Calculate the TEOP rate if requested 
     wa = 8pi * Defaults.getDefaults("alpha") * line.omega / (Basics.twice(line.initialLevel.J) + 1) 
     photonrate  = EmProperty(wa * rateC, wa * rateB)    
@@ -377,7 +377,7 @@ function  computeLines(finalMultiplet::Multiplet, initialMultiplet::Multiplet, n
     # Define a common subshell list for both multiplets
     subshellList = Basics.generate(OrderedSubshellList(), finalMultiplet.levels[1].basis, initialMultiplet.levels[1].basis)
     Defaults.setDefaults("relativistic subshell list", subshellList; printout=true)
-    #
+
     println("")
     printstyled("TwoElectronOnePhoton.computeLines(): The computation of the TEOP amplitudes and rates starts now ... \n", color=:light_green)
     printstyled("---------------------------------------------------------------------------------------------------- \n", color=:light_green)
@@ -403,12 +403,12 @@ function  computeLines(finalMultiplet::Multiplet, initialMultiplet::Multiplet, n
     # Print all results to screen
     TwoElectronOnePhoton.displayRates(stdout, newLines, settings)
     TwoElectronOnePhoton.displayLifetimes(stdout, newLines, settings)
-    #
+
     printSummary, iostream = Defaults.getDefaults("summary flag/stream")
     if  printSummary   TwoElectronOnePhoton.displayRates(iostream, newLines, settings)
                         TwoElectronOnePhoton.displayLifetimes(iostream, newLines, settings)
     end
-    #
+
     if    output    return( newLines )
     else            return( nothing )
     end
@@ -457,7 +457,7 @@ function  determineLines(finalMultiplet::Multiplet, initialMultiplet::Multiplet,
             if  Basics.selectLevelPair(iLevel, fLevel, settings.lineSelection)
                 omega = iLevel.energy - fLevel.energy   + settings.photonEnergyShift
                 if  omega <= 0.   continue   end    # no emission line for a final level above the initial one
-                #
+
                 channels = TwoElectronOnePhoton.determineChannels(fLevel, iLevel, settings)
                 if   length(channels) == 0   continue   end
                 push!( lines, TwoElectronOnePhoton.Line(iLevel, fLevel, omega, EmProperty(0., 0.), channels) )
@@ -486,7 +486,7 @@ function  displayLines(lines::Array{TwoElectronOnePhoton.Line,1})
     sb = sb * TableStrings.center(14, TableStrings.inUnits("energy"); na=4)
     sa = sa * TableStrings.flushleft(30, "List of multipoles"; na=4);             sb = sb * TableStrings.hBlank(34)
     println(sa);    println(sb);    println("  ", TableStrings.hLine(nx)) 
-    #   
+
     for  line in lines
         sa  = "  ";    isym = LevelSymmetry( line.initialLevel.J, line.initialLevel.parity)
                         fsym = LevelSymmetry( line.finalLevel.J,   line.finalLevel.parity)
@@ -502,7 +502,7 @@ function  displayLines(lines::Array{TwoElectronOnePhoton.Line,1})
     end
     println("  ", TableStrings.hLine(nx))
     println(" ")
-    #
+
     return( nothing )
 end
 
@@ -553,7 +553,7 @@ function  displayLifetimes(stream::IO, lines::Array{TwoElectronOnePhoton.Line,1}
     sa = sa * TableStrings.center(12, "Decay widths"; na=4);       
     sb = sb * TableStrings.center(12, TableStrings.inUnits("energy"); na=4)
     println(stream, sa);    println(stream, sb);    println(stream, "  ", TableStrings.hLine(nx)) 
-    #    
+
     for  ii = 1:length(ilevels)
         sa = istr[ii]
         sa = sa * "Coulomb          " * @sprintf("%.6e",              1.0/irates[ii].Coulomb)     * "  "
@@ -567,7 +567,7 @@ function  displayLifetimes(stream::IO, lines::Array{TwoElectronOnePhoton.Line,1}
         println(stream, sa)
     end
     println(stream, "  ", TableStrings.hLine(nx))
-    #
+
     return( nothing )
 end
 
@@ -598,7 +598,7 @@ function  displayRates(stream::IO, lines::Array{TwoElectronOnePhoton.Line,1}, se
     sa = sa * TableStrings.center(13, "Line strength"; na=4);       
     sb = sb * TableStrings.center(12, "[a.u.]"       ; na=4)
     println(stream, sa);    println(stream, sb);    println(stream, "  ", TableStrings.hLine(nx)) 
-    #   
+
     for  line in lines
         for  ch in line.channels
             sa  = "  ";    isym = LevelSymmetry( line.initialLevel.J, line.initialLevel.parity)
@@ -621,7 +621,7 @@ function  displayRates(stream::IO, lines::Array{TwoElectronOnePhoton.Line,1}, se
         end
     end
     println(stream, "  ", TableStrings.hLine(nx))
-    #
+
     return( nothing )
 end
 

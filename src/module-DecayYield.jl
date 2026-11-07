@@ -126,14 +126,14 @@ function computeOutcomes(initialConfigs::Array{Configuration,1}, asfSettings::As
     println("")
     printstyled("DecayYield.computeOutcomes(): The computation of the fluorescence & Auger yields starts now ... \n", color=:light_green)
     printstyled("----------------------------------------------------------------------------------------------- \n", color=:light_green)
-    #
+
     # `multiplet` (the caller's own, independent standalone SCF) is deliberately NOT used to build the
     # outcomes below -- see the cascadeLevels comment further down (FIXED 13-Oct-2026, item 65).
-    #
+
     # Overwrite the default settings for the generation of the continuum orbitals, if needed
-    ## setDefaults("method: continuum, asymptotic Coulomb")
-    ## setDefaults("method: normalization, pure sine")
-    #
+    # setDefaults("method: continuum, asymptotic Coulomb")
+    # setDefaults("method: normalization, pure sine")
+
     cApproach   = settings.approach
     decayShells = union( Basics.extractNonrelativisticShellList(initialConfigs), settings.decayShells )
     # NOTE: Cascade.StepwiseDecayScheme.decayShells (passed below) is NOT consulted by the currently-active
@@ -152,7 +152,7 @@ function computeOutcomes(initialConfigs::Array{Configuration,1}, asfSettings::As
             push!(decayInitialConfigs, Configuration(nshells, conf.NoElectrons))
         end
     end
-    #
+
     println("\nPerform a cascade computation for all radiative decay channels of the levels from the initial configurations:")
     wa = JenaAtomicCalculator.Cascade.Computation(JenaAtomicCalculator.Cascade.Computation(), name="photon lines", nuclearModel=nm, grid=grid, asfSettings=asfSettings,
                                 scheme=JenaAtomicCalculator.Cascade.StepwiseDecayScheme([Radiative()], 0, Dict{Int64,Float64}(), 0, decayShells, Shell[], Shell[]),
@@ -169,33 +169,33 @@ function computeOutcomes(initialConfigs::Array{Configuration,1}, asfSettings::As
     # twice the tolerance, for nominally "the same" level.
     genMultiplets = wb[ResultKeys.GeneratedMultiplets]
     cascadeLevels = DecayYield.extractGenerationZeroLevels(genMultiplets, decayInitialConfigs)
-    #
+
     outcomes = DecayYield.determineOutcomes(cascadeLevels, settings)
     # Display all selected levels before the computations start
     if  settings.printBefore    DecayYield.displayOutcomes(outcomes)    end
-    #
+
     println("\nPerform a cascade computation for all (single-electron) Auger decay channels of the levels from the initial configurations:")
     wa = JenaAtomicCalculator.Cascade.Computation(JenaAtomicCalculator.Cascade.Computation(), name="Auger lines", nuclearModel=nm, grid=grid, asfSettings=asfSettings,
                                 scheme=JenaAtomicCalculator.Cascade.StepwiseDecayScheme([Auger()], 1, Dict{Int64,Float64}(), 0, decayShells, Shell[], Shell[]),
                                 approach=cApproach, initialConfigs=decayInitialConfigs)
     wb = perform(wa, output=true, outputToFile=false);   linesA = wb[AutoIonization.Settings]
-    #
+
     # Calculate all amplitudes and requested properties
     newOutcomes = DecayYield.Outcome[]
     for  outcome in outcomes
         newOutcome = JenaAtomicCalculator.Cascade.computeDecayYieldOutcome(outcome, linesR, linesA, settings)
         push!( newOutcomes, newOutcome)
-        #
+
         if settings.geant4
             JenaAtomicCalculator.Cascade.computeDecayProbabilities(newOutcome, linesR, linesA, settings)
         end
     end
-    #
+
     # Print all results to screen
     DecayYield.displayResults(stdout, newOutcomes, settings)
     printSummary, iostream = Defaults.getDefaults("summary flag/stream")
     if  printSummary    DecayYield.displayResults(iostream, newOutcomes, settings)   end
-    #
+
     if    output    return( newOutcomes )
     else            return( nothing )
     end
@@ -269,7 +269,7 @@ function  displayOutcomes(outcomes::Array{DecayYield.Outcome,1})
     sa = sa * TableStrings.center(14, "Energy"; na=4);              
     sb = sb * TableStrings.center(14, TableStrings.inUnits("energy"); na=4)
     println(sa);    println(sb);    println("  ", TableStrings.hLine(nx)) 
-    #  
+
     for  outcome in outcomes
         sa  = "  ";    sym = LevelSymmetry( outcome.level.J, outcome.level.parity)
         sa = sa * TableStrings.center(10, TableStrings.level(outcome.level.index); na=2)
@@ -278,7 +278,7 @@ function  displayOutcomes(outcomes::Array{DecayYield.Outcome,1})
         println( sa )
     end
     println("  ", TableStrings.hLine(nx))
-    #
+
     return( nothing )
 end
 
@@ -298,7 +298,7 @@ function  displayResults(stream::IO, outcomes::Array{DecayYield.Outcome,1}, sett
     if    settings.approach isa Union{Basics.AverageSCA, Basics.SCA}
     println(stream, "    + Approach:  $(settings.approach)  ... all fluorescence rates and yields only in Babushkin gauge. ")
     end
-    #
+
     println(stream, " ")
     println(stream, "  ", TableStrings.hLine(nx))
     sa = "  ";   sb = "  "
@@ -313,7 +313,7 @@ function  displayResults(stream::IO, outcomes::Array{DecayYield.Outcome,1}, sett
     sa = sa * TableStrings.center(10, "rate_A"; na=2);                            sb = sb * TableStrings.hBlank(12)
     sa = sa * TableStrings.center(24, "Cou -- omega_A -- Bab"; na=3);             sb = sb * TableStrings.hBlank(27)
     println(stream, sa);    println(stream, sb);    println(stream, "  ", TableStrings.hLine(nx)) 
-    #  
+
     for  outcome in outcomes
         sa  = "  ";    sym = LevelSymmetry( outcome.level.J, outcome.level.parity)
         sa = sa * TableStrings.center(10, TableStrings.level(outcome.level.index); na=2)
@@ -332,7 +332,7 @@ function  displayResults(stream::IO, outcomes::Array{DecayYield.Outcome,1}, sett
         println(stream, sa )
     end
     println(stream, "  ", TableStrings.hLine(nx), "\n\n")
-    #
+
     return( nothing )
 end
 

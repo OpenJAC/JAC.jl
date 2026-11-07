@@ -14,17 +14,17 @@ function integralRulesForOneYlm(rex::RacahAlgebra.RacahExpression)
         aRexList = RacahAlgebra.symmetricForms(aW3j)
         for  xaRex in aRexList
             ww = xaRex.w3js[1]
-            #
+
             #   Rule:                  -m   ( j  j J )         -j
             #   ----        Sum(m) (-1)     (        )  =  (-1)    (2j + 1)  delta(J,0)  delta(M,0)
             #                               ( m -m M )
-            #
+
             specialW3j = W3j(ww.ja, ww.ja, ww.jc, ww.ma, -ww.ma, ww.mc)
             if  ww == specialW3j
                 newPhase  = rex.phase  + xaRex.phase;     testPhase = newPhase   + ww.ma  
                 newWeight = rex.weight * xaRex.weight;    testWeight = newWeight
                 newW3js   = W3j[];       for (ibW3j, bW3j) in enumerate(rex.w3js)  if  iaW3j != ibW3j   push!(newW3js, bW3j)   end   end
-                #
+
                 if  RacahAlgebra.hasIndexOld(ww.ma, rex.summations)          &&  RacahAlgebra.hasNoVars([ww.ma], testPhase)      &&  
                     RacahAlgebra.hasNoVars([ww.ma], testWeight)           &&  RacahAlgebra.hasNoVars([ww.ma], rex.deltas)     &&  
                     RacahAlgebra.hasNoVars([ww.ma], rex.triangles)        &&  RacahAlgebra.hasNoVars([ww.ma], newW3js)        &&  

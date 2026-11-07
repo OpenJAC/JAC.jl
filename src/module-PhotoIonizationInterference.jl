@@ -314,7 +314,7 @@ function amplitudeResonant(mp::EmMultipole, kappa::Int64, phase::Float64, dLevel
                            exciteCache::Dict{Tuple{EmMultipole,Int64,Int64},EmPropertyC} = Dict{Tuple{EmMultipole,Int64,Int64},EmPropertyC}())
     denominator = Complex(totalEnergy - dLevel.energy, 0.5 * gammaD)
     if  abs(denominator) < 1.0e-30    return( EmPropertyC(0.0im) )    end
-    #
+
     cacheKey = (mp, dLevel.index, initialLevel.index)
     if  haskey(exciteCache, cacheKey)
         ampExcite = exciteCache[cacheKey]
@@ -331,7 +331,7 @@ function amplitudeResonant(mp::EmMultipole, kappa::Int64, phase::Float64, dLevel
         exciteCache[cacheKey] = ampExcite
     end
     if  ampExcite == EmPropertyC(0.0im)    return( EmPropertyC(0.0im) )    end
-    #
+
     ampDecay = AutoIonization.amplitudeForPhotoionizationConvention(settings.augerOperator, kappa, phase, newcLevel, dLevel, grid;
                                                                     printout=false)
 
@@ -396,11 +396,11 @@ function computeAmplitudesProperties(pathway::PhotoIonizationInterference.Pathwa
         newiLevel = Basics.generateLevelWithExtraSubshell(cSubshell, redILevel)
         cOrbital, phase = Continuum.generateOrbitalForLevel(pathway.electronEnergy, cSubshell, newfLevel, nm, grid, contSettings)
         newChannels = PhotoIonizationInterference.Channel[]
-        #
+
         for  ch  in  pw.channels
             newcLevel = Basics.generateLevelWithExtraElectron(cOrbital, ch.symmetry, newfLevel)
             ampsPI = MultipoleAmplitude[];    ampsRes = MultipoleAmplitude[];    ampsTot = MultipoleAmplitude[]
-            #
+
             for  mp  in  settings.multipoles
                 # The direct, photoionization term
                 if  settings.includePI
@@ -437,7 +437,7 @@ function computeAmplitudesProperties(pathway::PhotoIonizationInterference.Pathwa
         end
         push!( newPartialWaves, PhotoIonizationInterference.PartialWave(pw.kappa, pathway.electronEnergy, phase, newChannels) )
     end
-    #
+
     # The three cross sections, each through the SAME function of PhotoIonization, so that they are commensurable by construction
     csTot = PhotoIonization.computeCrossSection( PhotoIonizationInterference.toPhotoIonizationWaves(newPartialWaves, :total),
                                                  pathway.photonEnergy, pathway.initialLevel )
@@ -446,7 +446,7 @@ function computeAmplitudesProperties(pathway::PhotoIonizationInterference.Pathwa
     csRes = PhotoIonization.computeCrossSection( PhotoIonizationInterference.toPhotoIonizationWaves(newPartialWaves, :resonant),
                                                  pathway.photonEnergy, pathway.initialLevel )
     interference = csTot - csPI - csRes
-    #
+
     betaNu = EmProperty[]
     if  settings.calcAnisotropy
         totWaves = PhotoIonizationInterference.toPhotoIonizationWaves(newPartialWaves, :total)
@@ -483,7 +483,7 @@ function computePathways(finalMultiplet::Multiplet, intermediateMultiplet::Multi
     if  settings.printBefore    PhotoIonizationInterference.displayPathways(stdout, pathways, widths)    end
     maxEnergy = 0.;    for  pathway in pathways   maxEnergy = max(maxEnergy, pathway.electronEnergy)   end
     nrContinuum = Continuum.gridConsistency(maxEnergy, grid)
-    #
+
     # dLevel and initialLevel repeat across the WHOLE photon-energy scan, so one cache shared by every pathway removes almost
     # all of the redundancy; see PhotoIonizationInterference.amplitudeResonant's own docstring for why this exists.
     exciteCache = Dict{Tuple{EmMultipole,Int64,Int64},EmPropertyC}()
@@ -527,7 +527,7 @@ function computeTotalWidths(intermediateMultiplet::Multiplet, initialMultiplet::
                                             gauges=[UseCoulomb, UseBabushkin], printBefore=false)
     augerLines  = AutoIonization.computeLines(finalMultiplet, intermediateMultiplet, nm, grid, augerSettings; output=true)
     photonLines = PhotoEmission.computeLines(initialMultiplet, intermediateMultiplet, grid, photonSettings; output=true)
-    #
+
     println("\n  Total widths Gamma_d of the intermediate levels, from the configurations named in this computation only:")
     println("  ", TableStrings.hLine(96))
     println("     level     J^P            Gamma_a [a.u.]      Gamma_r [a.u.]      Gamma_d [a.u.]     source")
@@ -633,7 +633,7 @@ function displayPathways(stream::IO, pathways::Array{PhotoIonizationInterference
     sa = sa * TableStrings.center(14, "no. of kappa"; na=2)
     sa = sa * TableStrings.center(16, "no. of resonances"; na=2)
     println(stream, sa);    println(stream, "  ", TableStrings.hLine(nx))
-    #
+
     for  pathway in pathways
         isym = LevelSymmetry(pathway.initialLevel.J, pathway.initialLevel.parity)
         fsym = LevelSymmetry(pathway.finalLevel.J,   pathway.finalLevel.parity)
@@ -673,7 +673,7 @@ function displayResults(stream::IO, pathways::Array{PhotoIonizationInterference.
     sa = sa * TableStrings.center(15, "interference"; na=1)
     sa = sa * TableStrings.center(13, "beta_2"; na=1)
     println(stream, sa);    println(stream, "  ", TableStrings.hLine(nx))
-    #
+
     for  pathway in pathways
         sa = "  " * TableStrings.center(16, TableStrings.levels_if(pathway.initialLevel.index, pathway.finalLevel.index); na=1)
         sa = sa * @sprintf("%14.6e", Defaults.convertUnits("energy: from atomic", pathway.photonEnergy)) * " "

@@ -602,12 +602,12 @@ function computeProperties(theme::Basics.HyperfineStructure, configs::Array{Conf
                 "pass  nuclearModel = Nuclear.Model(Z, model, A, Rrms, spinI, mu, Q, Omega)  for a real isotope.")
     end
 
-    ## A ONE-ELECTRON SYSTEM MUST NOT BE GIVEN A SCREENED FIELD.  There is no other electron to screen against,
-    ## so a DFS potential contributes a pure self-interaction error, and the hyperfine constant -- which samples
-    ## the orbital right at the nucleus -- feels it directly.  Measured on hydrogen 1s with everything else held
-    ## the same: the default DFS field gives A = 1464.20 MHz against the measured 21-cm value of 1420.406, i.e.
-    ## 3.1% high, while Basics.NuclearField() gives 1421.22 MHz, i.e. 0.057%.  A pedestrian should not have to
-    ## know that, so it is chosen here and announced; passing asfSettings explicitly overrides it.
+    # A ONE-ELECTRON SYSTEM MUST NOT BE GIVEN A SCREENED FIELD.  There is no other electron to screen against,
+    # so a DFS potential contributes a pure self-interaction error, and the hyperfine constant -- which samples
+    # the orbital right at the nucleus -- feels it directly.  Measured on hydrogen 1s with everything else held
+    # the same: the default DFS field gives A = 1464.20 MHz against the measured 21-cm value of 1420.406, i.e.
+    # 3.1% high, while Basics.NuclearField() gives 1421.22 MHz, i.e. 0.057%.  A pedestrian should not have to
+    # know that, so it is chosen here and announced; passing asfSettings explicitly overrides it.
     if  isnothing(asfSettings)
         if  configs[1].NoElectrons == 1
             settingsx = AsfSettings(AsfSettings(); scField=Basics.NuclearField())
@@ -684,11 +684,11 @@ function computeProperties(theme::Basics.ZeemanStructure, configs::Array{Configu
     Z = Defaults.getDefaults("nuclear: charge")
     nm = Nuclear.Model(Z)
 
-    ## A BADLY MATCHED BOX IS THE KNOWN FAILURE OF THIS PROPERTY, so the box is matched rather than defaulted.
-    ## Ge II 4s^2 4f on Radial.Grid(true) -- a 614 a.u. box -- returned g_J(4f_7/2) = -2.263670 against the
-    ## exact 8/7, wrong by a factor and in sign, because the SCF converged onto the wrong state for kappa = -4;
-    ## on a matched box the two spin-orbit partners agree and the paper is reproduced to six decimals
-    ## (examples/example-Cd.jl, branch c).  For years that was recorded as an angular-coefficient defect.
+    # A BADLY MATCHED BOX IS THE KNOWN FAILURE OF THIS PROPERTY, so the box is matched rather than defaulted.
+    # Ge II 4s^2 4f on Radial.Grid(true) -- a 614 a.u. box -- returned g_J(4f_7/2) = -2.263670 against the
+    # exact 8/7, wrong by a factor and in sign, because the SCF converged onto the wrong state for kappa = -4;
+    # on a matched box the two spin-orbit partners agree and the paper is reproduced to six decimals
+    # (examples/example-Cd.jl, branch c).  For years that was recorded as an angular-coefficient defect.
     if  isnothing(grid)   currentGrid = Basics.recommendedGrid(configs, nm)   else   currentGrid = grid   end
     if  isnothing(asfSettings)
         if  configs[1].NoElectrons == 1   settingsx = AsfSettings(AsfSettings(); scField=Basics.NuclearField())
@@ -798,8 +798,8 @@ function computeResonanceStrength(theme::Basics.ForDielectronicRecombination, in
           results = redirect_stdout(devnull) do   
                        atomic_code()  end
           captureLines, photonLines = results[DielectronicRecombination.Settings]
-          ## The CaptureLine's already carry the resonance strength, so no separate aggregation step is needed;
-          ## the per-final-level satellite table is printed only if settings.calcPhotonSpectrum is set.
+          # The CaptureLine's already carry the resonance strength, so no separate aggregation step is needed;
+          # the per-final-level satellite table is printed only if settings.calcPhotonSpectrum is set.
           DielectronicRecombination.displayResults(stdout, captureLines, photonLines, drSettings)
     end
     
@@ -852,7 +852,7 @@ function computeTransitionRates(theme::Basics.ForAutoIonization, initialConfigs:
     else                          currentGrid = grid
     end
         
-    augerSettings = AutoIonization.Settings()    ## AutoIonization.Settings(), printout=true, operator=CoulombInteraction())
+    augerSettings = AutoIonization.Settings()    # AutoIonization.Settings(), printout=true, operator=CoulombInteraction())
     
     # Specify the atomic computations
     function atomic_code()
@@ -1522,4 +1522,4 @@ function computeChargeStateDistribution(theme::Basics.ForStepwiseDecay,
 end
 
 
-end  ## module
+end  # module

@@ -21,7 +21,7 @@ function amplitude(mp::EmMultipole, gauge::EmGauge, omega::Float64, finalLevel::
                     grid::Radial.Grid; display::Bool=false)
 
     amplitude = MultipoleMoment.transitionAmplitude(mp, gauge, omega, finalLevel, initialLevel, grid; display=false)
-    #
+
     if  display
         sa = @sprintf("%.5e", amplitude.re) * "  " * @sprintf("%.5e", amplitude.im)
         println("    < level=$(finalLevel.index) [J=$(finalLevel.J)$(string(finalLevel.parity))] || Q^($mp) ($omega a.u., $gauge) ||" *
@@ -53,8 +53,8 @@ function amplitude(K::Integer, level::Level, grid::Radial.Grid; display::Bool=fa
     angularParts = Dict()
     for (sub1, orb1) in level.basis.orbitals, (sub2, orb2) in level.basis.orbitals
         radialParts[sub1, sub2] = RadialIntegrals.rkDiagonal(K, orb1, orb2, grid)
-        ## the former CL_reduced_me_rb convention: Grant's reduced matrix element divided by
-        ## sqrt(2 j_a + 1), with j_a from the FIRST argument as passed (10-Aug-2026).
+        # the former CL_reduced_me_rb convention: Grant's reduced matrix element divided by
+        # sqrt(2 j_a + 1), with j_a from the FIRST argument as passed (10-Aug-2026).
         angularParts[sub1, sub2] = AngularMomentum.CL_reduced_me(sub1, K, sub2) /
                                        sqrt( Basics.subshell_2j(sub1) + 1 )
     end
@@ -107,7 +107,7 @@ function dipoleAmplitude(finalLevel::Level, initialLevel::Level, grid::Radial.Gr
         printstyled("Compute dipole matrix of dimension $nf x $ni in the final- and initial-state bases " *
                     "for the transition [$(initialLevel.index)- $(finalLevel.index)] ... ", color=:light_green)
         matrix = zeros(ComplexF64, nf, ni)
-        #
+
         for  r = 1:nf
             for  s = 1:ni
                 # Calculate the spin-angular coefficients
@@ -117,7 +117,7 @@ function dipoleAmplitude(finalLevel::Level, initialLevel::Level, grid::Radial.Gr
                     waG = SpinAngular.computeCoefficients(opa, finalLevel.basis.csfs[r], initialLevel.basis.csfs[s], subshellList) 
                     wa  = waG
                 end
-                #
+
                 for  coeff in wa
                     # eMultipole at k = 1, not InteractionStrength.dipole: the two compute the same electric-dipole reduced
                     # matrix element and differ by exactly sqrt(2 j_a + 1), which eMultipole divides out and dipole does not.
@@ -131,7 +131,7 @@ function dipoleAmplitude(finalLevel::Level, initialLevel::Level, grid::Radial.Gr
         printstyled("done. \n", color=:light_green)
         amplitude::ComplexF64 = transpose(finalLevel.mc) * matrix * initialLevel.mc 
     end
-    #
+
     if  display
         sa = @sprintf("%.5e", amplitude.re) * "  " * @sprintf("%.5e", amplitude.im)
         println("    < level=$(finalLevel.index) [J=$(finalLevel.J)$(string(finalLevel.parity))] || D ||" *
@@ -194,7 +194,7 @@ function emmStaticAmplitude(k::Int64, finalLevel::Level, initialLevel::Level, gr
         if display   printstyled("Compute (static) EMM matrix of dimension $nf x $ni in the final- and initial-state bases " *
                                  "for the transition [$(initialLevel.index)- $(finalLevel.index)] ... ", color=:light_green)     end
         matrix = zeros(Float64, nf, ni)
-        #
+
         for  r = 1:nf
             for  s = 1:ni
                 if  fLevel.mc[r] == 0  ||  iLevel.mc[s] == 0    continue    end
@@ -202,7 +202,7 @@ function emmStaticAmplitude(k::Int64, finalLevel::Level, initialLevel::Level, gr
                 subshellList = iLevel.basis.subshells
                 opa = SpinAngular.OneParticleOperator(k, Basics.multipoleParity(EmMultipole(k, true)))
                 wa  = SpinAngular.computeCoefficients(opa, fLevel.basis.csfs[r], iLevel.basis.csfs[s], subshellList) 
-                #
+
                 for  coeff in wa
                     tamp = InteractionStrength.eMultipole(k, fLevel.basis.orbitals[coeff.a], iLevel.basis.orbitals[coeff.b], grid)
                     matrix[r,s] = matrix[r,s] + coeff.T * tamp  
@@ -214,7 +214,7 @@ function emmStaticAmplitude(k::Int64, finalLevel::Level, initialLevel::Level, gr
         # this factor, and it belongs here rather than at a call site (Rule 18).
         amplitude = sqrt( Basics.twice(fLevel.J) + 1.0 ) * transpose(fLevel.mc) * matrix * iLevel.mc 
     end
-    #
+
     if  display
         sa = @sprintf("%.5e", amplitude.re) * "  " * @sprintf("%.5e", amplitude.im)
         println("    < level=$(finalLevel.index) [J=$(finalLevel.J)$(string(finalLevel.parity))] || T^(E$k) ||" *
@@ -257,7 +257,7 @@ function transitionAmplitude(mp::EmMultipole, gauge::EmGauge, omega::Float64, fi
     printstyled("Compute multipole-moment transition matrix of dimension $nf x $ni in the final- and initial-state bases " *
                 "for the transition [$(initialLevel.index)- $(finalLevel.index)] ... ", color=:light_green)
     matrix = zeros(ComplexF64, nf, ni)
-    #
+
     for  r = 1:nf
         for  s = 1:ni
             # The Ratip2013 angular-coefficient route was RETIRED on 30-Aug-2026: its module was already absent
@@ -275,7 +275,7 @@ function transitionAmplitude(mp::EmMultipole, gauge::EmGauge, omega::Float64, fi
     end
     printstyled("done. \n", color=:light_green)
     amplitude = transpose(finalLevel.mc) * matrix * initialLevel.mc 
-    #
+
     if  display
         sa = @sprintf("%.5e", amplitude.re) * "  " * @sprintf("%.5e", amplitude.im)
         println("    < level=$(finalLevel.index) [J=$(finalLevel.J)$(string(finalLevel.parity))] ||" *

@@ -1,6 +1,6 @@
 
-## Functions in this file cover: atomic processes.
-## Alphabetical order within this file.
+# Functions in this file cover: atomic processes.
+# Alphabetical order within this file.
 
 
 """
@@ -14,10 +14,10 @@ function testModule_AutoIonization(; short::Bool=true)
     # grid carried hp = 1.5e-2, i.e. only 16.1 points per oscillation of the 3.36e+02 Hartree Auger electron, and
     # Continuum.checkMatchingRadius now refuses it:  no radius in the outer two wavelengths gives a settled phase.
     # The old approved rate was NOT merely unverified but wrong -- measured by refining hp alone at fixed rbox:
-    #
+
     #     wavelength/hp        16.1        32.3           48.5           80.8
     #     rate [a.u.]          refused     5.399878e-04   5.402065e-04   5.402100e-04
-    #
+
     # The rate is converged to 0.04 % from 32 points onward, so 5.4021e-04 a.u. = 2.2333e+13 1/s is the value, and
     # the superseded reference held 2.064739e+13 1/s -- 7.5 % low.  hp = 5.0e-3 is chosen rather than the cheaper
     # 7.5e-3 so that the test also clears Continuum.gridConsistency's 40-point warning and runs silently.
@@ -46,41 +46,41 @@ function testModule_CoulombExcitation(; short::Bool=true)
     Defaults.setDefaults("print summary: open", "test-CoulombExcitation-new.sum")
     printstyled("\n\nTest the module  CoulombExcitation  ... \n", color=:cyan)
     ### Make the tests
-    ## THIS TEST USED TO ASSERT NOTHING (rewritten 08-Aug-2026). Its body between the two markers was EMPTY, its
-    ## file comparison was commented out -- and pointed at the AutoIonization approved file, a copy-paste
-    ## artifact -- and it returned success = true unconditionally. It therefore reported a pass for a module
-    ## that was never exercised, in every run of the suite.
+    # THIS TEST USED TO ASSERT NOTHING (rewritten 08-Aug-2026). Its body between the two markers was EMPTY, its
+    # file comparison was commented out -- and pointed at the AutoIonization approved file, a copy-paste
+    # artifact -- and it returned success = true unconditionally. It therefore reported a pass for a module
+    # that was never exercised, in every run of the suite.
     ##
-    ## WHAT IS CHECKED NOW is the SCAFFOLD, not the physics: that the settings construct, copy-construct and
-    ## print. That is a deliberately modest bar, and it is not nothing -- three bug classes met this month would
-    ## have been caught by exactly these lines: a `Base.show` declared without its `io` argument while using it
-    ## (six methods at once in MultiPhotonTransition), a Settings field commented out while still referenced,
-    ## and a copy-constructor that silently fails to carry a value through. The last of those was found HERE:
-    ## the ionEnergies guard assigned the parameter instead of the local, so every copy-construction that did
-    ## not pass ionEnergies explicitly raised an UndefVarError.
+    # WHAT IS CHECKED NOW is the SCAFFOLD, not the physics: that the settings construct, copy-construct and
+    # print. That is a deliberately modest bar, and it is not nothing -- three bug classes met this month would
+    # have been caught by exactly these lines: a `Base.show` declared without its `io` argument while using it
+    # (six methods at once in MultiPhotonTransition), a Settings field commented out while still referenced,
+    # and a copy-constructor that silently fails to carry a value through. The last of those was found HERE:
+    # the ionEnergies guard assigned the parameter instead of the local, so every copy-construction that did
+    # not pass ionEnergies explicitly raised an UndefVarError.
     ##
-    ## NOT COVERED: any Coulomb-excitation amplitude, cross section or alignment parameter. When an approved
-    ## reference exists, it belongs here.
+    # NOT COVERED: any Coulomb-excitation amplitude, cross section or alignment parameter. When an approved
+    # reference exists, it belongs here.
     success = true
     settings = CoulombExcitation.Settings()
     if  length(sprint(show, settings)) == 0     success = false;   println("** empty show for CoulombExcitation.Settings")   end
-    ## the copy-constructor must carry a changed value through AND leave the others intact
+    # the copy-constructor must carry a changed value through AND leave the others intact
     newSettings = CoulombExcitation.Settings(settings; printBefore=true, zerosGL=7)
     if  !newSettings.printBefore                success = false;   println("** printBefore not carried by the copy-constructor")   end
     if  newSettings.zerosGL != 7                success = false;   println("** zerosGL not carried by the copy-constructor")       end
     if  newSettings.calcAlignment != settings.calcAlignment
                                                 success = false;   println("** calcAlignment altered by an unrelated keyword")     end
     ##
-    ## THE PHYSICS CHECK, added 09-Aug-2026: sigma(Mi,Mf) = sigma(-Mi,-Mf), EXACTLY.
+    # THE PHYSICS CHECK, added 09-Aug-2026: sigma(Mi,Mf) = sigma(-Mi,-Mf), EXACTLY.
     ##
-    ## This is the very symmetry whose violation exposed the root-cause bug of the July work on this module --
-    ## computeAmplitude's magnetic term was missing the -i prefactor that RATIP's coulex_pure_matrix() applies
-    ## to every magnetic contribution but which Eq. (8) of Surzhykov et al., PRA 77, 042722 (2008) does not show.
-    ## With the factor restored the equality holds to the last bit; without it, it fails visibly. It is
-    ## parameter-free, needs no reference data, and is precisely the guard that would catch a reintroduction.
+    # This is the very symmetry whose violation exposed the root-cause bug of the July work on this module --
+    # computeAmplitude's magnetic term was missing the -i prefactor that RATIP's coulex_pure_matrix() applies
+    # to every magnetic contribution but which Eq. (8) of Surzhykov et al., PRA 77, 042722 (2008) does not show.
+    # With the factor restored the equality holds to the last bit; without it, it fails visibly. It is
+    # parameter-free, needs no reference data, and is precisely the guard that would catch a reintroduction.
     ##
-    ## COST: about 50 s, dominated by the Z = 92 self-consistent field, not by the Coulomb-excitation quadrature
-    ## (verified -- shrinking the grid and halving zerosGL changed nothing). One impact energy is used.
+    # COST: about 50 s, dominated by the Z = 92 self-consistent field, not by the Coulomb-excitation quadrature
+    # (verified -- shrinking the grid and halving zerosGL changed nothing). One impact energy is used.
     ceSettings = CoulombExcitation.Settings(CoulombExcitation.Settings(); ionEnergies=[100.], calcAlignment=true,
                                             printBefore=false, zerosGL=4)
     wa = Atomic.Computation(Atomic.Computation(), name="U90+ K-L Coulomb excitation",
@@ -148,31 +148,31 @@ function testModule_MultiPhotonTransition(; short::Bool=true)
     Defaults.setDefaults("print summary: open", "test-MultiPhotonTransition-new.sum")
     printstyled("\n\nTest the module  MultiPhotonTransition  ... \n", color=:cyan)
     ### Make the tests
-    ## THIS TEST USED TO COMPUTE NOTHING. It set `success = true`, had its file comparison commented out, and
-    ## contained no computation at all between the two setDefaults calls -- so the suite counted a pass for a
-    ## module that had never been exercised. What follows are three real checks of the scaffold; the PHYSICS
-    ## check (H 2s -> 1s = 8.2206 /s) belongs here once the amplitudes are verified.
+    # THIS TEST USED TO COMPUTE NOTHING. It set `success = true`, had its file comparison commented out, and
+    # contained no computation at all between the two setDefaults calls -- so the suite counted a pass for a
+    # module that had never been exercised. What follows are three real checks of the scaffold; the PHYSICS
+    # check (H 2s -> 1s = 8.2206 /s) belongs here once the amplitudes are verified.
     success = true
-    ## (1) every scheme must construct, copy-construct and print.
+    # (1) every scheme must construct, copy-construct and print.
     for  scheme in [MultiPhotonTransition.TwoPhotonEmissionScheme(), MultiPhotonTransition.TwoPhotonAbsorptionScheme(),
                     MultiPhotonTransition.TwoPhotonAbsorptionBichromaticScheme(),
                     MultiPhotonTransition.ThreePhotonEmissionScheme(), MultiPhotonTransition.ThreePhotonAbsorptionScheme()]
         set = MultiPhotonTransition.Settings(MultiPhotonTransition.Settings(); scheme=scheme)
         if  typeof(set.scheme) != typeof(scheme)    success = false;   println("** scheme not carried: $scheme")   end
-        sprint(show, scheme)      ## must not raise
+        sprint(show, scheme)      # must not raise
     end
-    ## (2) every property must be printable. All six of these once declared Base.show WITHOUT an io argument
-    ##     while using `io` in the body, so each raised an UndefVarError; that is what this guards against.
+    # (2) every property must be printable. All six of these once declared Base.show WITHOUT an io argument
+    #     while using `io` in the body, so each raised an UndefVarError; that is what this guards against.
     for  property in [MultiPhotonTransition.EnergyDiffCs(), MultiPhotonTransition.TotalAlpha0(),
                       MultiPhotonTransition.TotalCsLinear(), MultiPhotonTransition.TotalCsRightCircular(),
                       MultiPhotonTransition.TotalCsUnpolarized(), MultiPhotonTransition.TotalCsDensityMatrix()]
         if  length(sprint(show, property)) == 0    success = false;   println("** empty show: $property")    end
     end
-    ## (3) three-photon EMISSION must still FAIL, and fail informatively rather than in a bare MethodError.
-    ##     ABSORPTION was in this list until 08-Aug-2026 and has been REMOVED because it now runs: the two halves
-    ##     are deliberately in different states, since absorption fixes the three photon energies and needs no
-    ##     sharings, while emission fixes only their sum and needs the simplex. A test asserting that a working
-    ##     scheme raises would be a test of the wrong thing.
+    # (3) three-photon EMISSION must still FAIL, and fail informatively rather than in a bare MethodError.
+    #     ABSORPTION was in this list until 08-Aug-2026 and has been REMOVED because it now runs: the two halves
+    #     are deliberately in different states, since absorption fixes the three photon energies and needs no
+    #     sharings, while emission fixes only their sum and needs the simplex. A test asserting that a working
+    #     scheme raises would be a test of the wrong thing.
     for  scheme in [MultiPhotonTransition.ThreePhotonEmissionScheme()]
         set  = MultiPhotonTransition.Settings(MultiPhotonTransition.Settings(); scheme=scheme)
         threw = false
@@ -185,13 +185,13 @@ function testModule_MultiPhotonTransition(; short::Bool=true)
         end
         if  !threw    success = false;   println("** three-photon scheme did not raise: $scheme")    end
     end
-    ## (4) the three-photon SHARINGS must reproduce the exact simplex moments; this is the sum rule that makes
-    ##     them a finished piece rather than plausible code. Four points per direction suffice for all four.
+    # (4) the three-photon SHARINGS must reproduce the exact simplex moments; this is the sum rule that makes
+    #     them a finished piece rather than plausible code. Four points per direction suffice for all four.
     for  (name, exact, quad, err) in MultiPhotonTransition.checkSharings_3p(0.5, 4)
         if  err > 1.0e-12    success = false;   println("** three-photon simplex moment '$name' off by $err")    end
     end
-    ## (5) the three-photon ABSORPTION scheme must carry its two photon energies through Settings, and its
-    ##     monochromatic sentinel must split the transition energy into three equal parts.
+    # (5) the three-photon ABSORPTION scheme must carry its two photon energies through Settings, and its
+    #     monochromatic sentinel must split the transition energy into three equal parts.
     scheme3 = MultiPhotonTransition.ThreePhotonAbsorptionScheme(
                   MultiPhotonTransition.AbstractMultiPhotonProperty[MultiPhotonTransition.TotalCsUnpolarized()], 0., 0.)
     omegas  = MultiPhotonTransition.determineOmegas_3pAbsorption(0.6, scheme3)
@@ -358,7 +358,7 @@ function testModule_StarkBroadening(; short::Bool=true)
     upperMp2 = Hamiltonian.performCI(wbU2.levels[1].basis, ni, grid, asfSettings; printout=false)
     lowerMp2 = Hamiltonian.performCI(wbL2.levels[1].basis, ni, grid, asfSettings; printout=false)
     ev_to_au = 1.0/Defaults.convertUnits("energy: from atomic to eV", 1.0)
-    ionizationEnergy = lowerMp2.levels[1].energy + 64.49*ev_to_au     ## NIST: C IV 2s ionization energy ~64.49 eV
+    ionizationEnergy = lowerMp2.levels[1].energy + 64.49*ev_to_au     # NIST: C IV 2s ionization energy ~64.49 eV
     method = Basics.SimplifiedModifiedSemiempiricalMethod(ionizationEnergy, 4.0)
     sbSettings2 = StarkBroadening.Settings(StarkBroadening.Settings(); multipoles=[E1], gauges=[UseCoulomb],
                       electronDensity=1.0e17, electronTemperature=20000.0, method=method)
@@ -506,7 +506,7 @@ function testModule_ImpactExcitation(; short::Bool=true)
     # questionable for near-neutral ones, where Mg II misses it by 45 %. A test belongs where the module is known
     # to work; the Mg II shortfall is a separate open question and must NOT be wired into the suite, or the test
     # would fail for a reason that is not its business.
-    #
+
     # NOTHING BELOW IS COMPARED WITH A STORED NUMBER. Both statements are exact.
     success = true;    printTest, iostream = Defaults.getDefaults("test flag/stream")
     grid = Radial.Grid(Radial.Grid(false); rnt = 2.0e-6, h = 5.0e-2, hp = 1.0e-2, rbox = 12.0)
@@ -585,7 +585,7 @@ function testModule_MultiPhotonIonization(; short::Bool=true)
     # and the two forms are then equivalent only through CLOSURE over a COMPLETE intermediate set. This module
     # sums bound states, so the set is incomplete and the gauges are EXPECTED to differ, by a lot. Asserting their
     # equality here would produce a test that fails for a correct code.
-    #
+
     # The three statements below hold regardless of that, and none needs a stored reference.
     success = true;    printTest, iostream = Defaults.getDefaults("test flag/stream")
 
@@ -682,22 +682,22 @@ function testModule_PhotoIonization(; short::Bool=true)
     # Make the comparison with approved data
     success = testCompareFiles( joinpath(@__DIR__, "..", "test", "approved", "test-PhotoIonization-approved.sum"),
                                 joinpath(@__DIR__, "..", "test", "test-PhotoIonization-new.sum"), "Total photoionization c", 10)
-    ## Check the summed (grand-total) cross sections separately: they must stay consistent with the
-    ## line-resolved table above, of which they are the sum over all final levels.
+    # Check the summed (grand-total) cross sections separately: they must stay consistent with the
+    # line-resolved table above, of which they are the sum over all final levels.
     success = success  &&
               testCompareFiles( joinpath(@__DIR__, "..", "test", "approved", "test-PhotoIonization-approved.sum"),
                                 joinpath(@__DIR__, "..", "test", "test-PhotoIonization-new.sum"),
                                 "Total photoionization cross sections, summed", 15)
     # ----------------------------------------------------------------------------------------------------------
     # TWO EXACT INVARIANTS, added 01-Sep-2026, and they test something the comparison above CANNOT.
-    #
+
     # `testCompareFiles` is a REGRESSION check: it asks whether today's numbers match a stored .sum file. That
     # file was produced by this same code, so a systematically wrong NORMALISATION agrees with it forever. This
     # module had exactly such a fault -- until 28-Aug-2026 one route used 4 pi^2 alpha omega |d|^2, the textbook
     # expression for a DIPOLE matrix element, while JAC's amplitude is built on j_L(alpha omega r) and already
     # carries a power of alpha omega, so the prefactor must go as 1/(alpha omega). A correct formula applied to
     # the wrong object, invisible to any stored reference.
-    #
+
     # Every check below is a statement that must hold exactly, so none needs a reference and none can drift.
     # Checks (1) and (2) test the TOTAL cross section; (3) tests the M_f-resolved PARTIAL ones, which became
     # testable on 03-Sep-2026 when they were rebuilt as sigma_total * p(M_f) from the statistical tensor.
@@ -963,10 +963,10 @@ function testModule_RayleighCompton(; short::Bool=true)
     Defaults.setDefaults("print summary: open", "test-RayleighCompton-new.sum")
     printstyled("\n\nTest the module  RayleighCompton  ... \n", color=:cyan)
     ### Make the tests
-    ## REWRITTEN 08-Aug-2026; it previously asserted nothing at all. See the note in testModule_CoulombExcitation
-    ## for what these scaffold checks do and do not cover.
+    # REWRITTEN 08-Aug-2026; it previously asserted nothing at all. See the note in testModule_CoulombExcitation
+    # for what these scaffold checks do and do not cover.
     ##
-    ## NOT COVERED: any Rayleigh or Compton scattering amplitude, cross section or Stokes parameter.
+    # NOT COVERED: any Rayleigh or Compton scattering amplitude, cross section or Stokes parameter.
     success = true
     settings = RayleighCompton.Settings()
     if  length(sprint(show, settings)) == 0     success = false;   println("** empty show for RayleighCompton.Settings")   end
@@ -991,14 +991,14 @@ function testModule_HyperfineInduced(; short::Bool=true)
     Defaults.setDefaults("print summary: open", "test-HyperfineInduced-new.sum")
     printstyled("\n\nTest the module  HyperfineInduced  ... \n", color=:cyan)
     ### Make the tests
-    ## NUCLEAR HYPERFINE MIXING in H-like 229Th89+ -- deliberately the smallest system that exercises the whole
-    ## chain: two nuclear states in one hyperfine basis, the mixing that follows, both terms of the amplitude
-    ## (nuclear radiation and the borrowed electronic one), and the level lifetimes. One electron, one electronic
-    ## level, four hyperfine levels, five lines -- it runs in seconds.
+    # NUCLEAR HYPERFINE MIXING in H-like 229Th89+ -- deliberately the smallest system that exercises the whole
+    # chain: two nuclear states in one hyperfine basis, the mixing that follows, both terms of the amplitude
+    # (nuclear radiation and the borrowed electronic one), and the level lifetimes. One electron, one electronic
+    # level, four hyperfine levels, five lines -- it runs in seconds.
     ##
-    ## Basics.NuclearField() rather than the default DFS: a DFS potential self-interacts badly on a one-electron
-    ## system (H 1s comes out at -0.194 instead of -0.5 a.u.) and would corrupt exactly the hyperfine matrix
-    ## elements under test.
+    # Basics.NuclearField() rather than the default DFS: a DFS potential self-interacts badly on a one-electron
+    # system (H 1s comes out at -0.194 instead of -0.5 a.u.) and would corrupt exactly the hyperfine matrix
+    # elements under test.
     elemM = Nuclear.reducedTransitionAmplitude(M1, 0.008, 229, AngularJ64(3//2))
     gsTh  = Nuclear.Isomer(Nuclear.Isomer(); spinI = AngularJ64(5//2), parity = Basics.plus, energy = 0.0,
                            mu =  0.360, multipoleM = [M1], elementM = [elemM])
@@ -1033,26 +1033,26 @@ end
 function testModule_ParticleScattering(; short::Bool=true)
     Defaults.setDefaults("print summary: open", "test-ParticleScattering-new.sum")
     printstyled("\n\nTest the module  ParticleScattering  ... \n", color=:cyan)
-    ## The module was rebuilt onto Dirac partial waves on 17-Aug-2026; before that its only coverage was a
-    ## ParticleScattering.Settings() entry in testStructConstructors, i.e. a test that could not fail. The checks below
-    ## are cheap and each of them was verified to FAIL under a matching perturbation of the source.
+    # The module was rebuilt onto Dirac partial waves on 17-Aug-2026; before that its only coverage was a
+    # ParticleScattering.Settings() entry in testStructConstructors, i.e. a test that could not fail. The checks below
+    # are cheap and each of them was verified to FAIL under a matching perturbation of the source.
     success = true
     oldEnergyUnit = Defaults.getDefaults("unit: energy")
     Defaults.setDefaults("unit: energy", "eV")
-    #
-    ## Test 1: kappa is the only quantum number stored in a PartialWave, and l and j must follow from it.
+
+    # Test 1: kappa is the only quantum number stored in a PartialWave, and l and j must follow from it.
     for  kappa in [-6, -5, -4, -3, -2, -1, 1, 2, 3, 4, 5]
         sh = Subshell(101, kappa)
         l  = (kappa < 0) ? -kappa - 1 : kappa
         success = success && Basics.subshell_l(sh) == l
         success = success && Basics.subshell_j(sh) == AngularJ64( (2*abs(kappa) - 1)//2 )
     end
-    #
-    ## Test 2: e-He elastic scattering at 300 eV, plane wave, static field with local exchange.
+
+    # Test 2: e-He elastic scattering at 300 eV, plane wave, static field with local exchange.
     grid   = Radial.Grid(Radial.Grid(false), rnt = 4.0e-6, h = 5.0e-2, hp = 1.5e-2, rbox = 10.0)
     thetas = [0.3, 1.0, 2.0, 3.0]
-    ## 100 eV rather than 300: the assertions below are identities and bounds, none of which needs a high energy, and
-    ## the partial-wave series is much shorter there. Keeping this test cheap matters -- it is one of ~50 in the suite.
+    # 100 eV rather than 300: the assertions below are identities and bounds, none of which needs a high energy, and
+    # the partial-wave series is much shorter there. Keeping this test cheap matters -- it is one of ~50 in the suite.
     psSet  = ParticleScattering.Settings(ParticleScattering.Settings(), impactEnergies=[100.0], polarThetas=thetas,
                                          polarPhis=[0.0], printBefore=false, epsPartialWave=1.0e-6, maxL=60)
     wc     = Atomic.Computation(Atomic.Computation(), name="e-He elastic", grid=grid, nuclearModel=Nuclear.Model(2.0),
@@ -1063,34 +1063,34 @@ function testModule_ParticleScattering(; short::Bool=true)
     end
     event  = wd[ParticleScattering.Settings][1]
     pws    = event.partialWaves
-    #
-    ## Test 3: the series must have converged well inside maxL, i.e. the epsPartialWave criterion ended it, not the
-    ##   backstop. This is the check the earlier hard-coded l = 0:30 loop made impossible.
+
+    # Test 3: the series must have converged well inside maxL, i.e. the epsPartialWave criterion ended it, not the
+    #   backstop. This is the check the earlier hard-coded l = 0:30 loop made impossible.
     lMax    = maximum( Basics.subshell_l(Subshell(101, pw.kappa)) for pw in pws )
     success = success && 0 < lMax < 60
-    ## ... and BOTH spin-orbit partners must be present for every l >= 1; a single-kappa treatment carries no spin.
+    # ... and BOTH spin-orbit partners must be present for every l >= 1; a single-kappa treatment carries no spin.
     success = success && length(pws) == 2*lMax + 1
-    #
-    ## Test 4: the total elastic cross section computed two independent ways -- by Gauss-Legendre quadrature of
-    ##   |f|^2 + |g|^2 over the scattering angle, and from the partial-wave sum of sin^2(delta) -- must agree.
+
+    # Test 4: the total elastic cross section computed two independent ways -- by Gauss-Legendre quadrature of
+    #   |f|^2 + |g|^2 over the scattering angle, and from the partial-wave sum of sin^2(delta) -- must agree.
     sigmaQuad  = event.integrated.sigmaElastic
     sigmaPhase = ParticleScattering.elasticCrossSectionFromPhases(pws, event.impactEnergy)
     success = success && sigmaQuad > 0.  &&  abs(sigmaQuad/sigmaPhase - 1.0) < 1.0e-8
-    #
-    ## Test 5: the transport cross sections are positive and ordered sigma_1 < sigma_el for forward-peaked scattering.
+
+    # Test 5: the transport cross sections are positive and ordered sigma_1 < sigma_el for forward-peaked scattering.
     success = success && event.integrated.sigmaMomentumTransfer > 0.
     success = success && event.integrated.sigmaViscosity        > 0.
     success = success && event.integrated.sigmaMomentumTransfer < event.integrated.sigmaElastic
-    #
-    ## Test 6: the Sherman function is bounded by unity at every angle, and it is NOT identically zero -- a non-zero S
-    ##   is only possible because the two kappa branches carry different phase shifts.
+
+    # Test 6: the Sherman function is bounded by unity at every angle, and it is NOT identically zero -- a non-zero S
+    #   is only possible because the two kappa branches carry different phase shifts.
     success = success && all( abs(obs.sherman) <= 1.0 + 1.0e-10  for obs in event.angular )
     success = success && any( abs(obs.sherman) >  1.0e-12        for obs in event.angular )
-    ## ... and it vanishes in the forward direction, where the spin-flip amplitude has no P_l^1 to build on.
+    # ... and it vanishes in the forward direction, where the spin-flip amplitude has no P_l^1 to build on.
     success = success && abs( ParticleScattering.angularObservables(pws, event.impactEnergy, 0., 0.).sherman ) < 1.0e-10
-    #
-    ## Test 7: the f/g projection must REFUSE a target that it does not describe. It rests on a spinless target, so an
-    ##   initial level with J /= 0 has to raise rather than return a plausible-looking number.
+
+    # Test 7: the f/g projection must REFUSE a target that it does not describe. It rests on a spinless target, so an
+    #   initial level with J /= 0 has to raise rather than return a plausible-looking number.
     psErr = 0
     badEvent = ParticleScattering.Event(ParticleScattering.Electron(), ParticleScattering.ElasticScattering(),
                                         ParticleScattering.StaticFieldFurnessMcCarthy(), Beam.PlaneWave(),
@@ -1100,33 +1100,33 @@ function testModule_ParticleScattering(; short::Bool=true)
     try     ParticleScattering.assertSpinlessTarget(badEvent)
     catch;  psErr = psErr + 1
     end
-    ## ... and a twisted beam must raise too, rather than fall back on the plane-wave superposition.
+    # ... and a twisted beam must raise too, rather than fall back on the plane-wave superposition.
     try     ParticleScattering.beamObservables(Beam.BesselBeam(), pws, event.impactEnergy, 1.0, 0.)
     catch;  psErr = psErr + 1
     end
     success = success && psErr == 2
-    #
-    ## Test 8: an ABSOLUTE check against PUBLISHED values, and the only assertion here that is not internal.
-    ##   Jablonski, Salvat & Powell, J. Phys. Chem. Ref. Data 33, 409 (2004), Table 3 give the transport cross section
-    ##   of helium at 100 eV as 0.928 a0^2 from their Dirac-Hartree-Fock potential and 0.834 from Thomas-Fermi-Dirac,
-    ##   against 0.754 derived from measurement. Their sigma_tr is our sigma_1 and is the same integral (their Eq. (15)
-    ##   of NSRDS-64), so this is like-for-like. With the Furness-McCarthy exchange that ELSEPA also uses -- the default
-    ##   model, hence the main run above -- we get 0.9432, i.e. 1.6 % from DHF. The window below is about 4 % wide and
-    ##   pins the absolute normalisation of the amplitudes, the phase-shift convention, the transport integral and the
-    ##   exchange term together; no internal identity can do that. It costs NOTHING, reusing the run already made.
-    ##   (The high-energy Rutherford limit is the other absolute check and lives in examples/example-Ob.jl, where it
-    ##   can afford the energies it needs.)
+
+    # Test 8: an ABSOLUTE check against PUBLISHED values, and the only assertion here that is not internal.
+    #   Jablonski, Salvat & Powell, J. Phys. Chem. Ref. Data 33, 409 (2004), Table 3 give the transport cross section
+    #   of helium at 100 eV as 0.928 a0^2 from their Dirac-Hartree-Fock potential and 0.834 from Thomas-Fermi-Dirac,
+    #   against 0.754 derived from measurement. Their sigma_tr is our sigma_1 and is the same integral (their Eq. (15)
+    #   of NSRDS-64), so this is like-for-like. With the Furness-McCarthy exchange that ELSEPA also uses -- the default
+    #   model, hence the main run above -- we get 0.9432, i.e. 1.6 % from DHF. The window below is about 4 % wide and
+    #   pins the absolute normalisation of the amplitudes, the phase-shift convention, the transport integral and the
+    #   exchange term together; no internal identity can do that. It costs NOTHING, reusing the run already made.
+    #   (The high-energy Rutherford limit is the other absolute check and lives in examples/example-Ob.jl, where it
+    #   can afford the energies it needs.)
     success = success && 0.90 < event.integrated.sigmaMomentumTransfer < 1.00
-    ## Test 9: the POSITRON path, which shares every piece of machinery with the electron one and differs only in the
-    ##   potential -- the electrostatic interaction changes sign and no exchange term applies. Two consequences are
-    ##   checked, and both are textbook rather than conventional: the s-wave phase shift must change SIGN, an attractive
-    ##   potential advancing the phase and a repulsive core retarding it; and the positron, kept away from the nucleus,
-    ##   must scatter LESS than an electron in the same static field, most of all backwards. Cheap: at 100 eV the
-    ##   positron series is as short as the electron one.
+    # Test 9: the POSITRON path, which shares every piece of machinery with the electron one and differs only in the
+    #   potential -- the electrostatic interaction changes sign and no exchange term applies. Two consequences are
+    #   checked, and both are textbook rather than conventional: the s-wave phase shift must change SIGN, an attractive
+    #   potential advancing the phase and a repulsive core retarding it; and the positron, kept away from the nucleus,
+    #   must scatter LESS than an electron in the same static field, most of all backwards. Cheap: at 100 eV the
+    #   positron series is as short as the electron one.
     posSet = ParticleScattering.Settings(ParticleScattering.Settings(), projectile=ParticleScattering.Positron(),
                                          interaction=ParticleScattering.StaticField(), impactEnergies=[100.0],
                                          polarThetas=[Float64(pi)], polarPhis=[0.0], printBefore=false,
-                                         epsPartialWave=1.0e-4, maxL=40)   ## signs and orderings only: precision not needed
+                                         epsPartialWave=1.0e-4, maxL=40)   # signs and orderings only: precision not needed
     eSet   = ParticleScattering.Settings(posSet, projectile=ParticleScattering.Electron())
     posEv, eEv = map( (posSet, eSet) ) do  st
         wcx = Atomic.Computation(Atomic.Computation(), name="positron/electron", grid=grid,
@@ -1139,13 +1139,13 @@ function testModule_ParticleScattering(; short::Bool=true)
     success = success && dPos < 0.  &&  dEle > 0.
     success = success && posEv.integrated.sigmaElastic < eEv.integrated.sigmaElastic
     success = success && posEv.angular[1].dcs          < eEv.angular[1].dcs
-    #
-    ## Test 10: the exchange model must MATTER and must be energy-dependent. The Furness-McCarthy term used by ELSEPA
-    ##   deepens the well relative to the pure static field, so it must raise the elastic cross section; and it is not
-    ##   the Slater term of JAC's DFS field, which is built for a bound electron and (measured against Jablonski,
-    ##   Salvat & Powell 2004, Table 3) overshoots -- see examples/example-Od.jl.
-    ##   No extra computation is needed: the main run above already uses the default Furness-McCarthy model, at the same
-    ##   energy and on the same grid as eSet, so `event` IS the FM case and eEv the static one.
+
+    # Test 10: the exchange model must MATTER and must be energy-dependent. The Furness-McCarthy term used by ELSEPA
+    #   deepens the well relative to the pure static field, so it must raise the elastic cross section; and it is not
+    #   the Slater term of JAC's DFS field, which is built for a bound electron and (measured against Jablonski,
+    #   Salvat & Powell 2004, Table 3) overshoots -- see examples/example-Od.jl.
+    #   No extra computation is needed: the main run above already uses the default Furness-McCarthy model, at the same
+    #   energy and on the same grid as eSet, so `event` IS the FM case and eEv the static one.
     success = success && event.integrated.sigmaElastic > eEv.integrated.sigmaElastic
     success = success && ParticleScattering.phaseShift(event.partialWaves, -1) > dEle
 
@@ -1239,7 +1239,7 @@ function testModule_PhotoIonizationInterference(; short::Bool=true)
     grid     = Radial.Grid(Radial.Grid(false), rnt = 2.0e-6, h = 5.0e-2, hp = 1.0e-2, rbox = 4.0)
     Defaults.setDefaults("standard grid", grid)
     nModel   = Nuclear.Model(26.)
-    photonEnergies = [2200.0]   ## ionization threshold (f-i) measured at 1944.6 eV; this clears it with margin
+    photonEnergies = [2200.0]   # ionization threshold (f-i) measured at 1944.6 eV; this clears it with margin
     iConfigs = [Configuration("1s^2 2s^2")];   mConfigs = [Configuration("1s 2s^2 2p")]
     fConfigs = [Configuration("1s^2 2s")]
 
@@ -1361,7 +1361,7 @@ function testModule_ResonantImpactIonization(; short::Bool=true)
     # its headline check (the 158 branching sums coming out at exactly 1) is one its own comment warns about: it
     # tests the ARITHMETIC and never the completeness, so a decay route left out of the configuration lists is
     # missing from the denominator too and the sum is 1 regardless.
-    #
+
     # What IS checked here are the SCALING LAWS and BOUNDS of the strength formulas, which are exact, which no
     # implementation can satisfy by accident, and which need no computation at all:
     #     S_0 = pi^2/k^2 * A_capture * (2J_d + 1)/(2J_i + 1)
@@ -1461,30 +1461,30 @@ function testModule_TwoElectronOnePhoton(; short::Bool=true)
     printstyled("\n\nTest the module  TwoElectronOnePhoton  ... \n", color=:cyan)
     # A TWO-ROUTE test, cut down from example-Dn.jl branch a). The same physical rate for He-like Ne is reached in
     # two independent ways, and to leading order in the configuration mixing they must agree:
-    #
+
     #   (ii) EXPLICIT second-order perturbation theory -- this module. The reference state is the PURE 2s2p
     #        configuration and the coupling to the one-hole intermediates is carried by an explicit sum over a
     #        Green-function multiplet, with the energy denominators written out.
     #   (i)  IMPLICIT, through ordinary CI mixing -- a plain PhotoEmission computation whose initial multiplet
     #        already contains 1s2p beside 2s2p, so the one-body E1 operator connects the small 1s2p admixture to
     #        the ground state.
-    #
+
     # The agreement is not a coincidence to be tuned: the CI coefficient of route (i) IS c_n = <n|H-E|i>/(E_i - E_n),
     # the very ratio route (ii) forms inside its second-order sum, and <n|H-E|i> is literally the off-diagonal
     # element of JAC's own CI matrix -- measured 01-Nov-2026 as equal to ManyElectron.matrixElement_HminusE to all
     # eleven printed digits over eight CSF pairs. So this is a known-answer test in which the answer is supplied by
     # a different part of the code, and neither route can be fixed to match the other by adjusting a stored number,
     # because there is none.
-    #
+
     # THE TEST IS BUILT ON ONE FROZEN ORBITAL SET AND ON DISJOINT CONFIGURATION SPACES, AND THAT IS THE POINT OF IT
     # RATHER THAN A CONVENIENCE. Both are CONDITIONS for a second-order amplitude to mean what it says -- see
     # TwoElectronOnePhoton.checkSecondOrderConditions, whose docstring carries the derivation -- and until
     # 01-Nov-2026 this test violated BOTH, which is how it read 1.05 while each route was wrong:
-    #
+
     #        route (ii) / route (i)      Green space shares 1s2s      spaces disjoint
     #        separate SCF sets                   3.700                     0.108
     #        one frozen orbital set              6.095                     0.997
-    #
+
     # (a) the Green space [1s2p, 1s2s] shared 1s2s with the final space [1s^2, 1s2s, 2p^2], so the second-order sum
     #     counted an admixture the final CI state already carried -- a factor 6.1, on the time ordering that carries
     #     160-400x the other; and (b) the three multiplets each had their own SCF orbitals, so
@@ -1493,15 +1493,15 @@ function testModule_TwoElectronOnePhoton(; short::Bool=true)
     #     which is exactly why neither was visible. Route (ii) therefore takes the final space [1s^2, 2p^2] and
     #     leaves 1s2s to the Green multiplet, while route (i) keeps the full [1s^2, 1s2s, 2p^2]: the SAME physics,
     #     with the correlation partitioned differently, which is what makes the comparison worth making.
-    #
+
     # calcBiorthogonal IS NOW false, AND THAT REMOVES A SUSPECT RATHER THAN HIDING ONE. One orbital set needs no
     # transformation between the two multiplets, so BiOrthogonal.computeTransformation -- independently confirmed
     # broken for the N-vs-(N-1) case -- is no longer part of what this test depends on.
-    #
+
     # IT GOES THROUGH Hamiltonian.performCIwithFrozenOrbitals RATHER THAN Atomic.Computation + perform, because
     # perform cannot express "these three multiplets share one orbital set". That is a gap in src/ and not a
     # property of the physics; where it is closed, this test should move back onto the perform route.
-    #
+
     # The COULOMB gauge is compared. Babushkin is deliberately not asserted: these amplitudes are small and
     # near-cancelling, the two routes truncate the cancellation differently, and the length form is the more
     # sensitive of the two -- the Babushkin ratio for the very comparison below is 0.526 where Coulomb gives 0.9967.
@@ -1515,7 +1515,7 @@ function testModule_TwoElectronOnePhoton(; short::Bool=true)
     nm   = Nuclear.Model(10.);              asf  = AsfSettings()
     cRef = [Configuration("2s 2p")]
     cG   = [Configuration("1s 2p"), Configuration("1s 2s")]
-    c2nd = [Configuration("1s^2"), Configuration("2p^2")]                                       ## disjoint from cG
+    c2nd = [Configuration("1s^2"), Configuration("2p^2")]                                       # disjoint from cG
     cCIi = [Configuration("2s 2p"), Configuration("1s 2p")]
     cCIf = [Configuration("1s^2"), Configuration("1s 2s"), Configuration("2p^2")]
 
@@ -1616,14 +1616,14 @@ function testModule_ElectronCapture(; short::Bool=true)
     Defaults.setDefaults("print summary: open", "test-ElectronCapture-new.sum")
     printstyled("\n\nTest the module  ElectronCapture  ... \n", color=:cyan)
     # Two EXACT statements, so neither needs a stored reference and neither can drift.
-    #
+
     # (1) DETAILED BALANCE.  The capture is the time reverse of an Auger transition, so the rate this module
     #     computes and the rate AutoIonization computes for the REVERSED pair must satisfy
     #         P_cap(0 -> d) = (2J_d + 1) / (2 (2J_0 + 1)) * P_A(d -> 0)
     #     level by level (Fritzsche, Kabachnik & Surzhykov, PRA 78, 032703 (2008), Eq. 3).  This is the strongest
     #     check available here because it ties TWO modules together: it fails if either normalization is wrong,
     #     and it is what caught a missing (2J_d+1) on 02-Sep-2026.
-    #
+
     # (2) THE ALIGNMENT SELECTION RULES.  A_k0 exists only for EVEN k with k <= 2J_d, and not at all for J_d < 1.
     #     An unpolarized electron on an unpolarized ion can ALIGN the resonance but never ORIENT it.
     success = true;    printTest, iostream = Defaults.getDefaults("test flag/stream")
@@ -1646,7 +1646,7 @@ function testModule_ElectronCapture(; short::Bool=true)
         success = false
         if printTest   info(iostream, "no electron-capture line was built at all")   end
     end
-    #
+
     # (1) detailed balance, on every pair that both computations share
     nChecked = 0
     for  cl in capLines,  al in augLines
@@ -1665,7 +1665,7 @@ function testModule_ElectronCapture(; short::Bool=true)
         success = false
         if printTest   info(iostream, "no capture/Auger pair could be matched, so detailed balance was never tested")   end
     end
-    #
+
     # (2) the alignment selection rules, and that an aligned case actually occurs
     sawAligned = false
     for  cl in capLines
@@ -1700,6 +1700,7 @@ function testModule_ElectronCapture(; short::Bool=true)
     return( success )
 end
 
+
 """
 `TestFrames.testModule_PhotoDoubleIonization(; short::Bool=true)`  ... tests on module PhotoDoubleIonization;
     a success::Bool is returned.
@@ -1710,7 +1711,7 @@ function testModule_PhotoDoubleIonization(; short::Bool=true)
     # THIS MODULE IS PARKED UNDER RULE 13 AND ITS ABSOLUTE SCALE IS NOT TRUSTED, so this test asserts nothing
     # about the VALUE of a cross section.  What it does assert are three invariants that hold whatever the scale
     # turns out to be, and each of them has already been broken once:
-    #
+
     #   (1) THE OUTPUT PATH RUNS.  displayResults was CALLED by computeLines and never written, and displayLines'
     #       second table read a `channels` field that the 15-Aug rebuild had moved onto the PartialWavePair.  Both
     #       were repaired on 15-Sep-2026; a module whose display routines raise cannot be used at all, and nothing
@@ -1722,7 +1723,7 @@ function testModule_PhotoDoubleIonization(; short::Bool=true)
     #       computeAmplitudesProperties forms it; a mismatch means the weights and the integrand have parted company.  The
     #       1/2 is the identical-particle factor, supplied there since 03-Nov-2026 because the sharing integral runs over
     #       the FULL range and so counts every final state twice; `Basics.determineEnergySharings` deliberately omits it.
-    #
+
     # WHAT IS DELIBERATELY **NOT** ASSERTED: gauge equality.  As for MultiPhotonIonization above, a second-order
     # amplitude is evaluated off shell at every intermediate step and the two gauge forms agree only through
     # closure over a COMPLETE intermediate set.  This module sums a handful of states, so the gauges are EXPECTED

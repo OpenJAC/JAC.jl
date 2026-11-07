@@ -692,10 +692,10 @@ end
 `Cascade.ImpactIonizationScheme()`  ... constructor for an 'default' instance of a Cascade.ImpactIonizationScheme.
 """
 function ImpactIonizationScheme()
-    ## ImpactExc is what this constructor has always named; only the missing () is repaired here, which is what
-    ## made it raise.  Whether an IONIZATION scheme should default to the impact-EXCITATION process is a
-    ## separate question: Basics has no impact-ionization tag at all (the nearest is Coulion, i.e. Coulomb
-    ## ionization by ion impact), so choosing one is a decision for the maintainer and not a repair.
+    # ImpactExc is what this constructor has always named; only the missing () is repaired here, which is what
+    # made it raise.  Whether an IONIZATION scheme should default to the impact-EXCITATION process is a
+    # separate question: Basics has no impact-ionization tag at all (the nearest is Coulion, i.e. Coulomb
+    # ionization by ion impact), so choosing one is a decision for the maintainer and not a repair.
     ImpactIonizationScheme([ImpactExc()], Float64[] )
 end
 
@@ -797,7 +797,7 @@ function Base.show(io::IO, scheme::PhotoAbsorptionScheme)
     println(io, "calcResonant:               $(scheme.calcResonant )  ")
     println(io, "electronEnergyShift:        $(scheme.electronEnergyShift)  ")
     println(io, "minCrossSection:            $(scheme.minCrossSection)  ")
-    #
+
     if  length(scheme.photonEnergies) > 0  &&  length(scheme.electronEnergies) > 0    
         error("Only photon or electron energies can be specified.")
     end
@@ -949,11 +949,11 @@ function Base.show(io::IO, scheme::PhotoIonizationScheme)
     println(io, "lValues:                    $(scheme.lValues )  ")
     println(io, "electronEnergyShift:        $(scheme.electronEnergyShift)  ")
     println(io, "minCrossSection:            $(scheme.minCrossSection)  ")
-    #
-    ## These two tests referred to bare `photonEnergies` / `electronEnergies` instead of the fields of the
-    ## given scheme, so that ANY printout of a PhotoIonizationScheme -- and hence of any Cascade.Computation
-    ## carrying one -- raised an UndefVarError.  Every example does println(wa), so the scheme could not be
-    ## used in the documented way at all.
+
+    # These two tests referred to bare `photonEnergies` / `electronEnergies` instead of the fields of the
+    # given scheme, so that ANY printout of a PhotoIonizationScheme -- and hence of any Cascade.Computation
+    # carrying one -- raised an UndefVarError.  Every example does println(wa), so the scheme could not be
+    # used in the documented way at all.
     if  length(scheme.photonEnergies) > 0  &&  length(scheme.electronEnergies) > 0
         error("Only photon or electron energies can be specified.")
     end
@@ -1157,8 +1157,8 @@ end
 """
 struct  Step
     process            ::Basics.AbstractProcess
-    ## ImpactExcitation.Settings was missing from this Union, so a Cascade.Step could not even be constructed
-    ## for an electron-impact excitation cascade -- the scheme was unreachable however its steps were built.
+    # ImpactExcitation.Settings was missing from this Union, so a Cascade.Step could not even be constructed
+    # for an electron-impact excitation cascade -- the scheme was unreachable however its steps were built.
     settings           ::Union{PhotoEmission.Settings, AutoIonization.Settings, PhotoIonization.Settings, PhotoExcitation.Settings,
                                 PhotoRecombination.Settings, ImpactExcitation.Settings}
     initialConfigs     ::Array{Configuration,1}
@@ -1299,24 +1299,24 @@ function Base.show(io::IO, comp::Cascade.Computation)
 end
 
 #######################################################################################################################################
-## STORED CASCADE DATA (.jld):  a format stamp, and a reader that fails with an explanation.
+# STORED CASCADE DATA (.jld):  a format stamp, and a reader that fails with an explanation.
 ##
-## WHAT THESE FILES ARE, stated plainly because it is easy to assume otherwise.  A cascade `.jld` is written by
-## JLD2 from the `results` dictionary, which holds the WHOLE OBJECT GRAPH -- Multiplet -> Level -> Basis -> CsfR
-## -> Orbital -> Radial.Grid, plus the process Lines.  JAC itself never reads one back: every "JLD2.load(...)"
-## in this module is help text printed for the user, who loads the file in their own session.
+# WHAT THESE FILES ARE, stated plainly because it is easy to assume otherwise.  A cascade `.jld` is written by
+# JLD2 from the `results` dictionary, which holds the WHOLE OBJECT GRAPH -- Multiplet -> Level -> Basis -> CsfR
+# -> Orbital -> Radial.Grid, plus the process Lines.  JAC itself never reads one back: every "JLD2.load(...)"
+# in this module is help text printed for the user, who loads the file in their own session.
 ##
-## THE CONSEQUENCE, measured on 14-Aug-2026 rather than assumed: a file written on 5-Aug-2026 CANNOT be loaded
-## by today's JAC.  Not because of anything in the cascade, but because Radial.Grid lost a field and
-## Radial.MeshNone ceased to exist in the Radial rework (cfc1848, d2722fe, 968d269).  JLD2 reconstructs what it
-## can and then dies with a MethodError about a ReconstructedMutable, six frames deep, saying nothing about the
-## cause.  ANY struct change anywhere in that graph does this, and there have already been several.
+# THE CONSEQUENCE, measured on 14-Aug-2026 rather than assumed: a file written on 5-Aug-2026 CANNOT be loaded
+# by today's JAC.  Not because of anything in the cascade, but because Radial.Grid lost a field and
+# Radial.MeshNone ceased to exist in the Radial rework (cfc1848, d2722fe, 968d269).  JLD2 reconstructs what it
+# can and then dies with a MethodError about a ReconstructedMutable, six frames deep, saying nothing about the
+# cause.  ANY struct change anywhere in that graph does this, and there have already been several.
 ##
-## So a stored cascade is tied to the JAC that wrote it.  The stamp below does not change that -- serialising an
-## object graph and then changing the objects cannot be made safe by a version number.  What it does is make the
-## failure legible: Cascade.checkDataFile says which JAC wrote the file and what is missing, instead of leaving
-## the user with a JLD2 internal error.  The durable fix would be to store DATA (indices, energies, rates)
-## rather than objects; that is a design decision about what these files are for, recorded and not taken here.
+# So a stored cascade is tied to the JAC that wrote it.  The stamp below does not change that -- serialising an
+# object graph and then changing the objects cannot be made safe by a version number.  What it does is make the
+# failure legible: Cascade.checkDataFile says which JAC wrote the file and what is missing, instead of leaving
+# the user with a JLD2 internal error.  The durable fix would be to store DATA (indices, energies, rates)
+# rather than objects; that is a design decision about what these files are for, recorded and not taken here.
 #######################################################################################################################################
 
 
@@ -1364,9 +1364,9 @@ end
 """
 function writeDataFile(filename::String, results::Dict{String,Any})
     results = Base.merge( results, Dict("data format:" => Cascade.dataFormatStamp()) )
-    ## jldopen rather than JLD2.save, which routes through FileIO and rejects the .jld extension; this is what
-    ## the JLD2.@save macro these call sites used before expands to, so the file layout is unchanged -- one
-    ## entry named "results".
+    # jldopen rather than JLD2.save, which routes through FileIO and rejects the .jld extension; this is what
+    # the JLD2.@save macro these call sites used before expands to, so the file layout is unchanged -- one
+    # entry named "results".
     JLD2.jldopen(filename, "w") do f
         f["results"] = results
     end
@@ -1391,8 +1391,8 @@ function checkDataFile(filename::String; stream::IO=stdout)
     println(stream, "  size: " * string(round(filesize(filename)/1024/1024, digits=2)) * " MB")
     local results
     try
-        ## jldopen rather than JLD2.load: the latter goes through FileIO, which prints its own "Fatal error"
-        ## banner to stdout BEFORE throwing -- which is exactly the noise this function exists to replace.
+        # jldopen rather than JLD2.load: the latter goes through FileIO, which prints its own "Fatal error"
+        # banner to stdout BEFORE throwing -- which is exactly the noise this function exists to replace.
         JLD2.jldopen(filename, "r") do f
             results = haskey(f, "results") ? f["results"] : Dict{String,Any}(k => f[k] for k in keys(f))
         end

@@ -1,13 +1,13 @@
 
 # The data structures of PhotonScattering. They come first because Settings names them in its field types.
-#
+
 # The module is organized along THREE ORTHOGONAL AXES, deliberately the same arrangement that ParticleScattering uses for massive
 # projectiles and that proved to carry a second projectile (the positron) without any new machinery:
-#
+
 #     beam            how the photon is prepared            plane wave, Bessel/twisted, and its polarization
 #     process         what happens to the target            Rayleigh, Compton, Raman, resonant inelastic, pair creation
 #     approximation   how the amplitude is evaluated        second-order Green sum, form factor, independent particle
-#
+
 # The third axis is what lets a cheap and an expensive calculation of the SAME process stand side by side and be compared, which is
 # the check a scattering code most often needs and most rarely has.
 

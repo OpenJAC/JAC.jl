@@ -782,7 +782,7 @@ function  displayQualityFlags(stream::IO, lines::Array{PhotoEmission.Line,1}, qu
     sa = sa * TableStrings.center(12, "B/C ratio"; na=2);                        sb = sb * TableStrings.hBlank(14)
     sa = sa * TableStrings.center(14, "Verdict"; na=2);                          sb = sb * TableStrings.hBlank(16)
     println(stream, sa);    println(stream, sb);    println(stream, "  ", TableStrings.hLine(nx))
-    #
+
     for  (i, line)  in  enumerate(lines)
         ratio = line.photonRate.Coulomb != 0. ? line.photonRate.Babushkin / line.photonRate.Coulomb : NaN
         for  lq in qualities[i]

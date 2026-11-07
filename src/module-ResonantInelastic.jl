@@ -175,18 +175,18 @@ end
 function  computeAmplitudesProperties(pathway::ResonantInelastic.Pathway, grid::Radial.Grid, 
                                       settings::ResonantInelastic.Settings)
     productF = EmProperty(0.);   relativeCS = EmProperty(0.)
-    ## println(">> pathway: $(pathway.initialLevel.index)--$(pathway.intermediateLevel.index)--$(pathway.finalLevel.index) ...")
-    #
+    # println(">> pathway: $(pathway.initialLevel.index)--$(pathway.intermediateLevel.index)--$(pathway.finalLevel.index) ...")
+
     Defaults.setDefaults("relativistic subshell list", pathway.intermediateLevel.basis.subshells; printout=false)
     intermediateLevel = deepcopy(pathway.intermediateLevel)
     initialLevel      = deepcopy(pathway.initialLevel)
     
     #  The particular application requires to decide, which levels need to be "mixed with enhanced factor"
     
-    ## Interference in the RIXS out-channel (June 2025)
-    ## if settings.calcRixsCI    intermediateLevel =  Basics.modifyLevelMixing(intermediateLevel, settings.ciEnhancement)   end 
+    # Interference in the RIXS out-channel (June 2025)
+    # if settings.calcRixsCI    intermediateLevel =  Basics.modifyLevelMixing(intermediateLevel, settings.ciEnhancement)   end 
     
-    ## RIXS signals with double excitations (Nov 2025)
+    # RIXS signals with double excitations (Nov 2025)
     if settings.calcRixsCI       initialLevel      =  Basics.modifyLevelMixing(initialLevel, settings.ciEnhancement)        end 
     
     # Compute the amplitudes of the excitation and emission channels separately
@@ -228,11 +228,11 @@ function  computeAmplitudesProperties(pathway::ResonantInelastic.Pathway, grid::
     
     # Combine the amplitudes of the proper gauges to form the relativeCS
     ampCou = ampBab = ComplexF64(0.);    ampEx = ampEm = 0.
-    ## THE FIVE-LINE GAUGE RULE IS EXACTLY THE COMPONENTWISE PRODUCT.  It said: skip a mixed
-    ## Coulomb x Babushkin pair; send Coulomb x Coulomb to one sum and Babushkin x Babushkin to the other;
-    ## send anything involving a MAGNETIC multipole to both.  `em.amplitude * conj(ex.amplitude)` on two
-    ## EmPropertyC does all three by construction -- the components never meet, and a magnetic amplitude has
-    ## equal components and so lands in both.
+    # THE FIVE-LINE GAUGE RULE IS EXACTLY THE COMPONENTWISE PRODUCT.  It said: skip a mixed
+    # Coulomb x Babushkin pair; send Coulomb x Coulomb to one sum and Babushkin x Babushkin to the other;
+    # send anything involving a MAGNETIC multipole to both.  `em.amplitude * conj(ex.amplitude)` on two
+    # EmPropertyC does all three by construction -- the components never meet, and a magnetic amplitude has
+    # equal components and so lands in both.
     amp = EmPropertyC(0.0im)
     for  ex in newExChannels
         for  em in newEmChannels
@@ -279,10 +279,10 @@ function  computePathways(finalMultiplet::Multiplet, intermediateMultiplet::Mult
     end
     # Print all results to screen
     ResonantInelastic.displayResults(stdout, newPathways, settings)
-    #
+
     printSummary, iostream = Defaults.getDefaults("summary flag/stream")
     if  printSummary   ResonantInelastic.displayResults(iostream, newPathways, settings)   end
-    #
+
     if    output    return( newPathways )
     else            return( nothing )
     end
@@ -297,7 +297,7 @@ end
         an Array{PhotoExcitation.Channel,1} is returned.
 """
 function determineExcitationChannels(intermediateLevel::Level, initialLevel::Level, settings::ResonantInelastic.Settings)
-    ## One entry per multipole, carrying both gauges; the gauge loop and its hasMagnetic guard are gone.
+    # One entry per multipole, carrying both gauges; the gauge loop and its hasMagnetic guard are gone.
     channels = MultipoleAmplitude[]
     symi = LevelSymmetry(initialLevel.J, initialLevel.parity);    symn = LevelSymmetry(intermediateLevel.J, intermediateLevel.parity)
     for  mp in settings.multipoles
@@ -317,7 +317,7 @@ end
 function determineEmissionChannels(finalLevel::Level, intermediateLevel::Level, settings::ResonantInelastic.Settings)
     channels = MultipoleAmplitude[];   
     symn = LevelSymmetry(intermediateLevel.J, intermediateLevel.parity);    symf = LevelSymmetry(finalLevel.J, finalLevel.parity) 
-    ## One entry per multipole, carrying both gauges; the gauge loop and its hasMagnetic guard are gone.
+    # One entry per multipole, carrying both gauges; the gauge loop and its hasMagnetic guard are gone.
     for  mp in settings.multipoles
         if   AngularMomentum.isAllowedMultipole(symi, mp, symf)
             push!(channels, MultipoleAmplitude(mp, EmPropertyC(Complex(0.), Complex(0.))))
@@ -343,7 +343,7 @@ function  determinePathways(finalMultiplet::Multiplet, intermediateMultiplet::Mu
                    upper = Defaults.convertUnits("energy: to atomic", settings.omegaInInterval.upper) )
     omegaOutau = ( lower = Defaults.convertUnits("energy: to atomic", settings.omegaOutInterval.lower), 
                    upper = Defaults.convertUnits("energy: to atomic", settings.omegaOutInterval.upper) )
-    #
+
     for  iLevel  in  initialMultiplet.levels
         for  nLevel  in  intermediateMultiplet.levels
             for  fLevel  in  finalMultiplet.levels
@@ -385,7 +385,7 @@ function  displayPathways(stream::IO, pathways::Array{ResonantInelastic.Pathway,
     sa = sa * TableStrings.flushleft(57, "List of multipoles, gauges, kappas and total symmetries"; na=4)  
     sb = sb * TableStrings.flushleft(57, "partial (multipole, gauge, total J^P)                  "; na=4)
     println(stream, sa);    println(stream, sb);    println(stream, "  ", TableStrings.hLine(nx)) 
-    #   
+
     for  pathway in pathways
         sa  = "  ";    isym = LevelSymmetry( pathway.initialLevel.J,      pathway.initialLevel.parity)
                        msym = LevelSymmetry( pathway.intermediateLevel.J, pathway.intermediateLevel.parity)
@@ -398,9 +398,9 @@ function  displayPathways(stream::IO, pathways::Array{ResonantInelastic.Pathway,
         multipolesSymmetryList = Tuple{EmMultipole,LevelSymmetry,EmMultipole,EmGauge}[]
         for  exChannel in pathway.excitationChannels
             for  emChannel in pathway.emissionChannels
-                ## One row per surviving (multipole, multipole, GAUGE) combination.  Two electric multipoles
-                ## give a Coulomb and a Babushkin row; any magnetic partner gives a single Magnetic row.  The
-                ## mixed Coulomb x Babushkin pairs the flat form skipped simply never arise here.
+                # One row per surviving (multipole, multipole, GAUGE) combination.  Two electric multipoles
+                # give a Coulomb and a Babushkin row; any magnetic partner gives a single Magnetic row.  The
+                # mixed Coulomb x Babushkin pairs the flat form skipped simply never arise here.
                 exE = string(exChannel.multipole)[1] == 'E';   emE = string(emChannel.multipole)[1] == 'E'
                 if      exE && emE
                     push!( multipolesSymmetryList, (exChannel.multipole, msym, emChannel.multipole, Basics.Coulomb) )
@@ -418,7 +418,7 @@ function  displayPathways(stream::IO, pathways::Array{ResonantInelastic.Pathway,
     end
     println(stream, "  ", TableStrings.hLine(nx))
     println(stream, "\n>> A total of $(length(pathways)) RIXS pathways will be calculated. \n")
-    #
+
     return( nothing )
 end
 
@@ -431,7 +431,7 @@ end
 """
 function  displayResults(stream::IO, pathways::Array{ResonantInelastic.Pathway,1},  settings::ResonantInelastic.Settings)
     nx = 196
-    #
+
     println(stream, " ")
     println(stream, "  RIXS energies, widths, relative F = Re (<f|Mout|m> <m|Min|i>) values" * 
                     "  and relative cross sections (without omega/Gamma-dependent denominator):")
@@ -449,7 +449,7 @@ function  displayResults(stream::IO, pathways::Array{ResonantInelastic.Pathway,1
     sa = sa * TableStrings.center(36, " relative CS "; na=2);   
     sb = sb * TableStrings.center(36, "  Cou-|<f|Mout|m>  <m|Min|i>|^2-Bab"; na=2)
     println(stream, sa);    println(stream, sb);    println(stream, "  ", TableStrings.hLine(nx)) 
-    #   
+
     for  pathway in pathways
         sa  = " ";      isym = LevelSymmetry( pathway.initialLevel.J,      pathway.initialLevel.parity)
                         msym = LevelSymmetry( pathway.intermediateLevel.J, pathway.intermediateLevel.parity)
@@ -474,7 +474,7 @@ function  displayResults(stream::IO, pathways::Array{ResonantInelastic.Pathway,1
         println(stream, sa)
     end
     println(stream, "  ", TableStrings.hLine(nx))
-    #
+
     return( nothing )
 end
 

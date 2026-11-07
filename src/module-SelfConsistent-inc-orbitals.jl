@@ -144,7 +144,7 @@ function computeFunctionalSplit(coeffs1p::Array{Coefficient1p,1}, coeffs2p::Arra
     end
 
     rkCache = Dict{NTuple{5,Any}, Float64}()          # per-call, for quadruples that touch an active subshell
-    vkCache = Dict{Tuple{Int64,Subshell,Subshell,Int64}, Vector{Float64}}()   ## per-call; see computeFunctional
+    vkCache = Dict{Tuple{Int64,Subshell,Subshell,Int64}, Vector{Float64}}()   # per-call; see computeFunctional
     # HOW MUCH REDUNDANCY IS THERE AT THE POTENTIAL LEVEL?  Off unless JAC_EOL_RKCOUNT is set.  A Slater
     # integral is  int P_a(r) V_nu[b,d](r) P_c(r) dr,  and the expensive part -- the screened potential
     # V_nu[b,d] built by RadialIntegrals.buildScreenedPotential -- depends on only TWO of the four orbitals.

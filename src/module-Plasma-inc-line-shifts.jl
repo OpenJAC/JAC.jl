@@ -92,7 +92,7 @@ function  displayResults(stream::IO, multiplet::Multiplet, pMultiplet::Multiplet
     sa = sa * TableStrings.center(14, "Delta E";     na=4)              
     sb = sb * TableStrings.center(14, TableStrings.inUnits("energy"); na=4)
     println(stream, sa);    println(stream, sb);    println(stream, "  ", TableStrings.hLine(nx)) 
-    #  
+
     for  i  in  1:length(multiplet.levels)
         sa  = "  ";    sym = LevelSymmetry( multiplet.levels[i].J, multiplet.levels[i].parity);    
                     newsym = LevelSymmetry( pMultiplet.levels[i].J, pMultiplet.levels[i].parity)
@@ -107,7 +107,7 @@ function  displayResults(stream::IO, multiplet::Multiplet, pMultiplet::Multiplet
         println(stream, sa )
     end
     println(stream, "  ", TableStrings.hLine(nx), "\n\n")
-    #
+
     return( nothing )
 end
 
@@ -132,7 +132,7 @@ function  perform(scheme::Plasma.LineShiftScheme, computation::Plasma.Computatio
     finalFieldFree   = SelfConsistent.performSCF(scheme.finalConfigs,   nm, computation.grid, computation.asfSettings)
     initialMultiplet = Plasma.performCI(initialFieldFree.levels[1].basis, nm, computation.grid, computation.asfSettings, pm)
     finalMultiplet   = Plasma.performCI(finalFieldFree.levels[1].basis,   nm, computation.grid, computation.asfSettings, pm)
-    #
+
     # Display the plasma-induced level shifts of the initial and final multiplets, before the process-specific rates
     println("\n  Initial-state levels:")
     Plasma.displayResults(stdout, initialFieldFree, initialMultiplet, pm)
@@ -143,7 +143,7 @@ function  perform(scheme::Plasma.LineShiftScheme, computation::Plasma.Computatio
         Plasma.displayResults(iostream, initialFieldFree, initialMultiplet, pm)
         Plasma.displayResults(iostream, finalFieldFree, finalMultiplet, pm)
     end
-    #
+
     if      typeof(scheme.settings)  == AutoIonization.PlasmaSettings
         outcome = AutoIonization.computeLinesPlasma(finalMultiplet, initialMultiplet, nm, computation.grid, scheme.settings, pm)
         if output    results = Base.merge( results, Dict("AutoIonization lines in plasma:" => outcome) )         end

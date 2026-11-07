@@ -151,8 +151,7 @@ struct  Line
 end 
 
 
-# `Base.show(io::IO, line::RadiativeAuger.Line)`  ... prepares a proper printout of the variable line::RadiativeAuger.Line.
-    function Base.show(io::IO, line::RadiativeAuger.Line) 
+function Base.show(io::IO, line::RadiativeAuger.Line) 
     println(io, "initialLevel:           $(line.initialLevel)  ")
     println(io, "finalLevel:             $(line.finalLevel)  ")
     println(io, "totalRate:              $(line.totalRate)  ")
@@ -198,7 +197,7 @@ function  computeLines(finalMultiplet::Multiplet, initialMultiplet::Multiplet, g
     printstyled("RadiativeAuger.computeLines(): The computation of radiative Auger rates starts now ... \n", color=:light_green)
     printstyled("-------------------------------------------------------------------------------------- \n", color=:light_green)
     println("")
-    #
+
     lines = RadiativeAuger.determineLines(finalMultiplet, initialMultiplet, settings)
     # Display all selected lines before the computations start
     if  settings.printBefore    RadiativeAuger.displayLines(lines)    end
@@ -214,7 +213,7 @@ function  computeLines(finalMultiplet::Multiplet, initialMultiplet::Multiplet, g
     printSummary, iostream = Defaults.getDefaults("summary flag/stream")
     if  printSummary   RadiativeAuger.displayTotalRates(iostream, lines, settings)
                         RadiativeAuger.displayDifferentialRates(iostream, lines, settings)     end
-    #
+
     if    output    return( lines )
     else            return( nothing )
     end
@@ -282,7 +281,7 @@ end
     ... to display all differential rates, etc. of the selected lines. A neat table is printed but nothing is returned otherwise.
 """
 function  displayDifferentialRates(stream::IO, lines::Array{RadiativeAuger.Line,1}, settings::RadiativeAuger.Settings)
-    #
+
     # First, print lines and sharings
     nx = 130
     println(stream, " ")
@@ -299,7 +298,7 @@ function  displayDifferentialRates(stream::IO, lines::Array{RadiativeAuger.Line,
     sb = sb * TableStrings.center(34, TableStrings.inUnits("rate") * "        " * 
                                         TableStrings.inUnits("rate"); na=3)
     println(stream, sa);    println(stream, sb);    println(stream, "  ", TableStrings.hLine(nx)) 
-    #   
+
     for  line in lines
         sa  = "";      isym = LevelSymmetry( line.initialLevel.J, line.initialLevel.parity)
                         fsym = LevelSymmetry( line.finalLevel.J,   line.finalLevel.parity)
@@ -307,7 +306,7 @@ function  displayDifferentialRates(stream::IO, lines::Array{RadiativeAuger.Line,
         sa = sa * TableStrings.center(18, TableStrings.symmetries_if(isym, fsym); na=4) 
         energy = line.finalLevel.energy - line.initialLevel.energy
         sa = sa * @sprintf("%.5e", Defaults.convertUnits("energy: from atomic", energy)) * "    "
-        #
+
         for  (is, sharing)  in  enumerate(line.sharings)
             if  is == 1     sb = sa     else    sb = TableStrings.hBlank( length(sa) )    end
             sb = sb * @sprintf("%.4e", Defaults.convertUnits("energy: from atomic", sharing.omega))                    * "    "
@@ -319,7 +318,7 @@ function  displayDifferentialRates(stream::IO, lines::Array{RadiativeAuger.Line,
         end
     end
     println(stream, "  ", TableStrings.hLine(nx))
-    #
+
     return( nothing )
 end
 
@@ -343,7 +342,7 @@ function  displayLines(lines::Array{RadiativeAuger.Line,1})
     sa = sa * TableStrings.flushleft(57, "List of multipoles, gauges, kappas and total symmetries"; na=4)  
     sb = sb * TableStrings.flushleft(57, "partial (multipole, gauge, total J^P)                  "; na=4)
     println(sa);    println(sb);    println("  ", TableStrings.hLine(nx)) 
-    #   
+
     for  line in lines
         sa  = "  ";    isym = LevelSymmetry( line.initialLevel.J, line.initialLevel.parity)
                         fsym = LevelSymmetry( line.finalLevel.J,   line.finalLevel.parity)
@@ -351,7 +350,7 @@ function  displayLines(lines::Array{RadiativeAuger.Line,1})
         sa = sa * TableStrings.center(18, TableStrings.symmetries_if(isym, fsym); na=4)
         energy = line.initialLevel.energy - line.finalLevel.energy
         sa = sa * @sprintf("%.5e", Defaults.convertUnits("energy: from atomic", energy)) * "  "
-        #
+
         for  sharing  in  line.sharings
             sb =      @sprintf("%.4e", Defaults.convertUnits("energy: from atomic", sharing.omega))   * "  "
             sb = sb * @sprintf("%.4e", Defaults.convertUnits("energy: from atomic", sharing.epsilon)) * "    "
@@ -368,7 +367,7 @@ function  displayLines(lines::Array{RadiativeAuger.Line,1})
         end
     end
     println("  ", TableStrings.hLine(nx))
-    #
+
     return( nothing )
 end
 
@@ -378,7 +377,7 @@ end
     ... to display all total rates, etc. of the selected lines. A neat table is printed but nothing is returned otherwise.
 """
 function  displayTotalRates(stream::IO, lines::Array{RadiativeAuger.Line,1}, settings::RadiativeAuger.Settings)
-    #
+
     # First, print lines and sharings
     nx = 88
     println(stream, " ")
@@ -394,7 +393,7 @@ function  displayTotalRates(stream::IO, lines::Array{RadiativeAuger.Line,1}, set
     sb = sb * TableStrings.center(30, TableStrings.inUnits("rate") * "          " * 
                                         TableStrings.inUnits("rate"); na=3)
     println(stream, sa);    println(stream, sb);    println(stream, "  ", TableStrings.hLine(nx)) 
-    #   
+
     for  line in lines
         sa  = "";      isym = LevelSymmetry( line.initialLevel.J, line.initialLevel.parity)
                         fsym = LevelSymmetry( line.finalLevel.J,   line.finalLevel.parity)
@@ -402,13 +401,13 @@ function  displayTotalRates(stream::IO, lines::Array{RadiativeAuger.Line,1}, set
         sa = sa * TableStrings.center(18, TableStrings.symmetries_if(isym, fsym); na=4) 
         energy = line.initialLevel.energy - line.finalLevel.energy
         sa = sa * @sprintf("%.4e", Defaults.convertUnits("energy: from atomic", energy))                 * "      "
-        #
+
         sb = sa * @sprintf("%.5e", Defaults.convertUnits("rate: from atomic", line.totalRate.Coulomb))   * "     "
         sb = sb * @sprintf("%.5e", Defaults.convertUnits("rate: from atomic", line.totalRate.Babushkin)) * "   "
         println(stream,  sb )
     end
     println(stream, "  ", TableStrings.hLine(nx))
-    #
+
     return( nothing )
 end
 

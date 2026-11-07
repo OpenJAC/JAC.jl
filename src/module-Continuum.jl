@@ -129,9 +129,9 @@ function unsupportedScheme(fn::String, setting::String, scheme, implemented::Str
 end
 
 
-##  The wording of the six dispatch guards, written once so that they cannot drift apart.  Note that the two
-##  generateOrbitalForLevel methods implement a SMALLER set than generateOrbitalLocalPotential:  there is no
-##  level-route branch for ContSine, and a caller who selects it gets a named refusal rather than a marker.
+#  The wording of the six dispatch guards, written once so that they cannot drift apart.  Note that the two
+#  generateOrbitalForLevel methods implement a SMALLER set than generateOrbitalLocalPotential:  there is no
+#  level-route branch for ContSine, and a caller who selects it gets a named refusal rather than a marker.
 const  CONT_IMPLEMENTED_SOLUTION_LEVEL = "ContBessel, AsymptoticCoulomb, NonrelativisticCoulomb, BsplineGalerkin  " *
                                          "(NOT ContSine -- the level route has no branch for it)"
 const  CONT_IMPLEMENTED_SOLUTION_POT   = "ContBessel, ContSine, AsymptoticCoulomb, NonrelativisticCoulomb, BsplineGalerkin"
@@ -142,92 +142,92 @@ const  CONT_HOW_TO_SET_NORMALIZATION   = "setDefaults(\"method: normalization, .
                                          "Ong-Russek | Coulomb functions"
 
 
-##  THRESHOLDS FOR THE MATCHING-RADIUS CHECK of the Coulomb-function normalization, in RADIANS of inner phase shift.
-##  MEASURED 05-Nov-2026 by tools/probeContinuumMatchingRadius.jl over Z = 2, 18, 36, 92 at 0.05, 0.5, 5 and 50 Ha
-##  for kappa = -1, 1, -2, each on a box of 10 wavelengths with 40 mesh points per oscillation.
-##    33 SOUND orbitals spread between 6.0e-05 and 5.4e-04 rad -- so the worst sound case sits a factor 3.7 below
-##  the warn level, and all 33 reproduce the pre-guard normalization constant and phase EXACTLY.
-##    THE SPREAD IS CONVERTIBLE INTO WHAT A USER CARES ABOUT, which is why these numbers can be defended:  across
-##  the whole set the normalization constant's own variation over the probed radii is 2.4x the phase spread for a
-##  sound orbital and 3.5x for a bad one.  So `warn` is the point at which the normalization becomes uncertain at
-##  about the half-percent level, and `fatal` the point at which it exceeds ~30 % and is no longer a property of
-##  the solution at all.
+#  THRESHOLDS FOR THE MATCHING-RADIUS CHECK of the Coulomb-function normalization, in RADIANS of inner phase shift.
+#  MEASURED 05-Nov-2026 by tools/probeContinuumMatchingRadius.jl over Z = 2, 18, 36, 92 at 0.05, 0.5, 5 and 50 Ha
+#  for kappa = -1, 1, -2, each on a box of 10 wavelengths with 40 mesh points per oscillation.
+#    33 SOUND orbitals spread between 6.0e-05 and 5.4e-04 rad -- so the worst sound case sits a factor 3.7 below
+#  the warn level, and all 33 reproduce the pre-guard normalization constant and phase EXACTLY.
+#    THE SPREAD IS CONVERTIBLE INTO WHAT A USER CARES ABOUT, which is why these numbers can be defended:  across
+#  the whole set the normalization constant's own variation over the probed radii is 2.4x the phase spread for a
+#  sound orbital and 3.5x for a bad one.  So `warn` is the point at which the normalization becomes uncertain at
+#  about the half-percent level, and `fatal` the point at which it exceeds ~30 % and is no longer a property of
+#  the solution at all.
 const  CONT_MATCH_WARN                 = 2.0e-3
 const  CONT_MATCH_FATAL                = 1.0e-1
-##  AND THE PHASE ALONE IS HALF-BLIND, which the mutation pass of 05-Nov-2026 found and no amount of looking at
-##  sound orbitals could have:  the inner phase shift is extracted as the ANGLE of a complex number built from `P`
-##  and `Pprime`, so multiplying BOTH by the same factor leaves it EXACTLY unchanged.  A 30 % multiplicative
-##  distortion of the outer half of an orbital, and 2 % point-to-point noise, each left the phase spread identical
-##  to the tenth digit and passed as sound -- while the NORMALIZATION CONSTANT extracted at those same radii moved
-##  by 4.8 % and 4.0 % against 1.5e-04 for the sound orbital, a separation of more than a factor 300.
-##    So the normalization constant's own spread across the probed radii is the second, independent measure, and it
-##  is the one that answers the question a user actually asks:  is the normalization well defined?  Sound orbitals
-##  run to 1.2e-03;  the ruined ones to between 2.0e-02 and 1.8e-01.
+#  AND THE PHASE ALONE IS HALF-BLIND, which the mutation pass of 05-Nov-2026 found and no amount of looking at
+#  sound orbitals could have:  the inner phase shift is extracted as the ANGLE of a complex number built from `P`
+#  and `Pprime`, so multiplying BOTH by the same factor leaves it EXACTLY unchanged.  A 30 % multiplicative
+#  distortion of the outer half of an orbital, and 2 % point-to-point noise, each left the phase spread identical
+#  to the tenth digit and passed as sound -- while the NORMALIZATION CONSTANT extracted at those same radii moved
+#  by 4.8 % and 4.0 % against 1.5e-04 for the sound orbital, a separation of more than a factor 300.
+#    So the normalization constant's own spread across the probed radii is the second, independent measure, and it
+#  is the one that answers the question a user actually asks:  is the normalization well defined?  Sound orbitals
+#  run to 1.2e-03;  the ruined ones to between 2.0e-02 and 1.8e-01.
 const  CONT_SCALE_WARN                 = 5.0e-3
 const  CONT_SCALE_FATAL                = 1.0e-1
 
-##  THE MESH DENSITY BELOW WHICH MOVING THE MATCHING RADIUS IS NOT A REPAIR, in mesh points COUNTED over one
-##  oscillation of the de Broglie wavelength at the matching point.
-##    WHY THIS IS A BRACKET AND NOT A CROSSING, and the measurement is worth reading before anyone tightens it.
-##  MEASURED 06-Nov-2026 over four systems -- Ar and Kr at 5 Ha, U at 50 Ha, Ar at 0.5 Ha, each kappa = -1 -- with
-##  the box held fixed and grid.hp swept over thirteen values, comparing the normalization constant against the
-##  finest mesh of its own system.  THE ERROR IS NOT MONOTONE IN THE MESH DENSITY:
+#  THE MESH DENSITY BELOW WHICH MOVING THE MATCHING RADIUS IS NOT A REPAIR, in mesh points COUNTED over one
+#  oscillation of the de Broglie wavelength at the matching point.
+#    WHY THIS IS A BRACKET AND NOT A CROSSING, and the measurement is worth reading before anyone tightens it.
+#  MEASURED 06-Nov-2026 over four systems -- Ar and Kr at 5 Ha, U at 50 Ha, Ar at 0.5 Ha, each kappa = -1 -- with
+#  the box held fixed and grid.hp swept over thirteen values, comparing the normalization constant against the
+#  finest mesh of its own system.  THE ERROR IS NOT MONOTONE IN THE MESH DENSITY:
 ##
-##      Ar  5 Ha    counted  16     19     21     21     22     23     24     27     30     36     48
-##                  error   +11.5  +9.4   +1.5   -1.9   +1.7   -0.9   +0.1   +0.1   -0.1   -0.5   -0.3  %
-##      U  50 Ha    counted  15     20     20     21     22     23     25     29     35     46     62
-##                  error    +0.0  +3.4   +1.8   -1.2   +2.3   -0.3   +0.0   +0.1   +0.0   +0.0   -0.1  %
+#      Ar  5 Ha    counted  16     19     21     21     22     23     24     27     30     36     48
+#                  error   +11.5  +9.4   +1.5   -1.9   +1.7   -0.9   +0.1   +0.1   -0.1   -0.5   -0.3  %
+#      U  50 Ha    counted  15     20     20     21     22     23     25     29     35     46     62
+#                  error    +0.0  +3.4   +1.8   -1.2   +2.3   -0.3   +0.0   +0.1   +0.0   +0.0   -0.1  %
 ##
-##  TWO MESHES AT THE SAME COUNTED DENSITY, 21, DIFFER BY 3.3 % (+1.5 and -1.9), AND U AT 15 POINTS IS EXACT WHILE U
-##  AT 20 IS 3.4 % OUT.  So the counted density does NOT determine the error, and no single value of it can be a
-##  calibrated threshold -- which is the same non-monotone signature `Continuum.checkNormalizationRadius` already
-##  records for the normalization RADIUS (0.085 then 3.78 on a FINER grid), and has the same cause:  the matching
-##  point landing at an arbitrary phase of the oscillation.
-##    WHAT THE SAME SWEEP DOES ESTABLISH, strongly, is that THE VERDICT IS THE RELIABLE SIGNAL AND THE DENSITY IS
-##  NOT.  Every mesh judged `:sound` reproduced its system's converged constant to better than 0.5 %, and most to
-##  better than 0.2 %, in all four systems;  the meshes judged `:poor` scatter by up to 12 %.  That is what the
-##  phase-settling measure was built to do and it does it.
-##    HENCE WHAT THIS CONSTANT IS FOR, narrowly:  it decides only whether a MOVE of the matching radius may be
-##  taken, never whether an orbital is good.  Two measured points bracket it.  A move at 30 counted points returned
-##  -0.09 %, i.e. the repair worked;  the move that the dielectronic-recombination test case took at about 18
-##  counted points turned a +6.0 % error into a -5.6 % one, i.e. it relocated the error rather than removing it and
-##  reported success while doing so.  28 lies inside that bracket.  The crossing is not resolved more finely, and
-##  the scatter above shows why it cannot be from this quantity alone.
+#  TWO MESHES AT THE SAME COUNTED DENSITY, 21, DIFFER BY 3.3 % (+1.5 and -1.9), AND U AT 15 POINTS IS EXACT WHILE U
+#  AT 20 IS 3.4 % OUT.  So the counted density does NOT determine the error, and no single value of it can be a
+#  calibrated threshold -- which is the same non-monotone signature `Continuum.checkNormalizationRadius` already
+#  records for the normalization RADIUS (0.085 then 3.78 on a FINER grid), and has the same cause:  the matching
+#  point landing at an arbitrary phase of the oscillation.
+#    WHAT THE SAME SWEEP DOES ESTABLISH, strongly, is that THE VERDICT IS THE RELIABLE SIGNAL AND THE DENSITY IS
+#  NOT.  Every mesh judged `:sound` reproduced its system's converged constant to better than 0.5 %, and most to
+#  better than 0.2 %, in all four systems;  the meshes judged `:poor` scatter by up to 12 %.  That is what the
+#  phase-settling measure was built to do and it does it.
+#    HENCE WHAT THIS CONSTANT IS FOR, narrowly:  it decides only whether a MOVE of the matching radius may be
+#  taken, never whether an orbital is good.  Two measured points bracket it.  A move at 30 counted points returned
+#  -0.09 %, i.e. the repair worked;  the move that the dielectronic-recombination test case took at about 18
+#  counted points turned a +6.0 % error into a -5.6 % one, i.e. it relocated the error rather than removing it and
+#  reported success while doing so.  28 lies inside that bracket.  The crossing is not resolved more finely, and
+#  the scatter above shows why it cannot be from this quantity alone.
 const  CONT_MESH_SOUND                 = 28.0
 
 
-##  HOW MANY OSCILLATIONS OF THE OUTGOING WAVE MUST FIT IN THE BOX, for a convention that FITS AN ASYMPTOTIC SINE.
-##  Both numbers were measured 06-Nov-2026, and the experiment is `tools/probeSineBoxWaves.jl`:  a bare POINT proton,
-##  so the exact solution is the Coulomb function and `CoulombFunctionNorm` is correct at any radius and serves as
-##  the CONTROL.  The statistic is the norm of the NORMALIZED large component over a radial window both boxes
-##  contain, which is scale-free -- the Galerkin eigenvector's arbitrary scale cancels, and after normalization the
-##  same physical orbital must come out of any adequate box.  `hp` is equal in the two boxes of a pair, so the
-##  grids NEST and the window carries identical mesh points and identical weights.
+#  HOW MANY OSCILLATIONS OF THE OUTGOING WAVE MUST FIT IN THE BOX, for a convention that FITS AN ASYMPTOTIC SINE.
+#  Both numbers were measured 06-Nov-2026, and the experiment is `tools/probeSineBoxWaves.jl`:  a bare POINT proton,
+#  so the exact solution is the Coulomb function and `CoulombFunctionNorm` is correct at any radius and serves as
+#  the CONTROL.  The statistic is the norm of the NORMALIZED large component over a radial window both boxes
+#  contain, which is scale-free -- the Galerkin eigenvector's arbitrary scale cancels, and after normalization the
+#  same physical orbital must come out of any adequate box.  `hp` is equal in the two boxes of a pair, so the
+#  grids NEST and the window carries identical mesh points and identical weights.
 ##
-##      series A, box fixed at 12 a.u. and the ENERGY varied (eta = 5.0 ... 0.33):
-##          waves  0.54   0.76   1.05   1.43   1.91   2.67   3.82   5.73
-##          error  14.6%  61.2%  23.1%  11.3%   5.6%   9.1%   3.4%   0.8%      control 0.5 ... 3.6 %
-##      series B, ENERGY fixed (eta = 1.818) and only the box varied -- the confound removed:
-##          waves  0.54   0.71   0.97   1.23   1.76   2.46   3.51   5.27
-##          error  74.6%  57.7%  26.2%  10.2%  19.3%   2.6%  13.2%   6.0%      control 7e-8 above 8 a.u.
+#      series A, box fixed at 12 a.u. and the ENERGY varied (eta = 5.0 ... 0.33):
+#          waves  0.54   0.76   1.05   1.43   1.91   2.67   3.82   5.73
+#          error  14.6%  61.2%  23.1%  11.3%   5.6%   9.1%   3.4%   0.8%      control 0.5 ... 3.6 %
+#      series B, ENERGY fixed (eta = 1.818) and only the box varied -- the confound removed:
+#          waves  0.54   0.71   0.97   1.23   1.76   2.46   3.51   5.27
+#          error  74.6%  57.7%  26.2%  10.2%  19.3%   2.6%  13.2%   6.0%      control 7e-8 above 8 a.u.
 ##
-##  THE CONTROL IS WHAT MAKES THIS A MEASUREMENT.  In series B the default convention reproduces its own value to
-##  7e-8 across a factor seven in box size, so the box, the mesh and the solve are all innocent and the error
-##  belongs to the sine fit alone.  A first version of this experiment compared the normalization CONSTANT between
-##  boxes and was discarded:  N absorbs the eigenvector's arbitrary scale, so that comparison has no meaning, and
-##  its "control" drifted by factors of two.
+#  THE CONTROL IS WHAT MAKES THIS A MEASUREMENT.  In series B the default convention reproduces its own value to
+#  7e-8 across a factor seven in box size, so the box, the mesh and the solve are all innocent and the error
+#  belongs to the sine fit alone.  A first version of this experiment compared the normalization CONSTANT between
+#  boxes and was discarded:  N absorbs the eigenvector's arbitrary scale, so that comparison has no meaning, and
+#  its "control" drifted by factors of two.
 ##
-##  SO THE FATAL LEVEL IS ONE FULL OSCILLATION, and it is where the two series agree:  below one wave the error is
-##  15-75 %, which squares into a cross section wrong by a factor of 1.3 to 3.  The WARN level stays at four waves
-##  but claims LESS than it looks:  above one wave the error is an erratic 2.6-19.3 % at fixed eta and does NOT
-##  settle by 5.3 waves, and the 240 a.u. reference itself carries a fit residual of 0.337 -- so four waves is the
-##  level above which this experiment cannot certify anything, NOT a level above which the answer is known good.
+#  SO THE FATAL LEVEL IS ONE FULL OSCILLATION, and it is where the two series agree:  below one wave the error is
+#  15-75 %, which squares into a cross section wrong by a factor of 1.3 to 3.  The WARN level stays at four waves
+#  but claims LESS than it looks:  above one wave the error is an erratic 2.6-19.3 % at fixed eta and does NOT
+#  settle by 5.3 waves, and the 240 a.u. reference itself carries a fit residual of 0.337 -- so four waves is the
+#  level above which this experiment cannot certify anything, NOT a level above which the answer is known good.
 ##
-##  AND THE FIT RESIDUAL CANNOT DO THIS JOB, which is the finding that decided there should be a box tier at all.
-##  It is ANTI-correlated at the dangerous end:  74.6 % error at residual 0.038 and 61.2 % at 0.140, both BELOW its
-##  own 0.20 warning, while 2.6 % error reads 0.387 and warns.  The mechanism is plain once seen -- with less than
-##  one wave in the box the fit has almost nothing to satisfy, so it matches the stub nearly perfectly.  A small
-##  residual there means the fit is unconstrained, not that it is right.
+#  AND THE FIT RESIDUAL CANNOT DO THIS JOB, which is the finding that decided there should be a box tier at all.
+#  It is ANTI-correlated at the dangerous end:  74.6 % error at residual 0.038 and 61.2 % at 0.140, both BELOW its
+#  own 0.20 warning, while 2.6 % error reads 0.387 and warns.  The mechanism is plain once seen -- with less than
+#  one wave in the box the fit has almost nothing to satisfy, so it matches the stub nearly perfectly.  A small
+#  residual there means the fit is unconstrained, not that it is right.
 const  CONT_BOX_WAVES_FATAL            = 1.0
 const  CONT_BOX_WAVES_WARN             = 4.0
 
@@ -257,7 +257,7 @@ function generateOrbitalForLevel(energy::Float64, sh::Subshell, level::Level, nm
                                  settings::Continuum.Settings; nuclearPot::Union{Nothing,Radial.Potential}=nothing, 
                                  primitives::Union{Nothing,Bsplines.Primitives}=nothing, 
                                  storage::Union{Nothing,Dict{String,Array{Float64,2}}}=nothing)
-    #
+
     # Generate a (local) potential for the given level.  The NUCLEAR part depends only on the nuclear model
     # and the grid, so it is constant for a whole computation -- but this function is called once per line
     # AND per partial wave, so rebuilding it here is pure repeated work.  Profiling an AutoIonization run
@@ -266,11 +266,11 @@ function generateOrbitalForLevel(energy::Float64, sh::Subshell, level::Level, nm
     # Callers may therefore pass a potential built once; nothing is cached here, and omitting the keyword
     # reproduces the previous behaviour exactly.
     nuclearPotential  = isnothing(nuclearPot) ? Nuclear.nuclearPotential(nm, grid) : nuclearPot
-    ## wp1 = compute("radial potential: core-Hartree", grid, wLevel)
-    ## wp2 = compute("radial potential: Hartree-Slater", grid, wLevel)
-    ## wp3 = compute("radial potential: Kohn-Sham", grid, wLevel)
-    ## wp4 = compute("radial potential: Dirac-Fock-Slater", grid, wLevel)
-    ## wp  = Basics.computePotential(Basics.DFSField(0.42), grid, level)   
+    # wp1 = compute("radial potential: core-Hartree", grid, wLevel)
+    # wp2 = compute("radial potential: Hartree-Slater", grid, wLevel)
+    # wp3 = compute("radial potential: Kohn-Sham", grid, wLevel)
+    # wp4 = compute("radial potential: Dirac-Fock-Slater", grid, wLevel)
+    # wp  = Basics.computePotential(Basics.DFSField(0.42), grid, level)   
     wp  = Basics.computePotential(Basics.DFSField(1.0), grid, level);
     pot = Basics.add(nuclearPotential, wp)
 
@@ -296,8 +296,8 @@ function generateOrbitalForLevel(energy::Float64, sh::Subshell, level::Level, nm
     else    Continuum.unsupportedScheme("generateOrbitalForLevel", "Defaults.GBL_CONT_SOLUTION", Defaults.GBL_CONT_SOLUTION,
                                         CONT_IMPLEMENTED_SOLUTION_LEVEL, CONT_HOW_TO_SET_SOLUTION)
     end
-    #
-    #
+
+
     # Normalize the continuum orbital and determine its phase
     if      Defaults.GBL_CONT_NORMALIZATION  ==  PureSineNorm()
         cOrbital, phase = Continuum.normalizeOrbitalPureSine(cOrbital, pot.grid, settings; Zbar = Radial.determineZbar(pot))
@@ -351,7 +351,7 @@ function generateOrbitalForLevel(energy::Float64, sh::Subshell, level::Level, nm
     typeof(plasmaModel) == Basics.DebyeHueckelModel  ||
         error("Unsupported plasma model = $(plasmaModel)  (only Basics.DebyeHueckelModel is currently supported " *
               "for the plasma-screened continuum orbital).")
-    #
+
     # Generate the (local) potential for the given level exactly as in the field-free case, then Debye-Hueckel
     # screen the combined (nuclear + mean-field) potential as a whole -- see the docstring note above.
     nuclearPotential = isnothing(nuclearPot) ? Nuclear.nuclearPotential(nm, grid) : nuclearPot
@@ -385,7 +385,7 @@ function generateOrbitalForLevel(energy::Float64, sh::Subshell, level::Level, nm
     else    Continuum.unsupportedScheme("generateOrbitalForLevel", "Defaults.GBL_CONT_SOLUTION", Defaults.GBL_CONT_SOLUTION,
                                         CONT_IMPLEMENTED_SOLUTION_LEVEL, CONT_HOW_TO_SET_SOLUTION)
     end
-    #
+
     # Normalize the continuum orbital and determine its phase
     if      Defaults.GBL_CONT_NORMALIZATION  ==  PureSineNorm()
         cOrbital, phase = Continuum.normalizeOrbitalPureSine(cOrbital, pot.grid, settings; Zbar = Radial.determineZbar(pot))
@@ -431,7 +431,7 @@ function generateOrbitalLocalPotential(energy::Float64, sh::Subshell, pot::Radia
     else    Continuum.unsupportedScheme("generateOrbitalLocalPotential", "Defaults.GBL_CONT_SOLUTION", Defaults.GBL_CONT_SOLUTION,
                                         CONT_IMPLEMENTED_SOLUTION_POT, CONT_HOW_TO_SET_SOLUTION)
     end
-    #
+
     # Normalize the continuum orbital and determine its phase
     if      Defaults.GBL_CONT_NORMALIZATION  ==  PureSineNorm()
         cOrbital, phase, normFactor = Continuum.normalizeOrbitalPureSine(cOrbital, pot.grid, settings; Zbar = Radial.determineZbar(pot))
@@ -445,7 +445,7 @@ function generateOrbitalLocalPotential(energy::Float64, sh::Subshell, pot::Radia
     else    Continuum.unsupportedScheme("generateOrbitalLocalPotential", "Defaults.GBL_CONT_NORMALIZATION", Defaults.GBL_CONT_NORMALIZATION,
                                         CONT_IMPLEMENTED_NORMALIZATION, CONT_HOW_TO_SET_NORMALIZATION)
     end
-    #
+
     return( cOrbital, phase, normFactor )
 end
 
@@ -470,7 +470,7 @@ function generateOrbitalAsymptoticCoulomb(energy::Float64, sh::Subshell, pot::Ra
     eta  = - (kappa - im*y) / (energy + wc^2) / (gammaBar + im*y) / (2im)
     NP   = sqrt( (energy + 2*wc^2)/(pi*wc^2*q) );   NQ = -sqrt( energy / (pi*wc^2*q) )
     
-    ## println("Continuum-asymptotic Coulomb orbital for q = $q,  kappa = $kappa,  Zbar=$Zbar  y = $y,   gammaBar = $gammaBar,  eta = $eta")
+    # println("Continuum-asymptotic Coulomb orbital for q = $q,  kappa = $kappa,  Zbar=$Zbar  y = $y,   gammaBar = $gammaBar,  eta = $eta")
     if  Defaults.GBL_PRINT_DEBUG  println("Continuum-asymptotic Coulomb orbital for q = $q,  kappa = $kappa,  Zbar=$Zbar,  eta = $eta")    end
 
     
@@ -539,9 +539,9 @@ function generateOrbitalGalerkin(energy::Float64, sh::Subshell, pot::Radial.Pote
     Continuum.checkNormalizationRadius(pot)
     P = zeros(settings.mtp);   Q = zeros(settings.mtp);   Pprime = zeros(settings.mtp);    Qprime = zeros(settings.mtp)
     nsL = pot.grid.nsL - 1;    nsS = pot.grid.nsS - 1
-    ## The B-spline basis depends only on the grid, but this function is called once per line AND per partial wave;
-    ## profiling the Auger rates alone (11-Aug-2026) put 34.3% of them into generatePrimitives.  Nothing is cached
-    ## here: a caller that knows its grid is fixed builds the basis once and hands it in.
+    # The B-spline basis depends only on the grid, but this function is called once per line AND per partial wave;
+    # profiling the Auger rates alone (11-Aug-2026) put 34.3% of them into generatePrimitives.  Nothing is cached
+    # here: a caller that knows its grid is fixed builds the basis once and hands it in.
     if  isnothing(primitives)   wa = Bsplines.generatePrimitives(pot.grid)
     else                        wa = primitives
         wa.grid.nsL == pot.grid.nsL  &&  wa.grid.nsS == pot.grid.nsS  &&  wa.grid.NoPoints == pot.grid.NoPoints  ||
@@ -561,13 +561,13 @@ function generateOrbitalGalerkin(energy::Float64, sh::Subshell, pot::Radial.Pote
             end
         end
     end
-    ## Only the LOWEST eigenpair is used below -- the null-space vector of wc = wb'*wb, which is the Galerkin
-    ## solution.  Asking LAPACK for that one pair (syevr) instead of decomposing the whole matrix is ~2.7x
-    ## faster at this size (671x671, measured 12-Aug-2026); the eigenvector agrees with the full solve to
-    ## ~1e-12, and the eigenvalue -- which is ~0 by construction and enters only the printout below -- to the
-    ## same absolute accuracy.  Profiling the Auger rates put 18.7% of them in this call.
+    # Only the LOWEST eigenpair is used below -- the null-space vector of wc = wb'*wb, which is the Galerkin
+    # solution.  Asking LAPACK for that one pair (syevr) instead of decomposing the whole matrix is ~2.7x
+    # faster at this size (671x671, measured 12-Aug-2026); the eigenvector agrees with the full solve to
+    # ~1e-12, and the eigenvalue -- which is ~0 by construction and enters only the printout below -- to the
+    # same absolute accuracy.  Profiling the Auger rates put 18.7% of them in this call.
     wd = Basics.diagonalize(MatrixWithLinearAlgebra(), wc; range=1:1)
-    ## println(">>> Galerkin-eigenvalues = $(wd.values[1]), $(wd.values[2]) for  $sh  with  energy = $energy")
+    # println(">>> Galerkin-eigenvalues = $(wd.values[1]), $(wd.values[2]) for  $sh  with  energy = $energy")
     
     cOrbital = Bsplines.generateOrbitalFromPrimitives(sh, energy, settings.mtp, wd.vectors[1], wa)  
     mtp      = size(cOrbital.P,1)
@@ -576,6 +576,7 @@ function generateOrbitalGalerkin(energy::Float64, sh::Subshell, pot::Radial.Pote
     
     return( cOrbital )
 end
+
 
 """
 `Continuum.generateOrbitalNonrelativisticCoulomb(energy::Float64, sh::Subshell, Zeff::Float64, grid::Radial.Grid, 
@@ -595,14 +596,14 @@ end
         the actual potential.  The formulas are left in place for whoever supplies a complex 1F1.
 """
 function generateOrbitalNonrelativisticCoulomb(energy::Float64, sh::Subshell, Zeff::Float64, grid::Radial.Grid, settings::Continuum.Settings) 
-    ##  A LOUD STOP, WHERE A SWALLOWED println USED TO BE.  This was already the author's intent -- the line that
-    ##  stood here said "presently, NO Julia implementation of the hypergeometric function with complex arguments
-    ##  available" -- but as a `println` it goes to stdout, is suppressed by every `redirect_stdout(devnull)` path in
-    ##  the package, and execution then continued into the loops below, which pass COMPLEX arguments to GSL.hypergeom
-    ##  (a real-only 1F1) and assign a complex result into a Float64 array.  Measured 03-Nov-2026, that surfaces as
-    ##  `InexactError: Float64(1.0 + 0.9027im)` from inside this function, with nothing to connect it to the setting
-    ##  the user chose.  The formulas below are left in place as the intended implementation, for whoever supplies a
-    ##  complex 1F1;  they have never produced an orbital.
+    #  A LOUD STOP, WHERE A SWALLOWED println USED TO BE.  This was already the author's intent -- the line that
+    #  stood here said "presently, NO Julia implementation of the hypergeometric function with complex arguments
+    #  available" -- but as a `println` it goes to stdout, is suppressed by every `redirect_stdout(devnull)` path in
+    #  the package, and execution then continued into the loops below, which pass COMPLEX arguments to GSL.hypergeom
+    #  (a real-only 1F1) and assign a complex result into a Float64 array.  Measured 03-Nov-2026, that surfaces as
+    #  `InexactError: Float64(1.0 + 0.9027im)` from inside this function, with nothing to connect it to the setting
+    #  the user chose.  The formulas below are left in place as the intended implementation, for whoever supplies a
+    #  complex 1F1;  they have never produced an orbital.
     error("\n\nContinuum.generateOrbitalNonrelativisticCoulomb():  STOP -- this solution method is NOT implemented.\n" *
           "    requested by           : setDefaults(\"method: continuum, nonrelativistic Coulomb\")\n" *
           "    what is missing        : a confluent hypergeometric function 1F1 with COMPLEX arguments;  GSL.hypergeom\n" *
@@ -776,19 +777,19 @@ end
 """
 function reportContinuumAmplitude(P::Array{Float64,1}, cOrbital::Orbital, grid::Radial.Grid, sa::String;
                                   residual::Float64=NaN)
-    ##  THE FIT RESIDUAL IS THE ONLY ONE OF THESE MEASURES THAT SEES A NON-ASYMPTOTIC ORBITAL, measured 03-Nov-2026
-    ##  and it is why `abs(N) > 30` could be deleted rather than merely corrected.  Over sixteen SOUND He+ orbitals,
-    ##  0.5 to 200 eV in 24 and 40 a.u. boxes, the interior/asymptotic ratio read 1.000 or 1.001 -- and it read
-    ##  1.000 for all seven DELIBERATELY ruined ones too, slow electrons in boxes far too small for them, so the
-    ##  ratio cannot separate the two cases at all.  The residual separates them by orders of magnitude:
+    #  THE FIT RESIDUAL IS THE ONLY ONE OF THESE MEASURES THAT SEES A NON-ASYMPTOTIC ORBITAL, measured 03-Nov-2026
+    #  and it is why `abs(N) > 30` could be deleted rather than merely corrected.  Over sixteen SOUND He+ orbitals,
+    #  0.5 to 200 eV in 24 and 40 a.u. boxes, the interior/asymptotic ratio read 1.000 or 1.001 -- and it read
+    #  1.000 for all seven DELIBERATELY ruined ones too, slow electrons in boxes far too small for them, so the
+    #  ratio cannot separate the two cases at all.  The residual separates them by orders of magnitude:
     ##
-    ##      sound     2.2e-04 (200 eV, 40 a.u.)  ...  1.8e-01 (0.5 eV, 24 a.u.)
-    ##      ruined    1.9e-01 (1.0 eV,  8 a.u.)  ...  1.8e+01 (0.05 eV, 12 a.u.)
+    #      sound     2.2e-04 (200 eV, 40 a.u.)  ...  1.8e-01 (0.5 eV, 24 a.u.)
+    #      ruined    1.9e-01 (1.0 eV,  8 a.u.)  ...  1.8e+01 (0.05 eV, 12 a.u.)
     ##
-    ##  Hence `required` 0.2 and `fatal` 1.0 below:  at a residual of 1.0 the misfit is as large as the amplitude it
-    ##  is a fraction of, so the asymptotic form the normalization assumed does not describe this orbital.  A NaN
-    ##  means the caller has no fit to offer -- normalizeOrbitalCoulombFunctions, which matches analytic functions instead --
-    ##  and the tier is then skipped rather than guessed at.
+    #  Hence `required` 0.2 and `fatal` 1.0 below:  at a residual of 1.0 the misfit is as large as the amplitude it
+    #  is a fraction of, so the asymptotic form the normalization assumed does not describe this orbital.  A NaN
+    #  means the caller has no fit to offer -- normalizeOrbitalCoulombFunctions, which matches analytic functions instead --
+    #  and the tier is then skipped rather than guessed at.
     resRequired = 0.2;    resFatal = 1.0
     if       !isnan(residual)  &&  residual > resFatal
         error("\n\nContinuum.normalizeOrbital" * sa * "():  STOP -- the orbital does not have the asymptotic form " *
@@ -797,7 +798,7 @@ function reportContinuumAmplitude(P::Array{Float64,1}, cOrbital::Orbital, grid::
         @warn("\n\nContinuum.normalizeOrbital" * sa * "():  the orbital only approximately has the asymptotic form " *
               "that this normalization assumes.\n" * Continuum.asymptoticFitReport(residual, resRequired, resFatal, cOrbital) )
     end
-    #
+
     wa = Continuum.checkContinuumAmplitude(P, cOrbital.energy, grid)
     if  wa.checked  &&  wa.ratio > wa.fatal
         # THE TWO TIERS DO DIFFERENT JOBS AND THE SPLIT IS MEASURED, not a hedge.  The normalization is fixed by the
@@ -961,7 +962,7 @@ function checkNormalizationRadius(pot::Radial.Potential)
         # "Zeff" at the normalization point and the asymptotic charge are different numbers, and the data behind
         # the 10 cannot say which of them the criterion should use. Refusing on that basis would be exactly the
         # "a finding from one scan is a hypothesis" mistake this list has twice paid for.
-        #
+
         # WHAT IT COSTS TODAY, measured 01-Sep-2026: as an ERROR this refuses exactly ONE case in the whole test
         # suite -- testModule_Cascade_StepwiseDecay, at Zeff*r = 9.36 against 10, i.e. 6 % short. Repairing that
         # needs rbox 9.5 -> 14.0, a 47 % larger box, and it MOVES THE NUMBERS, so the approved reference would
@@ -1079,7 +1080,7 @@ function gridConsistency(maxEnergy::Float64, grid::Radial.Grid; minEnergy::Union
     slowWavelgth = slowWavenb  > 0.  ?  2pi / slowWavenb  :  0.
     
     ptsPerOsc = wavelgth / grid.hp
-    #
+
     if      grid.hp == 0.
         error("\n\nContinuum.gridConsistency():  STOP -- this grid has grid.hp = 0. and therefore no asymptotic region " *
                 "with a constant step size.\n" *
@@ -1365,12 +1366,12 @@ function asymptoticAmplitude(P::Array{Float64,1}, grid::Radial.Grid, mtp::Int64,
     wc   = Defaults.getDefaults("speed of light: c")
     q    = sqrt( 2*energy + energy/(wc*wc) )
     y    = Zbar * (energy + wc^2) / (wc^2 * q)
-    ##  the outer third of the mesh, which keeps the inner, non-asymptotic region out of the fit
+    #  the outer third of the mesh, which keeps the inner, non-asymptotic region out of the fit
     iLow = max(2, mtp - div(mtp, 3));     nFitted = mtp - iLow + 1
     if  energy <= 0.0   ||   nFitted < 10   ||   grid.r[iLow] <= 0.0
         return( (A = 0.0, delta = 0.0, residual = Inf, nFitted = nFitted) )
     end
-    #
+
     Saa = 0.0;   Sab = 0.0;   Sbb = 0.0;   va = 0.0;   vb = 0.0
     for  i = iLow:mtp
         theta = q*grid.r[i] + y*log(2q*grid.r[i]);    sn = sin(theta);    cs = cos(theta)
@@ -1381,7 +1382,7 @@ function asymptoticAmplitude(P::Array{Float64,1}, grid::Radial.Grid, mtp::Int64,
     if  abs(det) < 1.0e-30   return( (A = 0.0, delta = 0.0, residual = Inf, nFitted = nFitted) )   end
     a = (Sbb*va - Sab*vb) / det;    b = (Saa*vb - Sab*va) / det;    A = sqrt(a*a + b*b)
     if  A <= 0.0             return( (A = 0.0, delta = 0.0, residual = Inf, nFitted = nFitted) )   end
-    #
+
     wa = 0.0
     for  i = iLow:mtp
         theta = q*grid.r[i] + y*log(2q*grid.r[i])
@@ -1426,7 +1427,7 @@ function normalizeOrbitalPureSine(cOrbital::Orbital, grid::Radial.Grid, settings
     newOrbital = Orbital( cOrbital.subshell, cOrbital.isBound, cOrbital.useStandardGrid, cOrbital.energy, 
                             P, Q, Pprime, Qprime, cOrbital.grid)
 
-    normF = N * wa.A   ## the fitted asymptotic amplitude of the P component after scaling, as a measure of the amplitude
+    normF = N * wa.A   # the fitted asymptotic amplitude of the P component after scaling, as a measure of the amplitude
 
     return( newOrbital, phi, normF )
 end
@@ -1440,7 +1441,7 @@ end
 function normalizeOrbitalCoulombSine(cOrbital::Orbital, pot::Radial.Potential, settings::Continuum.Settings) 
     mtp = size( cOrbital.P, 1);   energy = cOrbital.energy    
     
-    if  false  ## use non-relativistic Coulomb-sine wave representation
+    if  false  # use non-relativistic Coulomb-sine wave representation
         wc   = Defaults.getDefaults("speed of light: c");    q = sqrt( 2*cOrbital.energy );        l = Basics.subshell_l(cOrbital.subshell)
         Zbar = Radial.determineZbar(pot);    
         PPprime = cOrbital.P[mtp] / cOrbital.Pprime[mtp];    kr  = q * pot.grid.r[mtp];   at = atan( PPprime * q )
@@ -1452,8 +1453,8 @@ function normalizeOrbitalCoulombSine(cOrbital::Orbital, pot::Radial.Potential, s
         
         println(">> (Non-relativistic) Coulomb-sine normalized continuum orbital with normalization constant N=" * @sprintf("%.4e",N) *
                 " and phase phi=" * @sprintf("%.4e",phi) * " at r=" * @sprintf("%.4e",pot.grid.r[mtp])   * " a.u." )
-        #
-    else      ## use relativistic Coulomb-sine wave representation
+
+    else      # use relativistic Coulomb-sine wave representation
         wc   = Defaults.getDefaults("speed of light: c");    q = sqrt( 2*energy + energy/(wc*wc));      kappa = cOrbital.subshell.kappa
         Zbar = Radial.determineZbar(pot);    y = Zbar * (energy + wc^2) / (wc^2 * q);   gammaBar = sqrt(kappa^2 - Zbar^2 / wc^2)
         eta  = log( - (kappa - im*y) / (energy + wc^2) / (gammaBar + im*y)) / (2*im)
@@ -1462,18 +1463,18 @@ function normalizeOrbitalCoulombSine(cOrbital::Orbital, pot::Radial.Potential, s
         # Select the 'ratio' on which the thetaprimephase is determined
         if  false   PprimeP = cOrbital.Pprime[mtp] / cOrbital.P[mtp];        at = atan( - PprimeP / thetaprime );   son = "P'/P"    
         else        PprimeP = cOrbital.Q[mtp] * NP / cOrbital.P[mtp] / NQ;   at = atan( PprimeP );                  son = "Q/P"     end
-        #
+
         argG  = SpecialFunctions.gamma(gammaBar + im*y)
-        theta = q * pot.grid.r[mtp]  +  y * log(2q * pot.grid.r[mtp])  - atan(argG.im / argG.re)  -  pi*gammaBar/2 ##  +  eta.re
+        theta = q * pot.grid.r[mtp]  +  y * log(2q * pot.grid.r[mtp])  - atan(argG.im / argG.re)  -  pi*gammaBar/2 #  +  eta.re
         phi = at - theta
         phi = rem(phi+1000pi, pi)    # to bring phi in the interval 0. <= phi < pi
-        ##  A windowless form was tried here and REFUSED by measurement, 03-Nov-2026:  with phi = at - theta it
-        ##  reduces to A = sqrt(P^2 + (Q*NP/NQ)^2), the envelope built from the two components of the spinor, which
-        ##  are in quadrature only asymptotically.  Calibrated against this window ABOVE 14 eV, where the window is
-        ##  known to read the true amplitude, it missed by 1.4 to 4.2 % and non-monotonically, because at the radii
-        ##  used here -- about 22 a.u. -- the Coulomb tail has not yet left that quadrature exact.  The FIT below
-        ##  needs no such assumption:  it absorbs the phase as a free parameter and reads the amplitude from hundreds
-        ##  of points, which is why it succeeds where that one-point form failed.
+        #  A windowless form was tried here and REFUSED by measurement, 03-Nov-2026:  with phi = at - theta it
+        #  reduces to A = sqrt(P^2 + (Q*NP/NQ)^2), the envelope built from the two components of the spinor, which
+        #  are in quadrature only asymptotically.  Calibrated against this window ABOVE 14 eV, where the window is
+        #  known to read the true amplitude, it missed by 1.4 to 4.2 % and non-monotonically, because at the radii
+        #  used here -- about 22 a.u. -- the Coulomb tail has not yet left that quadrature exact.  The FIT below
+        #  needs no such assumption:  it absorbs the phase as a free parameter and reads the amplitude from hundreds
+        #  of points, which is why it succeeds where that one-point form failed.
         wa = Continuum.asymptoticAmplitude(cOrbital.P, pot.grid, mtp, energy, Continuum.asymptoticCharge(Zbar))
         A  = wa.A;    N   = NP / A
         
@@ -1487,7 +1488,7 @@ function normalizeOrbitalCoulombSine(cOrbital::Orbital, pot::Radial.Potential, s
     newOrbital = Orbital( cOrbital.subshell, cOrbital.isBound, cOrbital.useStandardGrid, cOrbital.energy, 
                             P, Q, Pprime, Qprime, cOrbital.grid)
 
-    normF = N * wa.A   ## the fitted asymptotic amplitude of the P component after scaling, as a measure of the amplitude
+    normF = N * wa.A   # the fitted asymptotic amplitude of the P component after scaling, as a measure of the amplitude
 
     return( newOrbital, phi, normF )
 end
@@ -1507,13 +1508,13 @@ function normalizeOrbitalOngRussek(cOrbital::Orbital, pot::Radial.Potential, set
     Pe = cOrbital.P[mtp];   Pep = cOrbital.Pprime[mtp];       r0 = pot.grid.r[mtp]
     # Compute U-function
     U = wc /2. * ((E-V)*dVdr - wc^2 *kappa*(kappa+1) /r0^3) / (( (E-V)^2 -wc^4 - wc^2 *kappa*(kappa+1) / r0^2)^(3/2)) * Pe
-    ## U = U - wc * (Pep + dVdr * Pe / (2*(E-V+ 2* wc^2)) ) / (( (E-V)^2 -wc^4 - wc^2 *kappa*(kappa+1)/r0^2)^(1/2))
+    # U = U - wc * (Pep + dVdr * Pe / (2*(E-V+ 2* wc^2)) ) / (( (E-V)^2 -wc^4 - wc^2 *kappa*(kappa+1)/r0^2)^(1/2))
     U = U - wc * (Pep + dVdr * Pe / (2*(E-V+ 2* wc^2)) ) / (( (E-V)^2 -wc^4 - wc^2 *kappa*(kappa+1)/r0^2)^(1/2))
     # Compute A-function
     A = (( (E-V)^2 -wc^4 - wc^2 *kappa*(kappa+1)/r0^2)^(1/2)) / (E-V+wc^2) * (Pe^2 + U^2)
     A = sqrt(A);              phir0 = atan(U, Pe)
     phi = phir0 - q*r0;       N  = 1 / (A * sqrt(pi*wc))
-    phi = rem(phi+1000pi, pi)    ## to bring phi in the interval 0. <= phi < pi
+    phi = rem(phi+1000pi, pi)    # to bring phi in the interval 0. <= phi < pi
     
     println(">> WKB (Ong-Russek) normalized continuum orbital with normalization constant N=" * @sprintf("%.4e",N) *
             " and phase phi=" * @sprintf("%.4e",phi) *
@@ -1521,8 +1522,8 @@ function normalizeOrbitalOngRussek(cOrbital::Orbital, pot::Radial.Potential, set
 
     
     P = N .* cOrbital.P;   Q = N .* cOrbital.Q;   Pprime = N .* cOrbital.Pprime;   Qprime = N .* cOrbital.Qprime;   
-    ##  this routine's WKB envelope is phase-complete and stays;  the fit supplies the REPORTED amplitude and, through
-    ##  its residual, the check that the orbital has reached the asymptotic form at all
+    #  this routine's WKB envelope is phase-complete and stays;  the fit supplies the REPORTED amplitude and, through
+    #  its residual, the check that the orbital has reached the asymptotic form at all
     wa = Continuum.asymptoticAmplitude(P, pot.grid, mtp, cOrbital.energy,
                                        Continuum.asymptoticCharge(Radial.determineZbar(pot)))
     Continuum.reportContinuumAmplitude(P, cOrbital, pot.grid, "OngRussek"; residual = wa.residual)
@@ -1712,7 +1713,7 @@ function checkMatchingRadius(cOrbital::Orbital, pot::Radial.Potential, l::Int64,
     energy = cOrbital.energy
     α  = Defaults.getDefaults("alpha")  ;   wc = 1/α
     q  = sqrt( energy * (energy + 2 * wc^2) ) / wc
-    λr = 2pi / q                                             ## the de Broglie wavelength, in a.u.
+    λr = 2pi / q                                             # the de Broglie wavelength, in a.u.
     rOuter = pot.grid.r[mtp]
 
     # POINTS PER OSCILLATION IS COUNTED OVER THE OUTER WAVELENGTH, NOT OBTAINED BY DIVIDING BY A LOCAL STEP, and the
@@ -1727,7 +1728,7 @@ function checkMatchingRadius(cOrbital::Orbital, pot::Radial.Potential, l::Int64,
     # -- is a fair proxy for the counted density, running a few percent BELOW it.  It is the per-point quotient, not
     # that proxy, which is unusable.
     iOne = something( findfirst(k -> pot.grid.r[k] >= rOuter - λr, 1:mtp), 1 )
-    ppo  = Float64(mtp - iOne + 1)                           ## counted points per oscillation, carried to the caller
+    ppo  = Float64(mtp - iOne + 1)                           # counted points per oscillation, carried to the caller
 
     # THE WINDOW IS THE OUTER TWO WAVELENGTHS, not a fixed number of mesh points.  A fixed point count is the error
     # that cost weeks on the sibling guard (see the amplitude note in Continuum.asymptoticAmplitude):  at a fine mesh
@@ -1736,8 +1737,8 @@ function checkMatchingRadius(cOrbital::Orbital, pot::Radial.Potential, l::Int64,
     iInner = something( findfirst(k -> pot.grid.r[k] >= rInner, 1:mtp), 1 )
     nAvail = mtp - iInner + 1
     if  nAvail < 16
-        ## Too few points in the outer two wavelengths to say anything;  that is itself a coarse-mesh statement,
-        ## and it is reported rather than silently passed.
+        # Too few points in the outer two wavelengths to say anything;  that is itself a coarse-mesh statement,
+        # and it is reported rather than silently passed.
         return( (index=mtp, moved=false, declined=false, spread=NaN, jitter=NaN, scaleDrift=NaN, ppo=ppo,
                  nProbes=nAvail, inside=false, rTP=0.0, verdict=:tooFewPoints) )
     end
@@ -1845,7 +1846,7 @@ function matchingRadiusReport(wa::NamedTuple, cOrbital::Orbital, pot::Radial.Pot
     energy = cOrbital.energy
     α  = Defaults.getDefaults("alpha")  ;   wc = 1/α
     q  = sqrt( energy * (energy + 2 * wc^2) ) / wc  ;   λr = 2pi / q
-    box = pot.grid.r[mtp] / λr                               ## box, in wavelengths
+    box = pot.grid.r[mtp] / λr                               # box, in wavelengths
     sh  = string(cOrbital.subshell)
 
     # WHICH GRID IS AT FAULT, and the order of these tests is the measured one rather than a guess.  EVERY badly
@@ -1984,19 +1985,19 @@ function normalizeOrbitalCoulombFunctions(cOrbital::Orbital, pot::Radial.Potenti
     N = m.N  ;    δ = m.iPhase  ;    Δ = m.cPhase  ;    sa = m.kind
 
     P = N .* cOrbital.P  ;   Q = N .* cOrbital.Q  ;   Pprime = N .* cOrbital.Pprime  ;   Qprime = N .* cOrbital.Qprime  ;   
-    ##  NO ASYMPTOTIC-FIT TIER HERE, AND THE REASON IS THE CONVENTION ITSELF, not an oversight -- it was added on
-    ##  03-Nov-2026 for uniformity and WITHDRAWN the same day, which is worth recording.  The other three conventions
-    ##  normalize against the ASYMPTOTIC FORM of the wave, so a fit to that form is exactly their validity criterion.
-    ##  This one matches the orbital to the EXACT Coulomb (or Bessel) functions, which hold at any radius, so it is
-    ##  legitimately usable where the asymptotic expansion is not.  Measured: Ne-like Kr, Zbar ~ 27, 16.7 eV in a
-    ##  10 a.u. box gives eta ~ 24, where the logarithmic term eta*ln(2qr) ~ 76 dwarfs q*r ~ 11 and the asymptotic
-    ##  form is meaningless -- the fit residual is 4.77 and refused four suite tests, while this normalization is
-    ##  sound there and always has been.  A measure may only guard the assumption its own routine makes.
-    ##    AND THAT IS WHY THE GUARD ABOVE TAKES THE FORM IT DOES (05-Nov-2026).  The assumption THIS routine makes is
-    ##  not that the wave is asymptotic but that ONE radius suffices, so the measure asks exactly that: the inner
-    ##  phase shift is radius-independent wherever the match is legitimate, and its spread over the outer two
-    ##  wavelengths is therefore the convention's own validity criterion -- needing no asymptotic form, no reference
-    ##  data, and no absolute scale.
+    #  NO ASYMPTOTIC-FIT TIER HERE, AND THE REASON IS THE CONVENTION ITSELF, not an oversight -- it was added on
+    #  03-Nov-2026 for uniformity and WITHDRAWN the same day, which is worth recording.  The other three conventions
+    #  normalize against the ASYMPTOTIC FORM of the wave, so a fit to that form is exactly their validity criterion.
+    #  This one matches the orbital to the EXACT Coulomb (or Bessel) functions, which hold at any radius, so it is
+    #  legitimately usable where the asymptotic expansion is not.  Measured: Ne-like Kr, Zbar ~ 27, 16.7 eV in a
+    #  10 a.u. box gives eta ~ 24, where the logarithmic term eta*ln(2qr) ~ 76 dwarfs q*r ~ 11 and the asymptotic
+    #  form is meaningless -- the fit residual is 4.77 and refused four suite tests, while this normalization is
+    #  sound there and always has been.  A measure may only guard the assumption its own routine makes.
+    #    AND THAT IS WHY THE GUARD ABOVE TAKES THE FORM IT DOES (05-Nov-2026).  The assumption THIS routine makes is
+    #  not that the wave is asymptotic but that ONE radius suffices, so the measure asks exactly that: the inner
+    #  phase shift is radius-independent wherever the match is legitimate, and its spread over the outer two
+    #  wavelengths is therefore the convention's own validity criterion -- needing no asymptotic form, no reference
+    #  data, and no absolute scale.
     Continuum.reportContinuumAmplitude(P, cOrbital, pot.grid, "CoulombFunctions")
     newOrbital = Orbital( cOrbital.subshell, cOrbital.isBound, cOrbital.useStandardGrid, cOrbital.energy, 
                             P, Q, Pprime, Qprime, cOrbital.grid)

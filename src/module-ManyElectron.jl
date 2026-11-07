@@ -85,6 +85,7 @@ function Base.string(from::ManyElectron.StartFromPrevious)
     return( sa )
 end
 
+
 function Base.show(io::IO, from::ManyElectron.StartFromPrevious)
     sa = "Start from previously-calculated orbitals for shells:\n" * string(from);       print(io, sa, "\n")
 end
@@ -169,7 +170,7 @@ struct  AsfSettings
     frozenSubshells        ::Array{Subshell,1}
     gridAccuracy           ::Float64
     gridStopper            ::Bool
-    #
+
     eeInteractionCI        ::AbstractEeInteraction
     qedModel               ::AbstractQedModel 	
     jjLS                   ::LSjjSettings 
@@ -249,7 +250,7 @@ function Base.show(io::IO, settings::AsfSettings)
         println(io, "frozenSubshells:      $(settings.frozenSubshells)  ")
         println(io, "gridAccuracy:         $(settings.gridAccuracy)  ")
         println(io, "gridStopper:          $(settings.gridStopper)  ")
-        #
+
         println(io, "eeInteractionCI:      $(settings.eeInteractionCI)  ")
         println(io, "qedModel :            $(settings.qedModel)  ")
         println(io, "jjLS:                 $(settings.jjLS.makeIt)  ")
@@ -386,7 +387,7 @@ end
 """
 function  Base.:(==)(csfa::CsfR, csfb::CsfR)
     # Stop the comparison with an error message if the CSF are not defined w.r.t a common subshell list.
-    if   !(csfa.useStandardSubshells)   ||   !(csfb.useStandardSubshells)	## ||   length(csfa.occupation) != length(csfb.occupation)
+    if   !(csfa.useStandardSubshells)   ||   !(csfb.useStandardSubshells)	# ||   length(csfa.occupation) != length(csfb.occupation)
         error("To determine the equivalence of two CSF requires that both are defined on a common subshell list.")
     end
 
@@ -653,7 +654,7 @@ end
 function Basis(sa::String, cslFilename::String, rwfFilename::String)
     if  sa == "from Grasp2013"
         isDefined = true 
-        #
+
         println("ManyElectron.Basis-aa: warning ... The standard grid is set; make an interactive request if not appropriate.") 
         grid     = Radial.Grid(true)
         basis    = Basics.read(ReadCslFileGrasp92(), cslFilename)

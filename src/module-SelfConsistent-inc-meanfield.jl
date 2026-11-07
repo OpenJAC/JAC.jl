@@ -63,7 +63,7 @@ function solveMeanFieldBasis(basis::Basis, nuclearModel::Nuclear.Model, primitiv
             wcBlock = Basics.analyzeConvergence(bsplineBlock[kappa], wc)
             if  wcBlock > 1.000 * settings.accuracyScf   go_on = true   end
             for  sh in basis.subshells
-                if      sh in settings.frozenSubshells   ## do nothing
+                if      sh in settings.frozenSubshells   # do nothing
                 elseif  sh.kappa == kappa
                     newOrbital = Bsplines.generateOrbitalFromPrimitives(sh, wc, primitives)
                     wcOrbital  = Basics.analyzeConvergence(previousOrbitals[sh], newOrbital)
@@ -145,7 +145,7 @@ function solveMeanFieldBasisAnderson(basis::Basis, nuclearModel::Nuclear.Model, 
         return( Basics.computePotential(settings.scField, primitives.grid, wLevel).Zr )
     end
 
-    xUsed    = screeningZr(previousOrbitals)          ## the screening potential the next solve will use
+    xUsed    = screeningZr(previousOrbitals)          # the screening potential the next solve will use
     xHistory = Vector{Float64}[];   fHistory = Vector{Float64}[]
     isNotSCF = true;   NoIteration = 0;   accuracyScf = 0.
     while  isNotSCF
@@ -167,7 +167,7 @@ function solveMeanFieldBasisAnderson(basis::Basis, nuclearModel::Nuclear.Model, 
             wcBlock = Basics.analyzeConvergence(bsplineBlock[kappa], wc)
             if  wcBlock > 1.000 * settings.accuracyScf   go_on = true   end
             for  sh in basis.subshells
-                if      sh in settings.frozenSubshells   ## do nothing
+                if      sh in settings.frozenSubshells   # do nothing
                 elseif  sh.kappa == kappa
                     newOrbital = Bsplines.generateOrbitalFromPrimitives(sh, wc, primitives)
                     wcOrbital  = Basics.analyzeConvergence(previousOrbitals[sh], newOrbital)
@@ -186,14 +186,14 @@ function solveMeanFieldBasisAnderson(basis::Basis, nuclearModel::Nuclear.Model, 
         # minus what was actually used to obtain them. It vanishes exactly at the self-consistent solution.
         gNew = screeningZr(previousOrbitals);    fNew = gNew - xUsed
         if  andersonDepth <= 0
-            xUsed = gNew                                                        ## plain (Jacobi) iteration
+            xUsed = gNew                                                        # plain (Jacobi) iteration
         else
             push!(xHistory, copy(xUsed));   push!(fHistory, fNew)
             if  length(xHistory) > andersonDepth + 1
                 popfirst!(xHistory);   popfirst!(fHistory)
             end
             m = length(xHistory) - 1
-            if  m < 1     xUsed = gNew                                          ## no history yet
+            if  m < 1     xUsed = gNew                                          # no history yet
             else
                 # Least squares: choose the combination of the last m residual DIFFERENCES that best cancels
                 # the current residual, then apply it to the iterates as well (standard Anderson, beta = 1).
@@ -203,7 +203,7 @@ function solveMeanFieldBasisAnderson(basis::Basis, nuclearModel::Nuclear.Model, 
                 try
                     gamma = dF \ fNew
                 catch
-                    gamma = zeros(m)      ## a rank-deficient window: fall back to the plain step
+                    gamma = zeros(m)      # a rank-deficient window: fall back to the plain step
                 end
                 if  any(!isfinite, gamma)   gamma = zeros(m)   end
                 xUsed = xUsed + fNew - (dX + dF) * gamma

@@ -1,28 +1,28 @@
 
-## Cascade approaches: the CONDITIONS that define them.
+# Cascade approaches: the CONDITIONS that define them.
 ##
-## A cascade approach fixes FOUR conditions and nothing else. Which processes are included, which multipoles
-## are applied, whether shake configurations are added, whether the Breit interaction or QED enter the
-## Hamiltonian -- all of that stays with the cascade SCHEME and with AsfSettings, where it already lives.
-## Keeping those apart is deliberate: the historical ShakeMCA approach duplicated the shakeFromShells/
-## shakeToShells fields that Cascade.StepwiseDecayScheme already carried, and "only E1 transitions" was
-## written into an approach while being a property of the requested processes; in both cases two places could
-## disagree about the same question with nothing to arbitrate.
+# A cascade approach fixes FOUR conditions and nothing else. Which processes are included, which multipoles
+# are applied, whether shake configurations are added, whether the Breit interaction or QED enter the
+# Hamiltonian -- all of that stays with the cascade SCHEME and with AsfSettings, where it already lives.
+# Keeping those apart is deliberate: the historical ShakeMCA approach duplicated the shakeFromShells/
+# shakeToShells fields that Cascade.StepwiseDecayScheme already carried, and "only E1 transitions" was
+# written into an approach while being a property of the requested processes; in both cases two places could
+# disagree about the same question with nothing to arbitrate.
 ##
-## Each approach differs from the one below it in exactly TWO of the conditions, and every approach is
-## reported to the user as the same six lines in the same order, stated absolutely (never as "as SCA, but
-## ..."), so that reading one block tells you what you got without holding another approach in your head:
+# Each approach differs from the one below it in exactly TWO of the conditions, and every approach is
+# reported to the user as the same six lines in the same order, stated absolutely (never as "as SCA, but
+# ..."), so that reading one block tells you what you got without holding another approach in your head:
 ##
-##      (1) level representation      <- from .levels
-##      (2) configurations per block  <- from .levels
-##      (3) bound orbitals            <- from .bound
-##      (4) continuum orbitals        <- from .continuum
-##      (5) continuum potential       <- from .continuumPotential
-##      (6) e-e interaction           <- from .levels plus the caller's AsfSettings
+#      (1) level representation      <- from .levels
+#      (2) configurations per block  <- from .levels
+#      (3) bound orbitals            <- from .bound
+#      (4) continuum orbitals        <- from .continuum
+#      (5) continuum potential       <- from .continuumPotential
+#      (6) e-e interaction           <- from .levels plus the caller's AsfSettings
 ##
-## Cascade.displayApproach generates all six lines FROM the conditions. That is the point: the previous
-## free-text blocks in each -inc- file kept announcing "single-CSF levels and without any configuration
-## mixing" for months while the code underneath was doing full configuration interaction.
+# Cascade.displayApproach generates all six lines FROM the conditions. That is the point: the previous
+# free-text blocks in each -inc- file kept announcing "single-CSF levels and without any configuration
+# mixing" for months while the code underneath was doing full configuration interaction.
 
 
 """
@@ -274,11 +274,11 @@ function validateConditions(approach::Basics.AbstractCascadeApproach)
         error("$approach is not yet available: it needs cascade blocks that comprise several configurations, " *
               "while the block generation currently places exactly one configuration into each block.")
     end
-    ## No check is needed for TransitionResolvedContinuum: it IS implemented, in the Auger branch of
-    ## Cascade.computeSteps that calls AutoIonization.computeLinesCascade and generates one continuum orbital
-    ## per fine-structure transition. It had simply never been reachable on purpose -- the dispatch keyed on
-    ## the approach NAME, so every approach other than AverageSCA fell into it by accident rather than by
-    ## request. Both values of condition (4) are now selected by the condition itself.
+    # No check is needed for TransitionResolvedContinuum: it IS implemented, in the Auger branch of
+    # Cascade.computeSteps that calls AutoIonization.computeLinesCascade and generates one continuum orbital
+    # per fine-structure transition. It had simply never been reachable on purpose -- the dispatch keyed on
+    # the approach NAME, so every approach other than AverageSCA fell into it by accident rather than by
+    # request. Both values of condition (4) are now selected by the condition itself.
     if  cd.continuumPotential == WithExchange()
         @warn("$approach asks for exchange between the free and the bound electrons, which JAC cannot yet " *
               "provide: continuum orbitals are generated in a local potential only, and lifting that needs a " *

@@ -1,41 +1,41 @@
 
 # The FORM-FACTOR approximation for coherent (Rayleigh) and incoherent (Compton) photon scattering.
-#
+
 # THE CHEAP NON-RELATIVISTIC LIMIT, and the point of having it. The atomic electrons are treated as free scatterers whose only
 # collective property is the Fourier transform of their charge density -- the atomic form factor F(q), with q = 2 k sin(theta/2)
 # the momentum transfer. There is NO sum over intermediate states, NO gauge and NO multipole expansion, which is why it costs
 # almost nothing and why it cannot describe a resonance.
-#
+
 #     Rayleigh (coherent)    d sigma / d Omega  =  (r_e^2 / 2) (1 + cos^2 theta) |F(q)|^2
 #     Compton  (incoherent)  d sigma / d Omega  =  (r_e^2 / 2) (1 + cos^2 theta) S(q)
-#
+
 # with r_e = alpha^2 in atomic units.
-#
+
 # IT EXISTS TO BE COMPARED AGAINST THE SECOND-ORDER SUM, and the comparison is worth having precisely because the two can
 # DISAGREE informatively. Where they agree, the expensive machinery is confirmed by something that shares none of its
 # machinery; where they disagree, the disagreement is the physics. A baseline that could only ever agree would be worth much
 # less. The two are valid in OPPOSITE regimes: the second-order sum near and below the resonances, where a bound electron
 # responds through the atom's polarizability and sigma ~ omega^4; the form factor well ABOVE the binding energies, where the
 # electrons do respond freely and sigma tends to a constant.
-#
+
 # AND IT CARRIES THE ONLY ABSOLUTE CHECK IN THIS MODULE -- but the two processes approach DIFFERENT limits, from OPPOSITE
 # directions in energy, and one number will not serve both:
-#
+
 #     RAYLEIGH   as q --> 0     F(q) --> N       sigma --> N^2 sigma_Thomson     electrons scatter IN PHASE, amplitudes add
 #     COMPTON    as q --> large S(q) --> N       sigma --> N   sigma_Thomson     electrons resolved, CROSS SECTIONS add
-#
+
 # with sigma_Thomson = (8 pi/3) alpha^4. So the coherent ratio must tend to 1 as the photon energy FALLS and the incoherent one
 # as it RISES. Both are CLOSED FORMS with no prefactor to derive and nothing taken from a table. Every other test in
 # PhotonScattering -- the omega^4 law, the Z^5 scan, detailed balance, the RIXS Lorentzian, low-frequency additivity -- is a
 # ratio or a shape, deliberately, because the cross-section prefactors are underived. These are not. If a computed limit misses
 # its Thomson value the fault is in this file's own normalization and nowhere else.
-#
+
 # MEASURED 22-Aug-2026 on beryllium-like neon: the coherent ratio is 0.999990 at 1 eV, i.e. ONE PART IN 10^5, falling to 0.943
 # at 2 keV where q a_0 = 1.07 and the form factor has genuinely left F(0). The incoherent ratio rises from 2e-6 at 10 eV to
 # 0.057 at 2 keV, and its low-energy behaviour is sigma ~ omega^2 exactly, which follows from S(q) ~ N q^2 <r^2> / 3 at small q.
 # PhotonScattering.thomsonLimit selects the right limit per process; printing the coherent one beside an incoherent cross
 # section produced a column of 0.000000 next to perfectly good numbers, which is how that defect was found.
-#
+
 # WHAT IS NOT HERE, and is not hidden: the Klein-Nishina factor and the Compton energy shift, so omega_out = omega_in throughout.
 # Both matter once the photon energy approaches m c^2 and neither is implemented. S(q) is likewise the closure approximation
 # rather than a Hartree-Fock incoherent scattering function; see PhotonScattering.incoherentScatteringFunction.
@@ -57,7 +57,7 @@ function computeFormFactorLines(finalMultiplet::Multiplet, initialMultiplet::Mul
     println("")
     printstyled("PhotonScattering.computeFormFactorLines(): The form-factor computation starts now ... \n", color=:light_green)
     printstyled("------------------------------------------------------------------------------------- \n", color=:light_green)
-    #
+
     newLines = PhotonScattering.Line[];    skipped = 0
     for  iLevel in initialMultiplet.levels
         for  fLevel in finalMultiplet.levels

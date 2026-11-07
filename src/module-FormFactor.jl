@@ -104,7 +104,7 @@ function amplitude(q::Float64, finalLevel::Level, initialLevel::Level, grid::Rad
     printstyled("Compute (single-electron) momentum transfer matrix of dimension $nf x $ni in the final- and initial-state bases " *
                 "for the transition [$(initialLevel.index)- $(finalLevel.index)] ... ", color=:light_green)
     matrix = zeros(ComplexF64, nf, ni)
-    #
+
     # NOT IMPLEMENTED, and it REFUSES rather than returning a number.  Until 28-Aug-2026 this routine printed a
     # warning and then returned the constant 4.0 + 5.0im -- a fabricated amplitude that a caller who did not watch
     # the terminal would have taken for a computed one.  A placeholder that returns a plausible value is the most
@@ -117,7 +117,7 @@ function amplitude(q::Float64, finalLevel::Level, initialLevel::Level, grid::Rad
           "    What DOES work in this module: FormFactor.computeOutcomes and the standard/Debye form factors,\n"   *
           "    validated against Hubbell (1975) and Waasmaier & Kirfel to better than 1.2 %.\n"                    *
           "    What is missing here: the single-electron momentum-transfer amplitude <f|| T^(1)(q) ||i> itself.\n")
-    #
+
     if  display
         println("   (Single-electron) Momentum transfer amplitude:  "                                                 *
                 "< level=$(finalLevel.index) [J=$(finalLevel.J)$(string(finalLevel.parity))] || T^(1) ($q a.u.) ||"   *
@@ -166,7 +166,7 @@ function modifiedF(q::Float64, level::Level, grid::Radial.Grid)
         orb  = level.basis.orbitals[sh]
         ei   = abs(orb.energy)
         nrho = length(orb.P)
-        #
+
         for    i = 2:nrho 
             wx = wc^2 / (wc^2 + ei + pot.Zr[i]/grid.r[i])
             if     q == 0.   wa[i] = wa[i] + occ * (orb.P[i]^2 + orb.Q[i]^2) * wx
@@ -205,7 +205,7 @@ function computeOutcomes(multiplet::Multiplet, nm::Nuclear.Model, grid::Radial.G
     println("")
     printstyled("FormFactor.computeOutcomes(): The computation of the atomic form factors starts now ... \n", color=:light_green)
     printstyled("------------------------------------------------------------------------------------------- \n", color=:light_green)
-    #
+
     outcomes = FormFactor.determineOutcomes(multiplet, settings)
     # Display all selected levels before the computations start
     if  settings.printBefore    FormFactor.displayOutcomes(stdout, outcomes)    end
@@ -219,7 +219,7 @@ function computeOutcomes(multiplet::Multiplet, nm::Nuclear.Model, grid::Radial.G
     FormFactor.displayResults(stdout, newOutcomes)
     printSummary, iostream = Defaults.getDefaults("summary flag/stream")
     if  printSummary    FormFactor.displayResults(iostream, newOutcomes)   end
-    #
+
     if    output    return( newOutcomes )
     else            return( nothing )
     end
@@ -262,7 +262,7 @@ function  displayOutcomes(stream::IO, outcomes::Array{FormFactor.Outcome,1})
     sb = sb * TableStrings.center(14, TableStrings.inUnits("energy"); na=4)
     sa = sa * "  q-values  ...";                                                      sb = sb * "   [a.u.]"
     println(stream, sa);    println(stream, sb);    println(stream, "  ", TableStrings.hLine(nx)) 
-    #  
+
     for  outcome in outcomes
         sa  = "  ";    sym = LevelSymmetry( outcome.level.J, outcome.level.parity)
         sa = sa * TableStrings.center(10, TableStrings.level(outcome.level.index); na=2)
@@ -275,7 +275,7 @@ function  displayOutcomes(stream::IO, outcomes::Array{FormFactor.Outcome,1})
         println(stream,  sa ) 
     end
     println(stream, "  ", TableStrings.hLine(nx))
-    #
+
     return( nothing )
 end
 
@@ -301,7 +301,7 @@ function  displayResults(stream::IO, outcomes::Array{FormFactor.Outcome,1})
     sa = sa * TableStrings.center(14, "modified F";     na=4) 
     sb = sb * TableStrings.center(14, "    " ; na=4)
     println(stream, sa);    println(stream, sb);    println(stream, "  ", TableStrings.hLine(nx)) 
-    #  
+
     for  outcome in outcomes
         sa  = "  ";    sym = LevelSymmetry( outcome.level.J, outcome.level.parity)
         sa = sa * TableStrings.center(10, TableStrings.level(outcome.level.index); na=2)
@@ -320,7 +320,7 @@ function  displayResults(stream::IO, outcomes::Array{FormFactor.Outcome,1})
         end
     end
     println(stream, "  ", TableStrings.hLine(nx), "\n\n")
-    #
+
     return( nothing )
 end
 

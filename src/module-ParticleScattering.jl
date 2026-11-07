@@ -199,7 +199,7 @@ function computeAmplitudesProperties(event::ParticleScattering.Event, nm::Nuclea
     pws = ParticleScattering.computePartialWaves(event.projectile, event.interaction, event.finalLevel, event.impactEnergy,
                                                  nm, grid, contSettings, settings; nuclearPot=nuclearPot, printout=printout)
     channels = ParticleScattering.scatteringChannels(pws, event.finalLevel)
-    #
+
     angular = ParticleScattering.AngularObservables[]
     for  theta  in  settings.polarThetas,  phi  in  settings.polarPhis
         push!( angular, ParticleScattering.beamObservables(event.beamType, pws, event.impactEnergy, theta, phi) )
@@ -229,7 +229,7 @@ function  computeEvents(finalMultiplet::Multiplet, initialMultiplet::Multiplet, 
     println("")
     printstyled("ParticleScattering.computeEvents(): The computation of scattering amplitudes starts now ... \n", color=:light_green)
     printstyled("------------------------------------------------------------------------------------------ \n", color=:light_green)
-    #
+
     events = ParticleScattering.determineEvents(finalMultiplet, initialMultiplet, settings)
     if  settings.printBefore    ParticleScattering.displayEvents(stdout, events)    end
     # Determine the maximum energy and check the consistency of the grid

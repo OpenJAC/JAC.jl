@@ -382,9 +382,9 @@ function  computeAmplitudesProperties(outcome::IsotopeShift.Outcome, nm::Nuclear
         deltaPot  = Nuclear.nuclearPotential(nm, grid).Zr - Nuclear.nuclearPotential(nmp, grid).Zr
         deltaPot  = deltaPot / (nm.radius^2 - nmp.radius^2)
         lastPoint = Basics.lastPoint(deltaPot, 1.0e-9);
-        #
+
         Fme       = IsotopeShift.amplitude(FieldShiftAmplitude(), outcome.level, outcome.level, deltaPot, grid)
-        #
+
         density   = Basics.computeDensity(outcome.level, grid)
         wb        = zeros( lastPoint )
         wb[1:lastPoint] = - density[1:lastPoint] .* deltaPot[1:lastPoint] ./ grid.r[1:lastPoint]
@@ -412,7 +412,7 @@ function computeOutcomes(multiplet::Multiplet, nm::Nuclear.Model, grid::Radial.G
     println("")
     printstyled("IsotopeShift.computeOutcomes(): The computation of the isotope-shift parameters starts now ... \n", color=:light_green)
     printstyled("-------------------------------------------------------------------------------------------------- \n", color=:light_green)
-    #
+
     outcomes = IsotopeShift.determineOutcomes(multiplet, settings)
     # Display all selected levels before the computations start
     if  settings.printBefore    IsotopeShift.displayOutcomes(outcomes)    end
@@ -426,7 +426,7 @@ function computeOutcomes(multiplet::Multiplet, nm::Nuclear.Model, grid::Radial.G
     IsotopeShift.displayResults(stdout, newOutcomes, settings)
     printSummary, iostream = Defaults.getDefaults("summary flag/stream")
     if  printSummary    IsotopeShift.displayResults(iostream, newOutcomes, settings)   end
-    #
+
     if    output    return( newOutcomes )
     else            return( nothing )
     end
@@ -467,7 +467,7 @@ function  displayOutcomes(outcomes::Array{IsotopeShift.Outcome,1})
     sa = sa * TableStrings.center(14, "Energy"; na=4);              
     sb = sb * TableStrings.center(14, TableStrings.inUnits("energy"); na=4)
     println(sa);    println(sb);    println("  ", TableStrings.hLine(nx)) 
-    #  
+
     for  outcome in outcomes
         sa  = "  ";    sym = Basics.LevelSymmetry( outcome.level.J, outcome.level.parity)
         sa = sa * TableStrings.center(10, TableStrings.level(outcome.level.index); na=2)
@@ -476,7 +476,7 @@ function  displayOutcomes(outcomes::Array{IsotopeShift.Outcome,1})
         println( sa )
     end
     println("  ", TableStrings.hLine(nx))
-    #
+
     return( nothing )
 end
 
@@ -514,9 +514,9 @@ function  displayResults(stream::IO, outcomes::Array{IsotopeShift.Outcome,1}, se
     sb = sb * TableStrings.center(11, "[MHz/fm^2]" ; na=5)
     sa = sa * TableStrings.center(11, "X^(boson)";   na=4)              
     sb = sb * TableStrings.center(11, "a.u."; na=4)
-    println(stream, sa);    println(stream, sb);    ## println(stream, sc);    
+    println(stream, sa);    println(stream, sb);    # println(stream, sc);    
     println(stream, "  ", TableStrings.hLine(nx)) 
-    #  
+
     for  outcome in outcomes
         sa  = "  ";    sym = LevelSymmetry( outcome.level.J, outcome.level.parity)
         sa = sa * TableStrings.center(10, TableStrings.level(outcome.level.index); na=2)
@@ -529,11 +529,11 @@ function  displayResults(stream::IO, outcomes::Array{IsotopeShift.Outcome,1}, se
         sa = sa * @sprintf("%.5e", Defaults.convertUnits("energy: from atomic to Hz", outcome.Fdensity) * 1.0e-6) * "    "
         sa = sa * @sprintf("%.5e", Defaults.convertUnits("energy: from atomic to Hz", outcome.Xboson) )      
         println(stream, sa )
-        ## sb = TableStrings.hBlank(47)
+        # sb = TableStrings.hBlank(47)
     end
     println(stream, "  ", TableStrings.hLine(nx), "\n\n")
-    #
-    #
+
+
     # Now printout the individual amplitudes in an extra table
     nx = 158
     println(stream, "  ", TableStrings.hLine(nx))
@@ -547,7 +547,7 @@ function  displayResults(stream::IO, outcomes::Array{IsotopeShift.Outcome,1}, se
     sa = sa * TableStrings.center(26, "H^(sms,B) amplitude"  ; na=3);             sb = sb * TableStrings.hBlank(35)
     sa = sa * TableStrings.center(26, "H^(sms,C) amplitude"  ; na=3);             sb = sb * TableStrings.hBlank(35)
     println(stream, sa);    println(stream, sb);    println(stream, "  ", TableStrings.hLine(nx)) 
-    #  
+
     for  outcome in outcomes
         sa  = "  ";    sym = LevelSymmetry( outcome.level.J, outcome.level.parity)
         sa = sa * TableStrings.center(10, TableStrings.level(outcome.level.index); na=2)
@@ -560,8 +560,8 @@ function  displayResults(stream::IO, outcomes::Array{IsotopeShift.Outcome,1}, se
         println(stream, sa )
     end
     println(stream, "  ", TableStrings.hLine(nx))
-    #
-    #
+
+
     # Now printout the transition isotope parameters
     nx = 144
     println(stream, " ")
@@ -588,9 +588,9 @@ function  displayResults(stream::IO, outcomes::Array{IsotopeShift.Outcome,1}, se
     sb = sb * TableStrings.center(11, "[MHz/fm^2]" ; na=4)
     sa = sa * TableStrings.center(11, "X^(boson)";   na=4)              
     sb = sb * TableStrings.center(11, "a.u."; na=4)
-    println(stream, sa);    println(stream, sb);    ## println(stream, sc);    
+    println(stream, sa);    println(stream, sb);    # println(stream, sc);    
     println(stream, "  ", TableStrings.hLine(nx)) 
-    #  
+
     for  ioutcome in outcomes
         for  foutcome in outcomes
         if ioutcome.level.index >= foutcome.level.index     continue    end
@@ -607,7 +607,7 @@ function  displayResults(stream::IO, outcomes::Array{IsotopeShift.Outcome,1}, se
         sa = sa * @sprintf("%.5e", Defaults.convertUnits("energy: from atomic to Hz", ioutcome.Fdensity-foutcome.Fdensity)  * 1.0e-6) * "    "      
         sa = sa * @sprintf("%.5e", Defaults.convertUnits("energy: from atomic to Hz", ioutcome.Xboson-foutcome.Xboson))      
         println(stream, sa )
-        ## sb = TableStrings.hBlank(47)
+        # sb = TableStrings.hBlank(47)
         end
     end
     println(stream, "  ", TableStrings.hLine(nx), "\n\n")

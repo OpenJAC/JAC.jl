@@ -97,7 +97,7 @@ function anapoleAmplitude(finalLevel::Level, initialLevel::Level, nm::Nuclear.Mo
         end
         amplitude = prefac * WeakInteractionMoment.oneParticleAmplitude(1, kernel, finalLevel, initialLevel)
     end
-    #
+
     if  display   WeakInteractionMoment.displayAmplitude("Anapole moment amplitude:  ", "H^(anapole)", nm,
                                                           finalLevel, initialLevel, amplitude)    end
 
@@ -157,7 +157,7 @@ function nuclearDensity(nm::Nuclear.Model, grid::Radial.Grid)
             rho[i] = 1.0 / (1.0 + exp( (grid.r[i] - c)/a ))
         end
     end
-    #
+
     wn = 0.
     for  i = 1:grid.NoPoints    wn = wn + rho[i] * 4pi * grid.r[i]^2 * grid.wr[i]    end
     wn == 0.  &&  error("The nuclear density integrates to zero on this grid; the nucleus is smaller than the innermost grid point.")
@@ -187,7 +187,7 @@ function oneParticleAmplitude(rank::Int64, kernel::Function, finalLevel::Level, 
     end
     nf = length(fLevel.basis.csfs);     ni = length(iLevel.basis.csfs)
     matrix = zeros(ComplexF64, nf, ni)
-    #
+
     for  r = 1:nf
         for  s = 1:ni
             if  fLevel.mc[r] == 0.  ||  iLevel.mc[s] == 0.    continue    end
@@ -298,7 +298,7 @@ function schiffMomentAmplitude(finalLevel::Level, initialLevel::Level, nm::Nucle
         end
         amplitude = 4pi * WeakInteractionMoment.oneParticleAmplitude(1, kernel, finalLevel, initialLevel)
     end
-    #
+
     if  display   WeakInteractionMoment.displayAmplitude("Schiff moment amplitude:   ", "H^(Schiff)", nm,
                                                           finalLevel, initialLevel, amplitude)    end
 
@@ -379,7 +379,7 @@ function weakChargeAmplitude(finalLevel::Level, initialLevel::Level, nm::Nuclear
         end
         amplitude = prefac * WeakInteractionMoment.oneParticleAmplitude(0, kernel, finalLevel, initialLevel)
     end
-    #
+
     if  display   WeakInteractionMoment.displayAmplitude("weak-charge amplitude:     ", "H^(weak-charge)", nm,
                                                           finalLevel, initialLevel, amplitude)    end
 

@@ -358,7 +358,7 @@ function computeTotalCsLinear_2pAbsorptionBichromatic(line::MultiPhotonTransitio
         # NO ODD-K RESTRICTION IS IMPOSED, and that is the physics of this file: the monochromatic routine must
         # skip odd K because two photons from one beam are identical bosons, whereas two beams of different
         # colour are not identical particles and nothing forbids it a priori.
-        #
+
         # FOR LINEARLY POLARIZED LIGHT IT NEVERTHELESS VANISHES, and by itself rather than by a rule. Both beams
         # carry the SAME polarization here (Settings holds one Stokes vector), so the helicity sum below is
         # coherent and symmetric, while the 3-j is antisymmetric under lambda1 <-> lambda2 for odd K with

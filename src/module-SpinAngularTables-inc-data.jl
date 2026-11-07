@@ -1,4 +1,4 @@
-#
+
 # This file has mainly been contributed by Gediminas Gaigalas (gediminas.gaigalas@tfai.vu.lt)
 
 
@@ -13,7 +13,7 @@
         bIndex - is the state number of the ket subshell in quasispin representation.
 """
 function completlyReducedCfpByIndices(aIndex::Int64, bIndex::Int64)
-    #
+
     wa = [0, 1, 1]
     if aIndex <= bIndex   aIndexN = aIndex;    bIndexN = bIndex
     else                  aIndexN = bIndex;    bIndexN = aIndex
@@ -52,9 +52,9 @@ end
         kj     - is the rank kj in angular momentum j space.
 """
 function completelyReducedWkk(aIndex::Int64, bIndex::Int64, kq::Int64, kj::Int64)
-    #
+
     # Define a tuple for comparison in the subsequent lists; apply symmetries to reduced the list of coefficients
-    #
+
     wa = [0, 1, 1]
     aT = qspaceTerms(aIndex);  bT = qspaceTerms(bIndex)
     if aT.j ==  bT.j < AngularJ64(9//2)  &&   aT.min_even ==  bT.min_even 
@@ -171,9 +171,9 @@ end
         kj     - is the rank kj in angular momentum j space.
 """
 function completelyReducedWkk_calculate(aIndex::Int64, bIndex::Int64, kq::Int64, kj::Int64)
-    #
+
     # Define a tuple for comparison in the subsequent lists; apply symmetries to reduced the list of coefficients
-    #
+
     wb = 0.0
     aT = qspaceTerms(aIndex);      bT = qspaceTerms(bIndex)
     if aT.min_even ==  bT.min_even
@@ -309,7 +309,7 @@ end
     h15 = AngularJ64(15//2);  h16 = AngularJ64(16//2);  h17 = AngularJ64(17//2);  h18 = AngularJ64(18//2);  h19 = AngularJ64(19//2)
     h20 = AngularJ64(20//2);  h21 = AngularJ64(21//2);  h22 = AngularJ64(22//2);  h23 = AngularJ64(23//2);  h24 = AngularJ64(24//2)
     h25 = AngularJ64(25//2);  h26 = AngularJ64(26//2);  h27 = AngularJ64(27//2)
-    #
+
     # Distinguish due to different j-values
     # j = 1/2)
     QTerm =  [ QspaceTerm(h1, h0, h1, 0, 2, 2, 1, 1), QspaceTerm(h1, h1, h0, 0, 1, 1, 2, 2),

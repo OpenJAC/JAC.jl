@@ -31,7 +31,7 @@ function perform(scheme::ElectronExcitationScheme, comp::Cascade.Computation; ou
               "Basics.ImpactExcAuto() for the resonant (dielectronic capture with re-autoionization) part; " *
               "the scheme currently carries $(scheme.processes).")
     end
-    #
+
     # Perform the two cascade computations for the electron-impact and dielectronic-capture with re-autoionzation separately, 
     # even if this requires to run the computation of the initial multiplet twice.
     if  calcDirect
@@ -50,8 +50,8 @@ function perform(scheme::ElectronExcitationScheme, comp::Cascade.Computation; ou
         ieComp   = Cascade.Computation(comp, scheme=ieScheme)
         ieOut    = Cascade.perform(ieScheme, ieComp; output=true, outputToFile=false)
     end
-    #
-    #
+
+
     if  calcResonant
         println("\n> Resonant dielectronic capture part of the electron-excitation cascade computations")
         println(  "  ==================================================================================  \n")
@@ -63,7 +63,7 @@ function perform(scheme::ElectronExcitationScheme, comp::Cascade.Computation; ou
         dcComp   = Cascade.Computation(comp, scheme=dcScheme)
         dcOut    = Cascade.perform(dcScheme, dcComp; output=true, outputToFile=false)
     end
-    #
+
     # Collect the output from the computations above if required
     data = Cascade.Data[]
     if output   &&   calcDirect 
@@ -75,7 +75,7 @@ function perform(scheme::ElectronExcitationScheme, comp::Cascade.Computation; ou
         push!(data, Cascade.Data{ImpactExcitation.Line}(ieOut[ImpactExcitation.Settings]) )
         results = Base.merge( results, Dict("cascade data:"                 => data ) )
     end
-    #
+
     if output   &&   calcResonant
         results = Base.merge( results, Dict("name"                          => comp.name) )
         results = Base.merge( results, Dict("cascade scheme"                => comp.scheme) )
@@ -86,7 +86,7 @@ function perform(scheme::ElectronExcitationScheme, comp::Cascade.Computation; ou
         results = Base.merge( results, Dict("cascade data:"                 => data ) )
     end
 
-    #
+
     #  Write out the result to file to later continue with simulations on the cascade data
     if  outputToFile
         filename = "zzz-cascade-photoabsorption-computations-" * string(Dates.now())[1:13] * ".jld"

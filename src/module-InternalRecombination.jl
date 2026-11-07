@@ -185,7 +185,7 @@ end
 """
 function amplitude(operator::AbstractEeInteraction, finalLevel::Level, rydbergLevel::Level, grid::Radial.Grid; 
                     display::Bool=true, printout::Bool=false)
-    #
+
     if  finalLevel.basis.subshells != rydbergLevel.basis.subshells  error("stop a")     end
     if  finalLevel.J               != rydbergLevel.J                error("stop b")     end
     fLevel = finalLevel;    iLevel = rydbergLevel
@@ -196,10 +196,10 @@ function amplitude(operator::AbstractEeInteraction, finalLevel::Level, rydbergLe
     if  printout   printstyled("Compute internal-stabilization amplitude for the transition [$(rydbergLevel.index)-$(finalLevel.index)] ... ", 
                                 color=:light_green)    end
     amplitude = ComplexF64(0.)
-    #
+
     for  r = 1:nf
         for  s = 1:ni
-            #
+
             #    <alpha_f J_f || V^(e-e) || (alpha_i J_i, n kappa) J_t>
             Vee       = ManyElectron.matrixElement_Vee(operator, fLevel.basis, r, iLevel.basis, s, grid)
             amplitude = amplitude + fLevel.mc[r] * Vee * iLevel.mc[s]
@@ -274,7 +274,7 @@ function  computeLines(finalMultiplet::Multiplet, initialMultiplet::Multiplet, n
     meanPot          = Basics.add(nuclearPot, Basics.computePotential(Basics.DFSField(1.0), grid, initialMultiplet.levels[1].basis))
     primitives       = Bsplines.generatePrimitives(grid)
     rydbergOrbitals  = Bsplines.generateOrbitals(rydbergSubshells, meanPot, nm, primitives; printout=true)
-    #
+
     lines = InternalRecombination.determineLines(finalMultiplet, initialMultiplet, settings)
     # Display all selected lines before the computations start
     if  settings.printBefore    InternalRecombination.displayLines(stdout, lines)    end  
@@ -290,7 +290,7 @@ function  computeLines(finalMultiplet::Multiplet, initialMultiplet::Multiplet, n
     printSummary, iostream = Defaults.getDefaults("summary flag/stream")
     if  printSummary   InternalRecombination.displayRates(iostream, newLines, settings)    
                         InternalRecombination.displayTotalRates(iostream, newLines, settings)        end
-    #
+
     if    output    return( lines )
     else            return( nothing )
     end
@@ -360,7 +360,7 @@ function  displayLines(stream::IO, lines::Array{InternalRecombination.Line,1})
     sa = sa * TableStrings.flushleft(37, "List of subshells and total symmetries"; na=4)  
     sb = sb * TableStrings.flushleft(37, "subshell (total J^P)                  "; na=4)
     println(stream, sa);    println(stream, sb);    println(stream, "  ", TableStrings.hLine(nx)) 
-    #   
+
     for  line in lines
         sa  = "  ";    isym = LevelSymmetry( line.initialLevel.J, line.initialLevel.parity)
                         fsym = LevelSymmetry( line.finalLevel.J,   line.finalLevel.parity)
@@ -377,7 +377,7 @@ function  displayLines(stream::IO, lines::Array{InternalRecombination.Line,1})
         println(stream,  sa )
     end
     println(stream, "  ", TableStrings.hLine(nx), "\n")
-    #
+
     return( nothing )
 end
 
@@ -406,7 +406,7 @@ function  displayRates(stream::IO, lines::Array{InternalRecombination.Line,1}, s
     sa = sa * TableStrings.center(15, "Rate"           ; na=2);                           
     sb = sb * TableStrings.center(14, TableStrings.inUnits("rate");  na=2)
     println(stream, sa);    println(stream, sb);    println(stream, "  ", TableStrings.hLine(nx)) 
-    #   
+
     for  line in lines
         sa  = "  ";    isym = LevelSymmetry( line.initialLevel.J, line.initialLevel.parity)
                         fsym = LevelSymmetry( line.finalLevel.J,   line.finalLevel.parity)
@@ -420,7 +420,7 @@ function  displayRates(stream::IO, lines::Array{InternalRecombination.Line,1}, s
         println(stream, sa)
     end
     println(stream, "  ", TableStrings.hLine(nx))
-    #
+
     return( nothing )
 end
 
@@ -448,7 +448,7 @@ function  displayTotalRates(stream::IO, lines::Array{InternalRecombination.Line,
     sa = sa * TableStrings.center(16, "Total IDE rate"; na=2);                           
     sb = sb * TableStrings.center(16, TableStrings.inUnits("rate");  na=2)
     println(stream, sa);    println(stream, sb);    println(stream, "  ", TableStrings.hLine(nx)) 
-    #
+
     used = falses(length(lines))
     for  (i, line) in enumerate(lines)
         if  used[i]     continue    end
@@ -459,7 +459,7 @@ function  displayTotalRates(stream::IO, lines::Array{InternalRecombination.Line,
                 total  = total  + lines[j].rate 
             end
         end
-        #
+
         isym = LevelSymmetry( line.initialLevel.J, line.initialLevel.parity)
         sa = "      " * string(line.initialLevel.index);   sb = "            " * string(isym)
         sa = sa[end-6:end] * sb[end-10:end] * "  "
@@ -469,7 +469,7 @@ function  displayTotalRates(stream::IO, lines::Array{InternalRecombination.Line,
         println(stream, sa)
     end
     println(stream, "  ", TableStrings.hLine(nx))
-    #
+
     return( nothing )
 end
 

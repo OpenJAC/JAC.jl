@@ -127,10 +127,10 @@ end
 # `Base.show(io::IO, channel::DoubleAutoIonization.ReducedChannel)`  
 #       ... prepares a proper printout of the variable cannel::DoubleAutoIonization.ReducedChannel.
 function Base.show(io::IO, channel::DoubleAutoIonization.ReducedChannel) 
-    ## sa = "reduced DA channel for J^P=(channel.tSymmetry)  with " * 
-    ##      "kappa1=$(channel.kappa1), energy1=$(channel.energy1), phase1=$(channel.phase1), " *
-    ##      "kappa2=$(channel.kappa2), energy2=$(channel.energy2), phase2=$(channel.phase2), amp=$(channel.amplitude) "
-    ## println(io, sa)
+    # sa = "reduced DA channel for J^P=(channel.tSymmetry)  with " * 
+    #      "kappa1=$(channel.kappa1), energy1=$(channel.energy1), phase1=$(channel.phase1), " *
+    #      "kappa2=$(channel.kappa2), energy2=$(channel.energy2), phase2=$(channel.phase2), amp=$(channel.amplitude) "
+    # println(io, sa)
     println(io, "multipole:                    $(channel.multipole)  ")
     println(io, "gauge:                        $(channel.gauge)  ")
     println(io, "omega:                        $(channel.omega)  ")
@@ -189,8 +189,7 @@ struct  Line
 end 
 
 
-# `Base.show(io::IO, line::DoubleAutoIonization.Line)`  ... prepares a proper printout of the variable line::DoubleAutoIonization.Line.
-    function Base.show(io::IO, line::DoubleAutoIonization.Line) 
+function Base.show(io::IO, line::DoubleAutoIonization.Line) 
     println(io, "initialLevel:           $(line.initialLevel)  ")
     println(io, "finalLevel:             $(line.finalLevel)  ")
     println(io, "totalRate:              $(line.totalRate)  ")
@@ -222,16 +221,16 @@ function amplitude(kind::String, channel::DoubleAutoIonization.ReducedChannel,
             if  greenChannel.symmetry == symi == symc
                 println(">>> Apply Green function channel with symmetry $(greenChannel.symmetry)")
                 for  (nlev, level)  in  enumerate(greenChannel. gMultiplet.levels)
-                    ## if  nlev > 2  println(">>> Skip nlev > 2 ... need to be corrected !!!!");    break     end
+                    # if  nlev > 2  println(">>> Skip nlev > 2 ... need to be corrected !!!!");    break     end
                     am_ni     = AutoIonization.amplitude(CoulombInteraction(), channel.kappa1, channel.phase1, level, initialLevel, grid; printout=false)
                     am_fn     = AutoIonization.amplitude(CoulombInteraction(), channel.kappa2, channel.phase2, continuumLevel, level, grid; printout=false)
                     amplitude = amplitude  +  am_fn * am_ni / (eni - level.energy)
                     println(">> DAI for level $nlev  with  am_fn(A) = $am_fn  and  am_ni(A) = $am_ni")
                 end 
-            else    ## println(">>> Skip Green function channel with symmetry $(greenChannel.symmetry)")
+            else    # println(">>> Skip Green function channel with symmetry $(greenChannel.symmetry)")
             end
         end
-        #
+
     else    error("stop b")
     end
     
@@ -254,7 +253,7 @@ function  computeAmplitudesProperties(line::DoubleAutoIonization.Line, nm::Nucle
     nucPot       = Nuclear.nuclearPotential(nm, grid)
     primitives   = Bsplines.generatePrimitives(grid)
     symi         = LevelSymmetry(line.initialLevel.J, line.initialLevel.parity)
-    #
+
     for sharing in line.sharings
         newChannels = DoubleAutoIonization.ReducedChannel[];    drate = 0.
         for (ich, ch)  in  enumerate(sharing.channels)
@@ -327,7 +326,7 @@ function  computeLines(finalMultiplet::Multiplet, initialMultiplet::Multiplet, n
     printstyled("DoubleAutoIonization.computeLines(): The computation of double-Auger rates starts now ... \n", color=:light_green)
     printstyled("----------------------------------------------------------------------------------------- \n", color=:light_green)
     println("")
-    #
+
     lines = DoubleAutoIonization.determineLines(finalMultiplet, initialMultiplet, settings)
     # Display all selected lines before the computations start
     if  settings.printBefore    DoubleAutoIonization.displayLines(stdout, lines)    end
@@ -343,7 +342,7 @@ function  computeLines(finalMultiplet::Multiplet, initialMultiplet::Multiplet, n
     printSummary, iostream = Defaults.getDefaults("summary flag/stream")
     if  printSummary   DoubleAutoIonization.displayTotalRates(iostream, newLines, settings)
                         DoubleAutoIonization.displayDifferentialRates(iostream, newLines, settings)     end
-    #
+
     if    output    return( newLines )
     else            return( nothing )
     end
@@ -398,7 +397,7 @@ end
     ... to display all differential rates, etc. of the selected lines. A neat table is printed but nothing is returned otherwise.
 """
 function  displayDifferentialRates(stream::IO, lines::Array{DoubleAutoIonization.Line,1}, settings::DoubleAutoIonization.Settings)
-    #
+
     # First, print lines and sharings
     nx = 110
     println(stream, " ")
@@ -414,7 +413,7 @@ function  displayDifferentialRates(stream::IO, lines::Array{DoubleAutoIonization
     sa = sa * TableStrings.center(16, "Diff. rate"; na=3)      
     sb = sb * TableStrings.center(16, TableStrings.inUnits("rate"); na=3)
     println(stream, sa);    println(stream, sb);    println(stream, "  ", TableStrings.hLine(nx)) 
-    #   
+
     for  line in lines
         sa  = "";      isym = LevelSymmetry( line.initialLevel.J, line.initialLevel.parity)
                         fsym = LevelSymmetry( line.finalLevel.J,   line.finalLevel.parity)
@@ -422,23 +421,23 @@ function  displayDifferentialRates(stream::IO, lines::Array{DoubleAutoIonization
         sa = sa * TableStrings.center(18, TableStrings.symmetries_if(isym, fsym); na=4) 
         energy = line.initialLevel.energy - line.finalLevel.energy
         sa = sa * @sprintf("%.5e", Defaults.convertUnits("energy: from atomic", energy)) * "    "
-        #
+
         for  (is, sharing)  in  enumerate(line.sharings)
             if  is == 1     sb = sa     else    sb = TableStrings.hBlank( length(sa) )    end
             sb = sb * @sprintf("%.4e", Defaults.convertUnits("energy: from atomic", sharing.epsilon1))           * "    "
             sb = sb * @sprintf("%.4e", Defaults.convertUnits("energy: from atomic", sharing.epsilon2))           * "    "
             sb = sb * @sprintf("%.4e",                                              sharing.weight)              * "     "
-            ## NOTE, 04-Nov-2026:  this is a rate PER UNIT ENERGY (per Hartree -- the weights of
-            ## Basics.determineEnergySharings are in a.u.), while the header above shows inUnits("rate") alone and so
-            ## omits the energy denominator.  PhotoDoubleIonization had the same defect and was fixed by switching to
-            ## `energy-diff. cross section`; there is no `energy-diff. rate` in Defaults yet, so fixing this properly
-            ## means adding one there -- a different module, deliberately not done here.
+            # NOTE, 04-Nov-2026:  this is a rate PER UNIT ENERGY (per Hartree -- the weights of
+            # Basics.determineEnergySharings are in a.u.), while the header above shows inUnits("rate") alone and so
+            # omits the energy denominator.  PhotoDoubleIonization had the same defect and was fixed by switching to
+            # `energy-diff. cross section`; there is no `energy-diff. rate` in Defaults yet, so fixing this properly
+            # means adding one there -- a different module, deliberately not done here.
             sb = sb * @sprintf("%.5e", Defaults.convertUnits("rate: from atomic",   sharing.differentialRate))   * "   "
             println(stream,  sb )
         end
     end
     println(stream, "  ", TableStrings.hLine(nx))
-    #
+
     return( nothing )
 end
 
@@ -449,7 +448,7 @@ end
         of all selected transitions and energies is printed but nothing is returned otherwise.
 """
 function  displayLines(stream::IO, lines::Array{DoubleAutoIonization.Line,1})
-    #
+
     # First, print lines and sharings
     nx = 82
     println(stream, " ")
@@ -462,7 +461,7 @@ function  displayLines(stream::IO, lines::Array{DoubleAutoIonization.Line,1})
     sa = sa * TableStrings.flushleft(54, "Energies (all in )" * TableStrings.inUnits("energy") * ")"; na=5);              
     sb = sb * TableStrings.flushleft(54, "   i -- f       epsilon_1     epsilon_2"; na=5)
     println(stream, sa);    println(stream, sb);    println(stream, "  ", TableStrings.hLine(nx)) 
-    #   
+
     for  line in lines
         sa  = "";      isym = LevelSymmetry( line.initialLevel.J, line.initialLevel.parity)
                         fsym = LevelSymmetry( line.finalLevel.J,   line.finalLevel.parity)
@@ -470,7 +469,7 @@ function  displayLines(stream::IO, lines::Array{DoubleAutoIonization.Line,1})
         sa = sa * TableStrings.center(18, TableStrings.symmetries_if(isym, fsym); na=4) 
         energy = line.initialLevel.energy - line.finalLevel.energy
         sa = sa * @sprintf("%.5e", Defaults.convertUnits("energy: from atomic", energy)) * "    "
-        #
+
         for  (is, sharing)  in  enumerate(line.sharings)
             if  is == 1     sb = sa     else    sb = TableStrings.hBlank( length(sa) )    end
             sb = sb * @sprintf("%.4e", Defaults.convertUnits("energy: from atomic", sharing.epsilon1)) * "    "
@@ -479,8 +478,8 @@ function  displayLines(stream::IO, lines::Array{DoubleAutoIonization.Line,1})
         end
     end
     println(stream, "  ", TableStrings.hLine(nx))
-    #
-    #
+
+
     # Second, print lines and channles
     nx = 123
     println(stream, " ")
@@ -493,7 +492,7 @@ function  displayLines(stream::IO, lines::Array{DoubleAutoIonization.Line,1})
     sa = sa * TableStrings.flushleft(77, "Channels (all energies in " * TableStrings.inUnits("energy") * ")" ; na=5);              
     sb = sb * TableStrings.flushleft(77, "(epsilon, kappa)_1   -->    J^P_x  -->   (epsilon, kappa)_2   -->  J^P_t = J^P_i"; na=5)
     println(stream, sa);    println(stream, sb);    println(stream, "  ", TableStrings.hLine(nx)) 
-    #
+
     for  line in lines
         sa  = "";      isym = LevelSymmetry( line.initialLevel.J, line.initialLevel.parity)
                         fsym = LevelSymmetry( line.finalLevel.J,   line.finalLevel.parity)
@@ -510,7 +509,7 @@ function  displayLines(stream::IO, lines::Array{DoubleAutoIonization.Line,1})
         end
     end
     println(stream, "  ", TableStrings.hLine(nx))
-    #
+
     return( nothing )
 end
 
@@ -520,7 +519,7 @@ end
     ... to display all total rates, etc. of the selected lines. A neat table is printed but nothing is returned otherwise.
 """
 function  displayTotalRates(stream::IO, lines::Array{DoubleAutoIonization.Line,1}, settings::DoubleAutoIonization.Settings)
-    #
+
     # First, print lines and sharings
     nx = 70
     println(stream, " ")
@@ -535,7 +534,7 @@ function  displayTotalRates(stream::IO, lines::Array{DoubleAutoIonization.Line,1
     sa = sa * TableStrings.center(16, "Total rate"; na=4)      
     sb = sb * TableStrings.center(16, TableStrings.inUnits("rate"); na=3)
     println(stream, sa);    println(stream, sb);    println(stream, "  ", TableStrings.hLine(nx)) 
-    #   
+
     for  line in lines
         sa  = "";      isym = LevelSymmetry( line.initialLevel.J, line.initialLevel.parity)
                         fsym = LevelSymmetry( line.finalLevel.J,   line.finalLevel.parity)
@@ -547,7 +546,7 @@ function  displayTotalRates(stream::IO, lines::Array{DoubleAutoIonization.Line,1
         println(stream,  sb )
     end
     println(stream, "  ", TableStrings.hLine(nx))
-    #
+
     return( nothing )
 end
 

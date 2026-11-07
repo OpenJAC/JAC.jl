@@ -17,8 +17,8 @@ function computeContinuumOrbitals(scheme::Cascade.RadiativeRecombinationScheme, 
     nrContinuum  = Continuum.gridConsistency(maximum(enGrid.t) + 0.1, comp.grid)
     contSettings = Continuum.Settings(false, nrContinuum);   
     npot         = Nuclear.nuclearPotential(comp.nuclearModel, comp.grid)
-    ## wp1 = compute("radial potential: core-Hartree", grid, wLevel)
-    ## wp2 = compute("radial potential: Hartree-Slater", grid, wLevel)
+    # wp1 = compute("radial potential: core-Hartree", grid, wLevel)
+    # wp2 = compute("radial potential: Hartree-Slater", grid, wLevel)
     wp           = Basics.computePotential(Basics.DFSField(1.0), comp.grid, level)
     pot          = Basics.add(npot, wp)
     #  Generate continuum orbitals
@@ -68,7 +68,7 @@ function computeSteps(scheme::Cascade.RadiativeRecombinationScheme, comp::Cascad
                 "to a total of $nt $(string(step.process)) decay lines."
         println(sa);    if  printSummary   println(iostream, sa)   end 
     end
-    #
+
     data = Cascade.Data{PhotoRecombination.Line}(linesRR)
 end
 
@@ -86,10 +86,10 @@ function determineSteps(scheme::Cascade.RadiativeRecombinationScheme, comp::Casc
                         initialList::Array{Cascade.Block,1}, capturedList::Array{Cascade.Block,1})
     # Determine a (free-electron) energy grid 
     println(" ")
-    ## NB: settings.electronEnergies are in USER units -- PhotoRecombination.determineLines converts them with
-    ## convertUnits("energy: to atomic", ...).  This grid must therefore be spanned with the RAW
-    ## scheme.maxFreeElectronEnergy, not the converted one; the *_au value below is only used for the
-    ## continuum orbitals in computeSteps/computeContinuumOrbitals, which work in atomic units.
+    # NB: settings.electronEnergies are in USER units -- PhotoRecombination.determineLines converts them with
+    # convertUnits("energy: to atomic", ...).  This grid must therefore be spanned with the RAW
+    # scheme.maxFreeElectronEnergy, not the converted one; the *_au value below is only used for the
+    # continuum orbitals in computeSteps/computeContinuumOrbitals, which work in atomic units.
     maxFreeElectronEnergy_au  = Defaults.convertUnits("energy: to atomic", scheme.maxFreeElectronEnergy)
     enGrid       = Radial.GridGL(Radial.GridGaussLegendreFinite(), 0.0, scheme.maxFreeElectronEnergy,
                                  scheme.NoFreeElectronEnergies, printout=true)
@@ -107,7 +107,7 @@ function determineSteps(scheme::Cascade.RadiativeRecombinationScheme, comp::Casc
                                                                         initialBlock.multiplet, capturedBlock.multiplet ) )
             end
         end
-        #
+
     else  error("Unsupported cascade approach.")
     end
     return( stepList )
@@ -123,7 +123,7 @@ end
 function generateBlocks(scheme::Cascade.RadiativeRecombinationScheme, comp::Cascade.Computation, confs::Array{Configuration,1}; printout::Bool=true)
     blockList = Cascade.Block[];    basis = Basis()
     printSummary, iostream = Defaults.getDefaults("summary flag/stream")
-    #
+
     if    comp.approach == AverageSCA()
         sa = "\n* Generate blocks for RR plasma rate coefficient computations: \n" *
                 "\n  In the cascade approach $(comp.approach), the following assumptions/simplifications are made: " *
@@ -134,7 +134,7 @@ function generateBlocks(scheme::Cascade.RadiativeRecombinationScheme, comp::Casc
                 "\n    + only E1 excitations are considered for the stabilization. \n"
         if  printout       println(sa)              end
         if  printSummary   println(iostream, sa)    end
-        #
+
         if  length(confs) > 1
             # Determine a list of hydrogenic orbitals for later use 
             relconfList = ConfigurationR[]
@@ -181,7 +181,7 @@ function generateBlocks(scheme::Cascade.RadiativeRecombinationScheme, comp::Casc
                 # Add all missing orbitals as hydrogenic
                 orbitals      = copy(basis.orbitals)
                 for  subsh in subshellList
-                    if haskey(orbitals, subsh)   ## do nothing
+                    if haskey(orbitals, subsh)   # do nothing
                     else      orbitals[subsh] = hydrogenicOrbitals[subsh];   print("hydrogenic $subsh ...")
                     end
                 end
@@ -201,7 +201,7 @@ function generateBlocks(scheme::Cascade.RadiativeRecombinationScheme, comp::Casc
                 "\n    + all requested multipoles are considered for the stabilization. \n"
         if  printout       println(sa)              end
         if  printSummary   println(iostream, sa)    end
-        #
+
         for  confa  in confs
             print("  Multiplet computations for $(string(confa)[1:end])   with $(confa.NoElectrons) electrons ... ")
             if  printSummary   println(iostream, "\n*  Multiplet computations for $(string(confa)[1:end])   with $(confa.NoElectrons) electrons ... ")   end
@@ -234,7 +234,7 @@ end
 function perform(scheme::RadiativeRecombinationScheme, comp::Cascade.Computation; output::Bool=false, outputToFile::Bool=true, outputDirectory::String="")
     if  output    results = Dict{String, Any}()    else    results = nothing    end
     printSummary, iostream = Defaults.getDefaults("summary flag/stream")
-    #
+
     # Perform the SCF and CI computation for the intial-state multiplets if initial configurations are given
     if  comp.initialConfigs != Configuration[]
         multiplet  = SelfConsistent.performSCF(comp.initialConfigs, comp.nuclearModel, comp.grid, comp.asfSettings; printout=false)
@@ -245,13 +245,13 @@ function perform(scheme::RadiativeRecombinationScheme, comp::Cascade.Computation
     # Print out initial configurations and levels 
     Cascade.displayLevels(stdout, multiplets, sa="initial ")
     if  printSummary   Cascade.displayLevels(iostream, multiplets, sa="initial ")                            end
-    #
+
     # Generate subsequent cascade configurations as well as display and group them together
     initialConfigs  = Basics.extractConfigurations(Basics.FromMultiplet(), multiplets)
     Basics.displayConfigurations(stdout, initialConfigs, details="initial configurations of the RR cascade ")
     capturedConfigs = Basics.generateConfigurations(Basics.ForPhotoRecombination(comp.scheme.intoShells), initialConfigs)
     Basics.displayConfigurations(stdout, capturedConfigs, details="final configurations of the RR cascade ")
-    #
+
     # Determine first all configuration 'blocks' and from them the individual steps of the cascade
     wc1 = Cascade.generateBlocks(scheme, comp::Cascade.Computation, initialConfigs)
     wc2 = Cascade.generateBlocks(scheme, comp::Cascade.Computation, capturedConfigs, printout=false)
@@ -264,12 +264,12 @@ function perform(scheme::RadiativeRecombinationScheme, comp::Cascade.Computation
         end
         println(">> Shift all initial level energies by $(-scheme.electronEnergyShift) $(Defaults.getDefaults("unit: energy"))")
     end
-    #
+
     Cascade.displayBlocks(stdout, wc1, sa="from the initial configurations of the RR cascade ");      
     Cascade.displayBlocks(stdout, wc2, sa="from the final configurations of the RR cascade ")
     if  printSummary   Cascade.displayBlocks(iostream, wc1, sa="from the initial configurations of the DR cascade ");      
                         Cascade.displayBlocks(iostream, wc2, sa="from the final configurations of the RR cascade ")           end      
-    #
+
     # Determine, modify and compute the transition data for all steps, ie. the PhotoIonization.Line's, etc.
     gMultiplets = Multiplet[];     
     for block in wc1  push!(gMultiplets, block.multiplet)    end
@@ -278,21 +278,21 @@ function perform(scheme::RadiativeRecombinationScheme, comp::Cascade.Computation
     Cascade.displaySteps(stdout, we, sa="radiative recombination ")
     if  printSummary   Cascade.displaySteps(iostream, we, sa="radiative recombination ")    end      
     wf   = Cascade.modifySteps(we)
-    #
+
     data = Cascade.computeSteps(scheme, comp, wf)
     if output    
-        ## results = Base.merge( results, Dict("name"                              => comp.name) ) 
-        ## results = Base.merge( results, Dict("cascade scheme"                    => comp.scheme) ) 
-        ## results = Base.merge( results, Dict("initial multiplets:"               => multiplets) )    
-        ## results = Base.merge( results, Dict("generated multiplets:"             => gMultiplets) )    
-        ## results = Base.merge( results, Dict("photo-recombination line data:"    => data) )
-        #
+        # results = Base.merge( results, Dict("name"                              => comp.name) ) 
+        # results = Base.merge( results, Dict("cascade scheme"                    => comp.scheme) ) 
+        # results = Base.merge( results, Dict("initial multiplets:"               => multiplets) )    
+        # results = Base.merge( results, Dict("generated multiplets:"             => gMultiplets) )    
+        # results = Base.merge( results, Dict("photo-recombination line data:"    => data) )
+
         results["name"]                              = comp.name
         results["cascade scheme"]                    = comp.scheme
         results["initial multiplets:"]               = multiplets  
         results["generated multiplets:"]             = gMultiplets 
         results["photo-recombination line data:"]    = data
-        #
+
         #  Write out the result to file to later continue with simulations on the cascade data
         filename = "zzz-cascade-rr-rate-computations-" * string(Dates.now())[1:13] * ".jld"
         println("\n* Write all results to disk; use:\n   JLD2.save(''$filename'', results) \n   using JLD2 " *
@@ -301,6 +301,6 @@ function perform(scheme::RadiativeRecombinationScheme, comp::Cascade.Computation
                                                 "\n   results = JLD2.load(''$filename'')    ... to load the results back from file." )      end      
         Cascade.writeDataFile(filename, results)
     end
-    ## return( results isa Dict{String,Any} ? Basics.PerformResults(results) : results )
+    # return( results isa Dict{String,Any} ? Basics.PerformResults(results) : results )
     return( results isa Dict{String,Any} ? Basics.PerformResults(results) : results )
 end

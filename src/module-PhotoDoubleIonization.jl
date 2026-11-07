@@ -995,7 +995,7 @@ function  computeAmplitudesProperties(line::PhotoDoubleIonization.Line, nm::Nucl
     # NOT explain the energy trend of the STATUS block, which is a factor of six.  The added
     # region only carries weight once the second-order denominator has the sign that puts the
     # on-shell point inside it; see the note at that denominator.
-    #
+
     # AND THE LIMIT MUST LIE ABOVE THE ON-SHELL POINT, NOT AT IT -- found 05-Oct-2026, and it is why priority
     # item 33's three proposed remedies could not work.  `onShellEnergy` below is exactly the limit this code used
     # until today, so for the LOWEST Green level the pole of the photon-first ordering sat precisely ON the upper
@@ -1004,7 +1004,7 @@ function  computeAmplitudesProperties(line::PhotoDoubleIonization.Line, nm::Nucl
     # can regularize what has no other side.  Measured: subtracting the singular part on the old range left the
     # divergence untouched -- the totals merely shifted by a constant -2.37e-05 (the dropped residue) while the
     # increments stayed at +26, +30, +29, +23 % for 15, 25, 41, 61 points.
-    #
+
     # THE PHYSICAL POINT IS THAT AN INTERMEDIATE STATE IS VIRTUAL.  The second-order sum runs over a COMPLETE set,
     # and the intermediate electron's energy is not restricted by energy conservation -- only the FINAL state's is.
     # Cutting the integral off at the energetically allowed maximum is therefore wrong on its own terms, quite
@@ -1103,7 +1103,7 @@ function  computeAmplitudesProperties(line::PhotoDoubleIonization.Line, nm::Nucl
     # The total is the sharing-integrated differential cross section, TIMES 1/2 BECAUSE THE TWO ELECTRONS ARE IDENTICAL.
     # dsigma/d eps1 is defined over the whole range [0, omega - I_double], so that integral counts each physical final state
     # twice -- once as (eps1, eps2) and once as (eps2, eps1) -- and the total carries a further factor 1/2.
-    #
+
     # THESE TWO LINES CLAIMED THE OPPOSITE UNTIL 03-Nov-2026, namely that the double counting was "already handled inside
     # Basics.determineEnergySharings and must NOT be applied again".  That routine's own docstring denies it in as many words:
     # "NO PARTICLE-STATISTICS FACTOR IS INCLUDED HERE, DELIBERATELY ... that factor belongs to the PHYSICS of the calling
@@ -1112,7 +1112,7 @@ function  computeAmplitudesProperties(line::PhotoDoubleIonization.Line, nm::Nucl
     # distinguishable shares just the same.  Its 08-Aug-2026 audit of consumers recorded that PhotoDoubleIonization "store[s]
     # and display[s] the weight but never integrate[s] with it", which was true on that date -- and then the 15-Aug rebuild
     # added the integral below, making this module a consumer, while the statistics factor was never supplied.
-    #
+
     # Kornberg & Miraglia state the same 1/2 for their own total.  Measured consequence at omega = 200 eV:
     # sigma(2+)/sigma(+) goes 2.70 % -> 1.35 %, i.e. BELOW the measured 3-4 %, which is the direction a knock-out-only
     # amplitude must err in because it carries no shake-off at all; 2.70 % overshot a measurement this model cannot reach.
@@ -1165,7 +1165,7 @@ function  computeLines(finalMultiplet::Multiplet, initialMultiplet::Multiplet, n
     # The nuclear potential and the B-spline primitives are constant for the whole computation and are built once.
     nuclearPot = Nuclear.nuclearPotential(nm, grid)
     primitives = Bsplines.generatePrimitives(grid)
-    #
+
     # ONCE PER COMPUTATION, not once per amplitude.  The first version of this check sat inside `amplitude` and fired 6656
     # times on one run of `examples/example-Dj.jl`, which is noise rather than a guard.
     for  problem in PhotoDoubleIonization.checkGreenSpaceOnGrid(settings.gMultiplet, grid)
@@ -1194,7 +1194,7 @@ function  computeLines(finalMultiplet::Multiplet, initialMultiplet::Multiplet, n
     PhotoDoubleIonization.displayResults(stdout, newLines, settings)
     printSummary, iostream = Defaults.getDefaults("summary flag/stream")
     if  printSummary   PhotoDoubleIonization.displayResults(iostream, newLines, settings)     end
-    #
+
     if    output    return( newLines )
     else            return( nothing )
     end
@@ -1311,7 +1311,7 @@ end
         exchange-closed.
 """
 function  displayResults(stream::IO, lines::Array{PhotoDoubleIonization.Line,1}, settings::PhotoDoubleIonization.Settings)
-    #
+
     # First table: the sharing-integrated total cross section, one row per line
     nx = 108
     println(stream, " ")
@@ -1328,7 +1328,7 @@ function  displayResults(stream::IO, lines::Array{PhotoDoubleIonization.Line,1},
     sb = sb * TableStrings.center(30, TableStrings.inUnits("cross section") * "          " *
                                       TableStrings.inUnits("cross section"); na=3)
     println(stream, sa);    println(stream, sb);    println(stream, "  ", TableStrings.hLine(nx))
-    #
+
     for  line in lines
         sa   = "";     isym = LevelSymmetry( line.initialLevel.J, line.initialLevel.parity)
                        fsym = LevelSymmetry( line.finalLevel.J,   line.finalLevel.parity)
@@ -1341,7 +1341,7 @@ function  displayResults(stream::IO, lines::Array{PhotoDoubleIonization.Line,1},
         println(stream, sa)
     end
     println(stream, "  ", TableStrings.hLine(nx))
-    #
+
     # Second table: the energy-sharing distribution, i.e. the integrand of the number above
     nx = 118
     println(stream, " ")
@@ -1359,7 +1359,7 @@ function  displayResults(stream::IO, lines::Array{PhotoDoubleIonization.Line,1},
     sb = sb * TableStrings.center(34, TableStrings.inUnits("differential cross section") *
                                       "        " * TableStrings.inUnits("differential cross section"); na=2)
     println(stream, sa);    println(stream, sb);    println(stream, "  ", TableStrings.hLine(nx))
-    #
+
     for  line in lines
         sa = TableStrings.center(18, TableStrings.levels_if(line.initialLevel.index, line.finalLevel.index); na=2)
         for  (is, sharing)  in  enumerate(line.sharings)
@@ -1367,12 +1367,12 @@ function  displayResults(stream::IO, lines::Array{PhotoDoubleIonization.Line,1},
             sb = sb * @sprintf("%.5e", Defaults.convertUnits("energy: from atomic", sharing.epsilon1)) * "  "
             sb = sb * @sprintf("%.5e", Defaults.convertUnits("energy: from atomic", sharing.epsilon2)) * "  "
             sb = sb * @sprintf("%.5e", sharing.weight)                                                 * "   "
-            ## an ENERGY-DIFFERENTIAL cross section needs BOTH conversions.  Until 04-Nov-2026 only the cross-section one
-            ## was applied while the header read [barn]/[eV], so this column carried barn per HARTREE -- a factor 27.2114,
-            ## and the epsilon columns beside it were already in eV.  Caught by the quadrature identity, which is unit-blind:
-            ## the weights of Basics.determineEnergySharings sum to the excess in a.u., so 0.5*sum(w*d) reproduces the total
-            ## only if d is per Hartree.  `energy-diff. cross section` and TableStrings.inUnits("differential cross section")
-            ## existed for this from the start and were wired up by no module at all.
+            # an ENERGY-DIFFERENTIAL cross section needs BOTH conversions.  Until 04-Nov-2026 only the cross-section one
+            # was applied while the header read [barn]/[eV], so this column carried barn per HARTREE -- a factor 27.2114,
+            # and the epsilon columns beside it were already in eV.  Caught by the quadrature identity, which is unit-blind:
+            # the weights of Basics.determineEnergySharings sum to the excess in a.u., so 0.5*sum(w*d) reproduces the total
+            # only if d is per Hartree.  `energy-diff. cross section` and TableStrings.inUnits("differential cross section")
+            # existed for this from the start and were wired up by no module at all.
             sb = sb * @sprintf("%.6e", Defaults.convertUnits("energy-diff. cross section: from atomic",
                                                             sharing.differentialCs.Coulomb))     * "   "
             sb = sb * @sprintf("%.6e", Defaults.convertUnits("energy-diff. cross section: from atomic",
@@ -1392,7 +1392,7 @@ end
         of all selected transitions and energies is printed but nothing is returned otherwise.
 """
 function  displayLines(stream::IO, lines::Array{PhotoDoubleIonization.Line,1})
-    #
+
     # First, print lines and sharings
     nx = 94
     println(stream, " ")
@@ -1405,7 +1405,7 @@ function  displayLines(stream::IO, lines::Array{PhotoDoubleIonization.Line,1})
     sa = sa * TableStrings.flushleft(54, "Energies (all in )" * TableStrings.inUnits("energy") * ")"; na=5);              
     sb = sb * TableStrings.flushleft(54, "  i -- f         omega        epsilon_1    epsilon_2"; na=5)
     println(stream, sa);    println(stream, sb);    println(stream, "  ", TableStrings.hLine(nx)) 
-    #   
+
     for  line in lines
         sa  = "";      isym = LevelSymmetry( line.initialLevel.J, line.initialLevel.parity)
                         fsym = LevelSymmetry( line.finalLevel.J,   line.finalLevel.parity)
@@ -1413,7 +1413,7 @@ function  displayLines(stream::IO, lines::Array{PhotoDoubleIonization.Line,1})
         sa = sa * TableStrings.center(18, TableStrings.symmetries_if(isym, fsym); na=4) 
         energy = line.finalLevel.energy - line.initialLevel.energy
         sa = sa * @sprintf("%.5e", Defaults.convertUnits("energy: from atomic", energy)) * "    "
-        #
+
         for  (is, sharing)  in  enumerate(line.sharings)
             if  is == 1     sb = sa     else    sb = TableStrings.hBlank( length(sa) )    end
             sb = sb * @sprintf("%.4e", Defaults.convertUnits("energy: from atomic", sharing.omega))    * "    "
@@ -1423,8 +1423,8 @@ function  displayLines(stream::IO, lines::Array{PhotoDoubleIonization.Line,1})
         end
     end
     println(stream, "  ", TableStrings.hLine(nx))
-    #
-    #
+
+
     # Second, print lines and channles
     nx = 130
     println(stream, " ")
@@ -1437,7 +1437,7 @@ function  displayLines(stream::IO, lines::Array{PhotoDoubleIonization.Line,1})
     sa = sa * TableStrings.flushleft(100, "Partial-wave pairs and the total symmetries they serve"; na=5);              
     sb = sb * TableStrings.flushleft(100, "kappa_1 + kappa_2    J^P_x        -->   J^P_total   multipoles"; na=5)
     println(stream, sa);    println(stream, sb);    println(stream, "  ", TableStrings.hLine(nx)) 
-    #
+
     for  line in lines
         sa  = "";      isym = LevelSymmetry( line.initialLevel.J, line.initialLevel.parity)
                        fsym = LevelSymmetry( line.finalLevel.J,   line.finalLevel.parity)
@@ -1459,7 +1459,7 @@ function  displayLines(stream::IO, lines::Array{PhotoDoubleIonization.Line,1})
         end
     end
     println(stream, "  ", TableStrings.hLine(nx))
-    #
+
     return( nothing )
 end
 

@@ -1,9 +1,9 @@
 
-#
+
 # Recoupling for one-particle operators of rank k > 0.
-#
+
 # This file is included from module-SpinAngular.jl and shares its namespace.
-#
+
 
 """
 `SpinAngular.openShells(csf::CsfR, subshells::Array{Subshell,1})`
@@ -83,11 +83,11 @@ end
         VERIFIED against `SpinAngularGaigalas.irreducibleTensor(SchemeEta_W(), ...)` to ratio 1.000000 on every case tested, which
         isolates this step from the outer normalization. A value::Float64 is returned.
 """
-#
+
 # The memo for `shellReducedW`. A MODULE-LEVEL cache is used here deliberately, and the reasoning is worth stating
 # because JAC's own precedent, `InteractionStrength.XLCache`, argues the opposite -- that a cache should be a
 # parameter and not a global.
-#
+
 # THAT ARGUMENT TURNS ON A HAZARD THAT DOES NOT EXIST HERE. The XL key holds subshell LABELS, and a label identifies
 # an orbital only within one basis: two bases can both contain a "2s_1/2" whose radial functions differ entirely, so
 # a global store can outlive the basis whose labels it uses and hand back numbers for the wrong orbitals. The key
@@ -95,25 +95,25 @@ end
 # Those are pure angular-momentum quantum numbers, and the value is a pure angular quantity: the reduced W of a
 # 3d_5/2 shell with N = 3, v = 3, J = 9/2 is the same number in every basis, every atom, and every calculation.
 # There is nothing for it to outlive.
-#
+
 # The key space is also bounded -- j <= 9/2, N <= 10, and the ranks that survive the triangle conditions -- so the
 # store cannot grow without limit. MEASURED before being written: over three configurations the same key recurs 9.7
 # times on average (882 invocations, 91 distinct), whereas caching the RECOUPLING instead would gain nothing at all,
 # its repeat factor being 1.04.
-#
+
 const SHELL_W_CACHE = Dict{NTuple{7,Int64}, Float64}()
 
 
 # The single-operator matrix elements are memoised for the same reason as the rank-k ones, and it matters more. The
 # arguments are a handful of small quantum numbers and the same ones recur across every CSF pair of a calculation.
-#
+
 # WHAT THE MEMO IS WORTH, re-measured 11-Sep-2026, and WHY THE EARLIER REASON NO LONGER HOLDS. This note used to say
 # that the sweep is dominated by EXACT RATIONAL ARITHMETIC -- BigInt allocation inside the Wigner-symbol package,
 # reached through the Clebsch-Gordan in `shellReducedA`. That ceased to be true on 25-Aug-2026, when the default
 # Wigner method became `FloatingWigner` (see `AngularMomentum.WIGNER_METHOD`): the exact path still exists but is
 # taken only when asked for, so no BigInt is allocated in a default run. At 3 us per uncached call the cost is not
 # rational arithmetic at all -- it is the quasispin/CFP table work and the Float64 Wigner evaluations themselves.
-#
+
 # The memo is nonetheless worth MORE than that stale reason claimed, and most where the coupling trees are longest:
 #     shellReducedW  8.1x per call          shellReducedA  7.1x per call
 #     whole CI matrix, cold against warm:   Cl III 3s^2 3p^3   57 %      Ti III 3d^2   94 %
@@ -336,7 +336,7 @@ function shellReducedAUncached(j::AngularJ64, Nbra::Int64, senBra::Int64, Jbra::
     # AN EMPTY SUBSHELL AGAINST A SINGLY OCCUPIED ONE NEEDS NO COEFFICIENT OF FRACTIONAL PARENTAGE: there is only
     # one state on each side, and the reduced matrix element is -/+ sqrt(2j+1) in closed form, + for the
     # annihilation j^1 -> j^0 and - for the creation j^0 -> j^1.
-    #
+
     # Taking it here is not an optimisation. The quasispin tables consulted below -- qshellTermQ, qshellTermM,
     # getTermNumber, completlyReducedCfpByIndices -- cover j <= 9/2 ONLY, while a continuum partial wave reaches
     # j = 21/2. Until 27-Aug-2026 the lookup ran off the end of those tables and this routine returned 0, so every
@@ -438,9 +438,9 @@ function substitutionRecoupling(leftCsf::CsfR, rightCsf::CsfR, ia::Int64, ib::In
     # six-j. That is worth doing rather than caching: a 9j costs 27.8 us here against 0.98 us for a 6j, so the
     # degenerate case is 28 times cheaper, and the identity was checked on 23328 argument combinations (1475 of them
     # non-zero) to a worst deviation of 5.6e-17 before being used.
-    #
+
     #   {a b c; d e f; g h 0} = delta(c,f) delta(g,h) (-1)^(b+c+d+g) / sqrt((2c+1)(2g+1)) * {a b c; e d g}
-    #
+
     if  Basics.twice(kJ) == 0  &&  Basics.twice(ja) == Basics.twice(jb)  &&  Basics.twice(Xb) == Basics.twice(Yb)
         ph9 = Basics.twice(Ybm) + Basics.twice(ja) + Basics.twice(Jb) + Basics.twice(Xb)
         if  iseven(ph9)

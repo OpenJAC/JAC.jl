@@ -23,7 +23,7 @@ function displayEvents(stream::IO, events::Array{ParticleScattering.Event,1})
     sa = sa * TableStrings.center(16, "Projectile"; na=2);         sb = sb * TableStrings.hBlank(18)
     sa = sa * TableStrings.center(20, "Interaction"; na=2);        sb = sb * TableStrings.hBlank(22)
     println(stream, sa);    println(stream, sb);    println(stream, "  ", TableStrings.hLine(nx))
-    #
+
     for  event in events
         sa  = "  "
         sa  = sa * TableStrings.center(16, TableStrings.levels_if(event.initialLevel.index, event.finalLevel.index); na=2)
@@ -59,7 +59,7 @@ function displayPhaseShifts(stream::IO, events::Array{ParticleScattering.Event,1
     sa = sa * TableStrings.center(20, "delta (j = l+1/2)"; na=4)
     sa = sa * TableStrings.center(20, "delta (j = l-1/2)"; na=2)
     println(stream, sa);    println(stream, "  ", TableStrings.hLine(nx))
-    #
+
     for  event in events
         lMax = isempty(event.partialWaves) ? -1 :
                maximum( Basics.subshell_l(Subshell(101, pw.kappa)) for pw in event.partialWaves )
@@ -100,7 +100,7 @@ function displayCrossSections(stream::IO, events::Array{ParticleScattering.Event
     sb = sb * TableStrings.center(18, "[a.u.]"; na=2)
     sa = sa * TableStrings.center(16, "Sherman S"; na=2);       sb = sb * TableStrings.hBlank(18)
     println(stream, sa);    println(stream, sb);    println(stream, "  ", TableStrings.hLine(nx))
-    #
+
     for  event in events
         for  obs in event.angular
             sa = "  "
@@ -139,7 +139,7 @@ function displayIntegratedCrossSections(stream::IO, events::Array{ParticleScatte
     println(stream, sa)
     println(stream, "  " * TableStrings.hBlank(16) * TableStrings.center(64, "all in [a.u.]"; na=2))
     println(stream, "  ", TableStrings.hLine(nx))
-    #
+
     for  event in events
         sa = "  " * @sprintf("%.6e", Defaults.convertUnits("energy: from atomic", event.impactEnergy)) * "     "
         sa = sa * @sprintf("%.8e", event.integrated.sigmaElastic)          * "        "

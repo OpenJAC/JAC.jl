@@ -35,8 +35,8 @@ function computeSteps(scheme::Cascade.DielectronicRecombinationScheme, comp::Cas
             nrContinuum  = Continuum.gridConsistency(meanEn + 0.1, comp.grid)
             contSettings = Continuum.Settings(false, nrContinuum);   
             npot         = Nuclear.nuclearPotential(comp.nuclearModel, comp.grid)
-            ## wp1 = compute("radial potential: core-Hartree", grid, wLevel)
-            ## wp2 = compute("radial potential: Hartree-Slater", grid, wLevel)
+            # wp1 = compute("radial potential: core-Hartree", grid, wLevel)
+            # wp2 = compute("radial potential: Hartree-Slater", grid, wLevel)
             wp           = Basics.computePotential(comp.asfSettings.scField, comp.grid, step.finalMultiplet.levels[1])         
             pot          = Basics.add(npot, wp)
             #  Generate continuum if not yet available
@@ -49,11 +49,11 @@ function computeSteps(scheme::Cascade.DielectronicRecombinationScheme, comp::Cas
                     kappaList = AngularMomentum.allowedKappaSymmetries(symi, symf)
                     for  kappa in kappaList
                         sh    = Subshell(101, kappa)
-                        if      abs(kappa) > step.settings.maxKappa                               ## continuum orbital not needed
-                        elseif  kappa in generatedKappas                                          ## already generated for this step
-                        elseif  haskey(cOrbitals,sh)   &&   cOrbitals[sh].energy - en / en < 0.15 ## use previous one
+                        if      abs(kappa) > step.settings.maxKappa                               # continuum orbital not needed
+                        elseif  kappa in generatedKappas                                          # already generated for this step
+                        elseif  haskey(cOrbitals,sh)   &&   cOrbitals[sh].energy - en / en < 0.15 # use previous one
                             println(">> No new continum orbital generated for $sh and energy $en ")
-                        else                                                                      ## generate new continuum orbital
+                        else                                                                      # generate new continuum orbital
                             push!(generatedKappas, kappa)
                             cOrbital, phase, normF  = Continuum.generateOrbitalLocalPotential(en, sh, pot, contSettings)
                             cOrbitals[sh]           = cOrbital;    cPhases[sh] = phase
@@ -81,9 +81,10 @@ function computeSteps(scheme::Cascade.DielectronicRecombinationScheme, comp::Cas
                 "to a total of $nt $(string(step.process)) decay lines."
         println(sa);    if  printSummary   println(iostream, sa)   end 
     end
-    #
+
     data = [ Cascade.Data{PhotoEmission.Line}(linesR), Cascade.Data{AutoIonization.Line}(linesA) ]
 end
+
 
 """
 `Cascade.determineSteps(scheme::Cascade.DielectronicRecombinationScheme, comp::Cascade.Computation, 
@@ -107,16 +108,16 @@ function determineSteps(scheme::Cascade.DielectronicRecombinationScheme, comp::C
                                                                         capturedBlock.multiplet, initialBlock.multiplet) )
             end
         end
-        #
+
         for  capturedBlock in capturedList
             for  decayBlock in decayList
                 if  decayBlock.NoElectrons != capturedBlock.NoElectrons   error("stop b")     end
                 # Check that at least one energy supports radiative stabilization
                 if   Basics.determineMeanEnergy(capturedBlock.multiplet) - Basics.determineMeanEnergy(decayBlock.multiplet) > scheme.minPhotonEnergy
-                    ## The multipoles must come from the scheme.  PhotoEmission.Settings() defaults to [E1], so the
-                    ## stabilization was always computed in E1 alone -- while generateBlocks() prints "all requested
-                    ## multipoles are considered for the stabilization".  scheme.multipoles was read nowhere in this
-                    ## file; this is the same defect that example-Fc.jl uncovered for the photo-excitation scheme.
+                    # The multipoles must come from the scheme.  PhotoEmission.Settings() defaults to [E1], so the
+                    # stabilization was always computed in E1 alone -- while generateBlocks() prints "all requested
+                    # multipoles are considered for the stabilization".  scheme.multipoles was read nowhere in this
+                    # file; this is the same defect that example-Fc.jl uncovered for the photo-excitation scheme.
                     settings = PhotoEmission.Settings(PhotoEmission.Settings(), multipoles=scheme.multipoles,
                                                       gauges=[UseCoulomb, UseBabushkin])
                     push!( stepList, Cascade.Step(Basics.Radiative(), settings, capturedBlock.confs,     decayBlock.confs,
@@ -124,7 +125,7 @@ function determineSteps(scheme::Cascade.DielectronicRecombinationScheme, comp::C
                 end
             end
         end
-        #
+
     else  error("Unsupported cascade approach.")
     end
     return( stepList )
@@ -140,7 +141,7 @@ end
 function generateBlocks(scheme::Cascade.DielectronicRecombinationScheme, comp::Cascade.Computation, confs::Array{Configuration,1}; printout::Bool=true)
     blockList = Cascade.Block[];    basis = Basis()
     printSummary, iostream = Defaults.getDefaults("summary flag/stream")
-    #
+
     if    comp.approach == AverageSCA()
         sa = "\n* Generate blocks for DR plasma rate coefficient computations: \n" *
                 "\n  In the cascade approach $(comp.approach), the following assumptions/simplifications are made: " *
@@ -151,7 +152,7 @@ function generateBlocks(scheme::Cascade.DielectronicRecombinationScheme, comp::C
                 "\n    + only E1 excitations are considered for the stabilization. \n"
         if  printout       println(sa)              end
         if  printSummary   println(iostream, sa)    end
-        #
+
         if  length(confs) > 1
             # Determine a list of hydrogenic orbitals for later use 
             relconfList = ConfigurationR[]
@@ -198,7 +199,7 @@ function generateBlocks(scheme::Cascade.DielectronicRecombinationScheme, comp::C
                 # Add all missing orbitals as hydrogenic
                 orbitals      = copy(basis.orbitals)
                 for  subsh in subshellList
-                    if haskey(orbitals, subsh)   ## do nothing
+                    if haskey(orbitals, subsh)   # do nothing
                     else      orbitals[subsh] = hydrogenicOrbitals[subsh];   print("hydrogenic $subsh ...")
                     end
                 end
@@ -219,7 +220,7 @@ function generateBlocks(scheme::Cascade.DielectronicRecombinationScheme, comp::C
                 "\n    + all requested multipoles are considered for the stabilization. \n"
         if  printout       println(sa)              end
         if  printSummary   println(iostream, sa)    end
-        #
+
         for  confa  in confs
             print("  Multiplet computations for $(string(confa)[1:end])   with $(confa.NoElectrons) electrons ... ")
             if  printSummary   println(iostream, "\n*  Multiplet computations for $(string(confa)[1:end])   with $(confa.NoElectrons) electrons ... ")   end
@@ -348,7 +349,7 @@ end
 function perform(scheme::DielectronicRecombinationScheme, comp::Cascade.Computation; output::Bool=false, outputToFile::Bool=true, outputDirectory::String="")
     if  output    results = Dict{String, Any}()    else    results = nothing    end
     printSummary, iostream = Defaults.getDefaults("summary flag/stream")
-    #
+
     # Perform the SCF and CI computation for the intial-state multiplets if initial configurations are given
     if  comp.initialConfigs != Configuration[]
         multiplet  = SelfConsistent.performSCF(comp.initialConfigs, comp.nuclearModel, comp.grid, comp.asfSettings; printout=false)
@@ -359,7 +360,7 @@ function perform(scheme::DielectronicRecombinationScheme, comp::Cascade.Computat
     # Print out initial configurations and levels 
     Cascade.displayLevels(stdout, multiplets, sa="initial ")
     if  printSummary   Cascade.displayLevels(iostream, multiplets, sa="initial ")                            end
-    #
+
     # Generate subsequent cascade configurations as well as display and group them together
     
     
@@ -370,7 +371,7 @@ function perform(scheme::DielectronicRecombinationScheme, comp::Cascade.Computat
     capturedConfigs, decayConfigs = Basics.generateConfigurations(theme, initialConfigs)
     Basics.displayConfigurations(stdout, capturedConfigs, details="doubly-excited capture configurations of the DR cascade ")
     Basics.displayConfigurations(stdout, decayConfigs, details="decay configurations of the DR cascade ")
-    #
+
     # Determine first all configuration 'blocks' and from them the individual steps of the cascade
     wc1 = Cascade.generateBlocks(scheme, comp::Cascade.Computation, initialConfigs)
     wc2 = Cascade.generateBlocks(scheme, comp::Cascade.Computation, capturedConfigs, printout=false)
@@ -384,14 +385,14 @@ function perform(scheme::DielectronicRecombinationScheme, comp::Cascade.Computat
         end
         println(">> Shift all initial level energies by $(-scheme.electronEnergyShift) $(Defaults.getDefaults("unit: energy"))")
     end
-    #
+
     Cascade.displayBlocks(stdout, wc1, sa="from the initial configurations of the DR cascade ");      
     Cascade.displayBlocks(stdout, wc2, sa="from the doubly-excited capture configurations of the DR cascade ")
     Cascade.displayBlocks(stdout, wc3, sa="from the decay configurations of the DR cascade ")
     if  printSummary   Cascade.displayBlocks(iostream, wc1, sa="from the initial configurations of the DR cascade ");      
                         Cascade.displayBlocks(iostream, wc2, sa="from the doubly-excited capture configurations of the DR cascade ")
                         Cascade.displayBlocks(iostream, wc3, sa="from the decay configurations of the DR cascade ")            end      
-    #
+
     # Determine, modify and compute the transition data for all steps, ie. the PhotoIonization.Line's, etc.
     gMultiplets = Multiplet[];     
     for block in wc1  push!(gMultiplets, block.multiplet)    end
@@ -401,7 +402,7 @@ function perform(scheme::DielectronicRecombinationScheme, comp::Cascade.Computat
     Cascade.displaySteps(stdout, we, sa="electron capture and stabilization ")
     if  printSummary   Cascade.displaySteps(iostream, we, sa="electron capture and stabilization ")    end      
     wf   = Cascade.modifySteps(we)
-    #
+
     data = Cascade.computeSteps(scheme, comp, wf)
     if output    
         results = Base.merge( results, Dict("name"                          => comp.name) ) 
@@ -409,7 +410,7 @@ function perform(scheme::DielectronicRecombinationScheme, comp::Cascade.Computat
         results = Base.merge( results, Dict("initial multiplets:"           => multiplets) )    
         results = Base.merge( results, Dict("generated multiplets:"         => gMultiplets) )    
         results = Base.merge( results, Dict("cascade data:"                 => data) )
-        #
+
         #  Write out the result to file to later continue with simulations on the cascade data
         filename = "zzz-cascade-dr-rate-computations-" * string(Dates.now())[1:13] * ".jld"
         println("\n* Write all results to disk; use:\n   JLD2.save(''$filename'', results) \n   using JLD2 " *
@@ -418,7 +419,7 @@ function perform(scheme::DielectronicRecombinationScheme, comp::Cascade.Computat
                                                 "\n   results = JLD2.load(''$filename'')    ... to load the results back from file." )      end      
         Cascade.writeDataFile(filename, results)
     end
-    ## return( results isa Dict{String,Any} ? Basics.PerformResults(results) : results )
+    # return( results isa Dict{String,Any} ? Basics.PerformResults(results) : results )
     return( results isa Dict{String,Any} ? Basics.PerformResults(results) : results )
 end
 
@@ -460,7 +461,7 @@ function perform(scheme::Cascade.DielectronicCaptureScheme, comp::Cascade.Comput
                  outputToFile::Bool=true, outputDirectory::String="")
     if  output    results = Dict{String, Any}()    else    results = nothing    end
     printSummary, iostream = Defaults.getDefaults("summary flag/stream")
-    #
+
     if  comp.initialConfigs != Configuration[]
         multiplet  = SelfConsistent.performSCF(comp.initialConfigs, comp.nuclearModel, comp.grid, comp.asfSettings; printout=false)
         multiplets = [Multiplet("initial states", multiplet.levels)]
@@ -468,7 +469,7 @@ function perform(scheme::Cascade.DielectronicCaptureScheme, comp::Cascade.Comput
         multiplets = comp.initialMultiplets
     end
     Cascade.displayLevels(stdout, multiplets, sa="initial ")
-    #
+
     initialConfigs = Basics.extractConfigurations(Basics.FromMultiplet(), multiplets)
     Basics.displayConfigurations(stdout, initialConfigs, details="initial configurations of the capture cascade ")
     # The EXCITED target: the exit channels of a resonant excitation, same electron number as the initial target.
@@ -481,7 +482,7 @@ function perform(scheme::Cascade.DielectronicCaptureScheme, comp::Cascade.Comput
                                                 scheme.intoShells, Shell[])
     capturedConfigs, _ = Basics.generateConfigurations(theme, initialConfigs)
     Basics.displayConfigurations(stdout, capturedConfigs, details="doubly-excited capture configurations ")
-    #
+
     drScheme = Cascade.DielectronicRecombinationScheme([E1], false, Shell(0,0), scheme.maxExcitationEnergy,
                                                         scheme.electronEnergyShift, 0., scheme.NoExcitations,
                                                         scheme.excitationFromShells, scheme.excitationToShells,
@@ -501,7 +502,7 @@ function perform(scheme::Cascade.DielectronicCaptureScheme, comp::Cascade.Comput
     Cascade.displayBlocks(stdout, wc1,  sa="from the initial configurations ")
     Cascade.displayBlocks(stdout, wc1x, sa="from the excited target configurations ")
     Cascade.displayBlocks(stdout, wc2,  sa="from the doubly-excited capture configurations ")
-    #
+
     gMultiplets = Multiplet[]
     for block in wc1   push!(gMultiplets, block.multiplet)    end
     for block in wc1x  push!(gMultiplets, block.multiplet)    end
@@ -512,7 +513,7 @@ function perform(scheme::Cascade.DielectronicCaptureScheme, comp::Cascade.Comput
     Cascade.displaySteps(stdout, we, sa="electron capture and re-autoionization ")
     wf   = Cascade.modifySteps(we)
     data = Cascade.computeSteps(drScheme, comp, wf)
-    #
+
     if  output
         linesC = AutoIonization.Line[]
         for  cData in data
@@ -525,7 +526,7 @@ function perform(scheme::Cascade.DielectronicCaptureScheme, comp::Cascade.Comput
         results = Base.merge( results, Dict("dielectronic-capture lines:"   => linesC) )
         results = Base.merge( results, Dict("cascade data:"                 => data) )
     end
-    #
+
     if  outputToFile
         filename = "zzz-cascade-dielectronic-capture-" * string(Dates.now())[1:13] * ".jld"
         println("\n* Write all results to disk; use:  JLD2.load(''$filename'')")

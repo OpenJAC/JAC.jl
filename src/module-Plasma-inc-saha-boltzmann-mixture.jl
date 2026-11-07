@@ -328,7 +328,7 @@ function determineInitialIonDensitiesPropterties(scheme::Plasma.SahaBoltzmannSch
     # Initial the isotope class data
     isotopicDensity = ionDensity * isoClass.isotopicFraction.x
     Lambda          = Plasma.thermalLength(temp, isoClass.isotopicFraction)
-    dominantEnergy  = -4*temp   ## Plasma.computeDominantIsotopeEnergy(isoClass)  -32.3703 
+    dominantEnergy  = -4*temp   # Plasma.computeDominantIsotopeEnergy(isoClass)  -32.3703 
     
     # Compute factor to re-normalize the partition function
     nDensityTotal = Plasma.computeIonLevelNumberDensityTotal(isoClass)
@@ -415,7 +415,7 @@ function determineIpShifts(pm::Basics.AbstractPlasmaModel, temp::Float64, ni::Fl
         qMax  = 0;   for ionClass  in  isoClass.ionClasses   qMax = max(qMax, ionClass.q)   end
         # qMax = 0 is a gas of neutrals: no charged component, no critical density, and the Debye branch is the one.
         if  qMax == 0   ncr = Inf   else   ncr = 3 / (4pi) * (temp / qMax^2)^3   end
-        #
+
         if  nFree <= ncr
             for ionClass  in  isoClass.ionClasses   deltaIp[ionClass.q] = (ionClass.q + 1) / pm.lambda            end
             sbranch = "weak-coupling (Debye-Hueckel) branch, Eq. (56)"
@@ -507,7 +507,7 @@ function  displayIsotopeClasses(stream::IO, isoClasses::Array{IsotopeClass,1})
     sa = sa * TableStrings.center(10, "No (ions)"           ; na=2);                       sb = sb * TableStrings.hBlank(12)
     sa = sa * TableStrings.center(16, "q    No (levels)"    ; na=2);                       sb = sb * TableStrings.hBlank(18)
     println(stream, sa);    println(stream, sb);    println(stream, "  ", TableStrings.hLine(nx)) 
-    #   
+
     for  isoClass in isoClasses
         sa  = "";    sc  = "                 ";    
         sc = sc * string(round(isoClass.isotopicFraction.Z, digits=2)) * ", "
@@ -559,7 +559,7 @@ function  displaySahaBoltzmannEquilibrium(stream::IO, isoClasses::Array{IsotopeC
     sa = sa * TableStrings.center(10, "No (ions)"           ; na=2);                       sb = sb * TableStrings.hBlank(12)
     sa = sa * TableStrings.center(30, "q    Energy     g    nDensity"    ; na=2);             sb = sb * TableStrings.hBlank(18)
     println(stream, sa);    println(stream, sb);    println(stream, "  ", TableStrings.hLine(nx)) 
-    #   
+
     for  isoClass in isoClasses
         sa  = "";    sc  = "                 ";    
         sc = sc * string(round(isoClass.isotopicFraction.Z, digits=2)) * ", "
@@ -624,14 +624,14 @@ end
         isotopic-class data. A neat table is printed but nothing is returned otherwise.
 """
 function  displayThermodynamicProperties(stream::IO, temp::Float64, totalIonDensity::Float64, isoClasses::Array{IsotopeClass,1})
-    #
+
     ne         = Plasma.computeElectronNumberDensity(temp, isoClasses)
     betamu     = Plasma.computeElectronChemicalPotential(temp, ne) / temp
     meanCharge = Plasma.computeElectronNumberDensity(temp, isoClasses) / totalIonDensity
     pressure   = Plasma.pressure(temp, totalIonDensity, isoClasses)
     internalEn = Plasma.internalEnergyDensity(temp, totalIonDensity, isoClasses)
     freeEn     = Plasma.freeEnergyDensity(temp, totalIonDensity, isoClasses)
-    #
+
     println(stream, "\n  Thermodynamic properties of the ionic mixture: \n")
     println(stream, "  + betamu:                  " * @sprintf("% .4e", betamu)                  )
     println(stream, "  + mean charge state <q>:   " * @sprintf("% .4e", meanCharge)              )
@@ -706,7 +706,7 @@ function  perform(scheme::Plasma.SahaBoltzmannScheme, computation::Plasma.Comput
     wa         = 0.;    for  fraction  in  scheme.isotopicMixture     wa = wa + fraction.x    end
     isoMixture = IsotopicFraction[]; 
     for  fraction  in  scheme.isotopicMixture   push!(isoMixture, IsotopicFraction(fraction.Z, fraction.A, fraction.x/wa) )   end
-    #
+
     if  computation.settings.useNumberDensity    totalIonDensity = computation.settings.density
     else                                         error("stop a")
     end
@@ -804,8 +804,8 @@ function solveSahaBoltzmannEquilibrium(temp::Float64, isoClasses::Array{IsotopeC
     while  isNotConverged
         noIteration = noIteration + 1
         println("\n> Saha-Boltzmann iteration $noIteration ... \n  ------------------------------")
-        #
-        if  noIteration == 1   ne = 2.0e-5 * 6     ## ion number density * Z
+
+        if  noIteration == 1   ne = 2.0e-5 * 6     # ion number density * Z
         else                   ne = Plasma.computeElectronNumberDensity(temp, oldIsoClasses)
         end
         chemMuE       = Plasma.computeElectronChemicalPotential(temp, ne) 
@@ -820,7 +820,7 @@ function solveSahaBoltzmannEquilibrium(temp::Float64, isoClasses::Array{IsotopeC
             groundE, deltaIp = Plasma.determineIpShifts(npm, temp, ionDensity, isoClass)
             qMax = 0;    for ionClass  in  isoClass.ionClasses   qMax = max(qMax, ionClass.q)   end
             
-            dominantEnergy = -4*temp  ## Plasma.computeDominantIsotopeEnergy(isoClass)  -32.3703
+            dominantEnergy = -4*temp  # Plasma.computeDominantIsotopeEnergy(isoClass)  -32.3703
                 
             # Compute factor to re-normalize the partition function -- RESTRICTED to levels that remain BOUND
             # under this IPD plasma model (item 97): a level the cut below removes must not go on being
@@ -858,7 +858,7 @@ function solveSahaBoltzmannEquilibrium(temp::Float64, isoClasses::Array{IsotopeC
         betamu = Plasma.computeElectronChemicalPotential(temp, ne) / temp
         if  abs(betamu - betamuOld) < 1.0e-10    isNotConverged = false   else  betamuOld = betamu   end 
         println(">> betamu = $betamu ")
-        #
+
         if     isNotConverged  &&  noIteration < 20   oldIsoClasses = deepcopy(newIsoClasses);   opm = npm
         else   break
         end
@@ -910,7 +910,7 @@ function generateIonLevelData(scheme::Plasma.SahaBoltzmannScheme, isoClass::Isot
     valShells  = Plasma.determineValenceShells( Zint - q )
     
     # Check the grid for a proper presentation of all orbitals
-    ## Radial.checkGrid(grid, Shell(scheme.upperShellNo, 0), isoClass.isotopicFraction.Z)
+    # Radial.checkGrid(grid, Shell(scheme.upperShellNo, 0), isoClass.isotopicFraction.Z)
     @warn("Check the grid in Plasma: re-install !!")
     
     # The generation of the ionic level data requires special care, especially if double or multiple 
@@ -930,7 +930,7 @@ function generateIonLevelData(scheme::Plasma.SahaBoltzmannScheme, isoClass::Isot
     # Generate from refConfig a set of configurations in line with the given scheme
     fromShells = Basics.extractShellList([refConfig])
     toShells   = Basics.generateShellList([refConfig], scheme.upperShellNo, [0,1,2,3])
-    #
+
     sConfigs   = Configuration[];    dtConfigs   = Configuration[]
     if  scheme.NoExcitations >= 1    sConfigs   = Basics.generateConfigurations([refConfig], fromShells, toShells, 1)  end
     if  scheme.NoExcitations >  1    
@@ -938,7 +938,7 @@ function generateIonLevelData(scheme::Plasma.SahaBoltzmannScheme, isoClass::Isot
     end
     allConfigs = append!(sConfigs, dtConfigs)
     allConfigs = unique(allConfigs)
-    #
+
     println(">> Generation of ion-level data for Z = $Zint and charge state q = $q  with configurations \n   $allConfigs")
     
     if  length(valShells) == 0      repConfigs = allConfigs
@@ -974,7 +974,7 @@ function generateIonLevelData(scheme::Plasma.SahaBoltzmannScheme, isoClass::Isot
             
         push!(ionLevels, Plasma.IonicLevel(level.energy, Basics.twice(level.J)+1, 0., uppermostShell) )
     end
-    #
+
     println("\n >> Generation of $(length(ionLevels)) ion-levels for Z = $Zint and charge state q = $q.")
 
     # Print information to summury file
@@ -1029,12 +1029,12 @@ function readEvaluateIonLevelData(filename::String, isoClass::IsotopeClass, NoEx
             else                        push!(newIonClasses, ionClass)
             end
         end
-        #
+
         newIsoClass = Plasma.IsotopeClass(isoClass.isotopicDensity, isoClass.Lambda, isoClass.dominantEnergy, 
                                           isoClass.isotopicFraction, newIonClasses)
         found       = true
         println(">>> Ion-level data are found in $filename  for $(chargeStates)+." )
-        #
+
     elseif  false  # Use this branch to read-in external data that were generated for test purposes
         for  ionClass in isoClass.ionClasses
             qkey = "q" * string(ionClass.q) * "Levels"
@@ -1043,12 +1043,12 @@ function readEvaluateIonLevelData(filename::String, isoClass::IsotopeClass, NoEx
             else                        push!(newIonClasses, ionClass)
             end
         end
-        #
+
         newIsoClass = Plasma.IsotopeClass(isoClass.isotopicDensity, isoClass.Lambda, isoClass.dominantEnergy, 
                                           isoClass.isotopicFraction, newIonClasses)
         found       = true
         println(">>> Ion-level data are found in $filename  for $(chargeStates)+. \n" )
-        #
+
     else
         println(">>> No ion-level data found in $filename." )
     end
@@ -1089,7 +1089,7 @@ function readEvaluateIonLevelData(scheme::Plasma.SahaBoltzmannScheme, isoClass::
             if  length(ionClass.ionLevels) == 0    incomplete = true    end
         end
     end
-    #
+
     if incomplete
         newIonClasses = Plasma.IonicClass[] 
         for  ionClass in newIsoClass.ionClasses

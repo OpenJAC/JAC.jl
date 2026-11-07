@@ -1,9 +1,9 @@
 
-#
+
 # Two-particle (electron-electron) coefficients.
-#
+
 # This file is included from module-SpinAngular.jl and shares its namespace.
-#
+
 
 """
 `abstract type SpinAngular.AbstractTwoElectronKind`
@@ -219,6 +219,7 @@ function computeCoefficients(op::SpinAngular.TwoParticleOperator, leftCsf::CsfR,
     return( coeffs )
 end
 
+
 """
 `SpinAngular.twoParticleDirect(leftCsf::CsfR, rightCsf::CsfR, subshells::Array{Subshell,1}, ia::Int64, ib::Int64, k::Int64)`
     ... to compute the DIRECT two-particle coefficient V^k(a,b;a,b) for two distinct open subshells `ia` and `ib`, in
@@ -261,6 +262,7 @@ function twoParticleDirect(leftCsf::CsfR, rightCsf::CsfR, subshells::Array{Subsh
     return( wa * wb * wR / ( sqrt(Basics.twice(leftCsf.J) + 1.0) * sqrt(2.0*k + 1.0) ) )
 end
 
+
 """
 `SpinAngular.twoParticleExchange(leftCsf::CsfR, rightCsf::CsfR, subshells::Array{Subshell,1}, ia::Int64, ib::Int64, k::Int64)`
     ... to compute the EXCHANGE two-particle coefficient V^k(a,b;b,a) for two distinct subshells at ANY occupations,
@@ -295,6 +297,7 @@ function twoParticleExchange(leftCsf::CsfR, rightCsf::CsfR, subshells::Array{Sub
 
     return( wa )
 end
+
 
 """
 `SpinAngular.shellReducedWByIndex(j::AngularJ64, Nbra::Int64, ibra::Int64, Nket::Int64, iket::Int64, kj::Int64)`
@@ -421,6 +424,7 @@ function twoParticleSameShell(leftCsf::CsfR, rightCsf::CsfR, subshells::Array{Su
 
     return( wa )
 end
+
 
 """
 `SpinAngular.twoParticleDirectVector(leftCsf::CsfR, rightCsf::CsfR, subshells::Array{Subshell,1}, ia::Int64, ib::Int64, kMax::Int64)`

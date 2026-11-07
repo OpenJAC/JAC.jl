@@ -1,10 +1,10 @@
 
 # Two-photon ionization of a ONE-ELECTRON system:   gamma + gamma + |i> --> |eps kappa_f>
-#
+
 # WRITTEN FROM SCRATCH 25-Aug-2026.  What stood here before produced partial amplitudes and stopped: it printed one
 # number per (multipole, intermediate symmetry, final symmetry) without ever summing the intermediate symmetries
 # coherently, without forming a cross section, and without a guard on the energy denominator.  None of it is kept.
-#
+
 # WHY A ONE-ELECTRON FILE AT ALL, when the scheme above it handles many-electron ions.  Two reasons, and the second
 # is the important one:
 #   + IT IS THE ONLY INDEPENDENT CHECK.  Two-photon ionization of hydrogen is a standard benchmark, and here the
@@ -15,7 +15,7 @@
 #     energies above half the ionization potential the continuum carries a substantial part of the amplitude.  In
 #     a one-electron system a Green's function can actually be constructed, which is not yet true of the
 #     many-electron case.
-#
+
 # THE RESONANCE GUARD REFUSES rather than skips.  If a photon energy brings a real intermediate state onto the
 # energy shell, the non-resonant second-order expression does not apply at all -- the amplitude diverges and the
 # process becomes a two-step sequential one with a genuine lifetime.  Skipping the offending term, as a bound-bound
@@ -43,12 +43,12 @@ function  reducedAmplitude2pOneElectron(K::AngularJ64, fOrbital::Orbital, omega2
     for  (sh, vOrbital)  in  orbitals
         if  LevelSymmetry(sh) != symx    continue    end
         denom = iOrbital.energy + omega1 - vOrbital.energy
-        ## THE TOLERANCE IS RELATIVE TO THE PHOTON ENERGY, and that is not a detail.  An ABSOLUTE 1e-6 a.u. was
-        ## tried first and proved useless: asking for hydrogen at omega = 0.375 a.u., which is the 1s -> 2p
-        ## resonance, left a denominator of 4.6e-6 -- inflating that one term by a factor 2e5 -- and the guard
-        ## passed it, because 4.6e-6 exceeds 1e-6.  A guard that lets the textbook resonance through is not a
-        ## guard.  Where "near resonance" begins is physics rather than arithmetic, so the number is a parameter;
-        ## the default of 1e-3*omega is about 0.01 eV at optical energies.
+        # THE TOLERANCE IS RELATIVE TO THE PHOTON ENERGY, and that is not a detail.  An ABSOLUTE 1e-6 a.u. was
+        # tried first and proved useless: asking for hydrogen at omega = 0.375 a.u., which is the 1s -> 2p
+        # resonance, left a denominator of 4.6e-6 -- inflating that one term by a factor 2e5 -- and the guard
+        # passed it, because 4.6e-6 exceeds 1e-6.  A guard that lets the textbook resonance through is not a
+        # guard.  Where "near resonance" begins is physics rather than arithmetic, so the number is a parameter;
+        # the default of 1e-3*omega is about 0.01 eV at optical energies.
         if  abs(denom) < resonanceTolerance * omega1
             error("MultiPhotonIonization: RESONANT INTERMEDIATE STATE.  The intermediate $sh lies within " *
                   "$(resonanceTolerance) x omega of the energy shell at omega1 = $omega1 a.u. (denominator " *
@@ -78,7 +78,7 @@ function  reducedAmplitude2pOneElectron(K::AngularJ64, fOrbital::Orbital, omega2
                 InteractionStrength.MabEmission(mp1, gauge, omega1, vOrbital, iOrbital, grid) / denom
     end
     if  !found    return( ComplexF64(0.) )    end
-    ## the two photons are recoupled to the total transferred rank K
+    # the two photons are recoupled to the total transferred rank K
     U = U * AngularMomentum.Wigner_6j(AngularMomentum.kappa_j(iOrbital.subshell.kappa),
                                       AngularMomentum.kappa_j(fOrbital.subshell.kappa), K,
                                       AngularJ64(mp2.L), AngularJ64(mp1.L), symx.J)
@@ -115,7 +115,7 @@ function  crossSection2pOneElectron(polarization::Symbol, iOrbital::Orbital, ome
               "needs omega1 + omega2 > |E_i|.")
     end
     symi = LevelSymmetry(iOrbital.subshell);    ji = AngularMomentum.kappa_j(iOrbital.subshell.kappa)
-    ## collect the reachable final symmetries once, together with the intermediates that reach them
+    # collect the reachable final symmetries once, together with the intermediates that reach them
     routes = Tuple{LevelSymmetry,LevelSymmetry,EmMultipole,EmMultipole}[]
     for  mp1 in multipoles,  mp2 in multipoles
         for  symx in AngularMomentum.allowedMultipoleSymmetries(symi, mp1)
@@ -125,10 +125,10 @@ function  crossSection2pOneElectron(polarization::Symbol, iOrbital::Orbital, ome
         end
     end
     finalSyms = unique( r[1] for r in routes )
-    #
+
     sigma = 0.
     for  symf  in  finalSyms
-        ## the continuum orbital of this final symmetry, at the energy fixed by energy conservation
+        # the continuum orbital of this final symmetry, at the energy fixed by energy conservation
         nrContinuum = Continuum.gridConsistency(epsilon, grid)
         cSettings   = Continuum.Settings(false, nrContinuum)
         fOrbital, _ = Continuum.generateOrbitalLocalPotential(epsilon, Subshell(1001, symf), meanPot, cSettings)
@@ -160,8 +160,8 @@ function  crossSection2pOneElectron(polarization::Symbol, iOrbital::Orbital, ome
             end
         end
     end
-    ## the same prefactor as MultiPhotonTransition's two-photon absorption; sigma is then in atomic units, i.e.
-    ## in a0^4 * t_au, and one atomic unit is 1.8966 GM
+    # the same prefactor as MultiPhotonTransition's two-photon absorption; sigma is then in atomic units, i.e.
+    # in a0^4 * t_au, and one atomic unit is 1.8966 GM
     sigma = sigma * 2*pi^5 / Defaults.getDefaults("alpha")^2 / (AngularMomentum.oneJ(ji)*2 + 1) / omega1^2
 
     return( (sigma, finalSyms) )
@@ -304,7 +304,7 @@ end
 """
 function  displayLines2pOneElectron(stream::IO, lines::Array{Line2pOneElectron,1})
     nx = 122
-    ## one atomic unit of a generalized two-photon cross section is a0^4 * t_au
+    # one atomic unit of a generalized two-photon cross section is a0^4 * t_au
     auToCm4s = Defaults.convertUnits("length: from atomic to cm", 1.0)^4 *
                Defaults.convertUnits("time: from atomic to sec", 1.0)
     println(stream, " ")

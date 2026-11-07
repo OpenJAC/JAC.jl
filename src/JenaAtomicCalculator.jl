@@ -1,9 +1,9 @@
-#
+
 #  Use git:                    git status ....;   git add <filenames>;   git commit -m "..";   git push;   git rm  <filenames>
 #  Use Jupyter notebooks:      using IJulia;   notebook()
 #  Activation:                 ];   pkg> up;   pkg> activate
 #  Working with JAC:           using Revise;   using JAC;   include("../src/jac.jl");   pkg> test
-#  
+
 """
 `module JenaAtomicCalculator`  
     ... Jena Atomic Calculator (JAC) provides tools for performing atomic (structure) calculations at various degrees of complexity 
@@ -61,9 +61,9 @@ const JAC = JenaAtomicCalculator
 incProperties           = true
 incBasicProcesses       = true
 incAdvancedProcesses    = true
-incCascades             = true  ## Requires: incBasicProcesses
-incPlasma               = true  ## Requires: incProperties
-incLiouville            = true  ## Requires: incProperties
+incCascades             = true  # Requires: incBasicProcesses
+incPlasma               = true  # Requires: incProperties
+incLiouville            = true  # Requires: incProperties
 incStrongField          = true
 incRacahAlgebra         = true
 incDeepLearning         = true
@@ -81,7 +81,7 @@ incRacahAlgebra         = false  ==#
 
 
 using  Dates,  Printf,  BSplineKit, LinearAlgebra, SpecialFunctions, QuadGK, Cubature, GSL, JLD2, SymEngine, 
-       HypergeometricFunctions  ## , Interact, GaussQuadrature, IJulia, FortranFiles
+       HypergeometricFunctions  # , Interact, GaussQuadrature, IJulia, FortranFiles
 
 export AbstractComputeTheme, AbstractConfigurationRestriction, AbstractConfigurationTheme,
        AbstractDisplayTheme, AbstractEeInteraction, AbstractEmpiricalSettings, AbstractLineShiftSettings,
@@ -178,9 +178,9 @@ include("module-Nuclear.jl");           using ..Nuclear
 
 # Specialized functions/methods to manipulate these data
 include("module-AngularMomentum.jl")
-## The Ratip2013 angular-coefficient module -- a Julia wrapper around the old Fortran
-## implementation -- was RETIRED on 30-Aug-2026. Its source was already absent from src/ and this
-## include already disabled; every call site sat behind Defaults.saRatip(), hardcoded false.
+# The Ratip2013 angular-coefficient module -- a Julia wrapper around the old Fortran
+# implementation -- was RETIRED on 30-Aug-2026. Its source was already absent from src/ and this
+# include already disabled; every call site sat behind Defaults.saRatip(), hardcoded false.
 include("module-SpinAngularTables.jl"); using ..SpinAngularTables
 include("module-SpinAngularGaigalas.jl"); using ..SpinAngularGaigalas
 include("module-SpinAngular.jl");    using ..SpinAngular
@@ -380,11 +380,11 @@ function detectPerformanceCoreCount(nCpu::Int64)
 
     gaps  = [ (distinct[i] - distinct[i+1]) / distinct[i]   for i = 1:length(distinct)-1 ]
     split = argmax(gaps)
-    gaps[split] < 0.15    &&    return nothing                 ## no gap large enough to call this heterogeneous
+    gaps[split] < 0.15    &&    return nothing                 # no gap large enough to call this heterogeneous
 
     highSpeeds = Set(distinct[1:split])
     nP = count(f -> f in highSpeeds, freqs)
-    nP < nCpu    ||    return nothing                           ## every CPU reported the same side; nothing to say
+    nP < nCpu    ||    return nothing                           # every CPU reported the same side; nothing to say
 
     return( nP )
 

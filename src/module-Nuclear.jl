@@ -367,7 +367,7 @@ function Isomer(isomer::Nuclear.Isomer;
     if  isnothing(Omega)        Omegax      = isomer.Omega       else   Omegax      = Omega       end
     if  isnothing(multipoleM)   multipoleMx = isomer.multipoleM  else   multipoleMx = multipoleM  end
     if  isnothing(elementM)     elementMx   = isomer.elementM    else   elementMx   = elementM    end
-    #
+
     if  length(multipoleMx) != length(elementMx)
         error("\n\nNuclear.Isomer():  STOP -- multipoleM and elementM must have the same length, but are \n"  *
               "$multipoleMx  and  $elementMx.\nEach nuclear matrix element belongs to exactly one multipole.\n")
@@ -397,11 +397,11 @@ function  weisskopfUnit(mp::EmMultipole, A::Int64)
     fmToAu = Defaults.convertUnits("length: from fm to atomic", 1.0)
     if      mp.electric
         wa = 1.0/(4pi) * (3.0/(L+3))^2 * Rfm^(2L)
-        return( wa * fmToAu^(2L) )                       ## e^2 a_0^(2L) = a.u. for EL
+        return( wa * fmToAu^(2L) )                       # e^2 a_0^(2L) = a.u. for EL
     else
         wa = 10.0/pi  * (3.0/(L+3))^2 * Rfm^(2L-2)
         muNToAu = Defaults.convertUnits("moment: from nuclear magneton to atomic", 1.0)
-        return( wa * muNToAu^2 * fmToAu^(2L-2) )         ## mu_N^2 a_0^(2L-2)
+        return( wa * muNToAu^2 * fmToAu^(2L-2) )         # mu_N^2 a_0^(2L-2)
     end
 end
 
@@ -475,8 +475,8 @@ end
 """
 `Nuclear.fermiA`  ... provides a value::Float64 for the fermi_a parameter.
 """
-const fermiA = 2.3/(4 * log(3))     ## made const 12-Aug-2026: it is read inside the r_rho/rr_rho
-                                    ## integrands, where a non-const global is boxed at every call.
+const fermiA = 2.3/(4 * log(3))     # made const 12-Aug-2026: it is read inside the r_rho/rr_rho
+                                    # integrands, where a non-const global is boxed at every call.
 
 
 """
@@ -520,14 +520,14 @@ end
 """
 function threeParameterFermiRrms(c::Float64, a::Float64, w::Float64)
     L3 = Math.polylogExp(c/a, 3);   L5 = Math.polylogExp(c/a, 5);   L7 = Math.polylogExp(c/a, 7)
-    ## u collects the dimensionless combination in which w always enters; M_(n+2)/M_n carries a^2 (n+1)(n+2)
+    # u collects the dimensionless combination in which w always enters; M_(n+2)/M_n carries a^2 (n+1)(n+2)
     u   = w * a^2 / c^2
     num = 24 * L5 + 720 * u * L7
     den =  2 * L3 +  24 * u * L5
-    ## The L_k are negative, so num and den are both negative for w = 0 and the ratio is positive.  Once
-    ## |u| = |w| a^2/c^2 grows to O(1) -- i.e. once c falls towards a -- the w-term can outweigh the leading
-    ## one and den crosses zero; the "distribution" is then no longer a sensible charge density and <r^2> is
-    ## meaningless rather than merely inaccurate.  Say so instead of returning a NaN.
+    # The L_k are negative, so num and den are both negative for w = 0 and the ratio is positive.  Once
+    # |u| = |w| a^2/c^2 grows to O(1) -- i.e. once c falls towards a -- the w-term can outweigh the leading
+    # one and den crosses zero; the "distribution" is then no longer a sensible charge density and <r^2> is
+    # meaningless rather than merely inaccurate.  Say so instead of returning a NaN.
     if  den == 0.  ||  num/den <= 0.
         error("Nuclear.threeParameterFermiRrms(): the three-parameter Fermi form is not meaningful for " *
               "c = $c fm, a = $a fm, w = $w -- the weight (1 + w r^2/c^2) outweighs the Fermi factor " *
@@ -685,10 +685,10 @@ end
 """
 function computeThreeParameterFermiC(R::Float64, a::Float64, w::Float64)
     R <= 0.  &&  error("Nuclear.computeThreeParameterFermiC(): R_rms = $R fm must be positive.")
-    cFloor = 4.0 * a          ## below this the w-weight competes with the Fermi factor; see the docstring
-    c0     = sqrt(5/3) * R    ## sharp-sphere estimate, always slightly above the true c
+    cFloor = 4.0 * a          # below this the w-weight competes with the Fermi factor; see the docstring
+    c0     = sqrt(5/3) * R    # sharp-sphere estimate, always slightly above the true c
     ##
-    ## Grow the bracket outwards from c0 until it straddles R.
+    # Grow the bracket outwards from c0 until it straddles R.
     cUpp = max(c0, cFloor);   nUpp = 0
     while  threeParameterFermiRrms(cUpp, a, w) < R   &&   nUpp < 60
         cUpp = 1.5 * cUpp;    nUpp = nUpp + 1
@@ -740,19 +740,19 @@ function computeFermiBParameter(R::Float64)
         diff = eq(b)
         count = count + 1
     end
-    ## Signal non-convergence rather than returning whatever the last iterate happened to be (12-Aug-2026).
-    ## The loop above exits on EITHER the target eps or the iteration cap, and the caller could not tell the
-    ## two apart, so a b-parameter the fixed-point step never resolved was handed back silently and used to
-    ## build a potential.  The iteration itself is unchanged.
+    # Signal non-convergence rather than returning whatever the last iterate happened to be (12-Aug-2026).
+    # The loop above exits on EITHER the target eps or the iteration cap, and the caller could not tell the
+    # two apart, so a b-parameter the fixed-point step never resolved was handed back silently and used to
+    # build a potential.  The iteration itself is unchanged.
     ##
-    ## THE TEST IS AGAINST A PHYSICALLY MEANINGFUL RESIDUAL, NOT AGAINST eps, and the distinction is not
-    ## academic: helium (R_rms = 1.8993 fm) stalls at a residual of 5.9e-8 fm and never reaches eps = 1e-14
-    ## at all.  That was found the first time this check ran, and it is worth knowing -- the loop's stated
-    ## target has never been attainable there.  The step is b <- b - (fermiRrms(b) - R) with unit damping,
-    ## and its convergence rate follows d(fermiRrms)/db, which vanishes as R_rms approaches the smallest
-    ## radius the 2-parameter form can represent (~1.86 fm); helium sits just above that edge.  A residual
-    ## of 6e-8 fm is 3e-8 relative, far below any experimental nuclear radius, so such a result is perfectly
-    ## usable and must not be rejected.  tolAccept is what separates "stalled but fine" from "wrong".
+    # THE TEST IS AGAINST A PHYSICALLY MEANINGFUL RESIDUAL, NOT AGAINST eps, and the distinction is not
+    # academic: helium (R_rms = 1.8993 fm) stalls at a residual of 5.9e-8 fm and never reaches eps = 1e-14
+    # at all.  That was found the first time this check ran, and it is worth knowing -- the loop's stated
+    # target has never been attainable there.  The step is b <- b - (fermiRrms(b) - R) with unit damping,
+    # and its convergence rate follows d(fermiRrms)/db, which vanishes as R_rms approaches the smallest
+    # radius the 2-parameter form can represent (~1.86 fm); helium sits just above that edge.  A residual
+    # of 6e-8 fm is 3e-8 relative, far below any experimental nuclear radius, so such a result is perfectly
+    # usable and must not be rejected.  tolAccept is what separates "stalled but fine" from "wrong".
     tolAccept = 1.0e-6
     if  abs(diff) > tolAccept
         error("Nuclear.computeFermiBParameter(): no convergence for R_rms = $R fm -- the fixed-point " *
@@ -827,17 +827,17 @@ function fermiDistributedNucleus(Rrms::Float64, Z::Float64, grid::Radial.Grid)
         b = computeFermiBParameter(Rrms);    b < 0  &&  error("Inappropriate R_rms radius.")
     end
     
-    ## The two integrands are defined AFTER fermiA_au/fermiC_au (moved here 12-Aug-2026).  They used to be
-    ## written above, closing over variables that were only assigned thirty lines further down: legal Julia,
-    ## since a closure captures the variable rather than its value, but it boxes both captures and reads as
-    ## an error.  Same values, same order of evaluation.
+    # The two integrands are defined AFTER fermiA_au/fermiC_au (moved here 12-Aug-2026).  They used to be
+    # written above, closing over variables that were only assigned thirty lines further down: legal Julia,
+    # since a closure captures the variable rather than its value, but it boxes both captures and reads as
+    # an error.  Same values, same order of evaluation.
     fermiA_au = Defaults.convertUnits("length: from fm to atomic", fermiA)
     fermiC_au = Defaults.convertUnits("length: from fm to atomic", b)
     function  r_rho(r::Float64)   r   / (1.0 + exp( (r-fermiC_au)/fermiA_au ) )   end
     function  rr_rho(r::Float64)  r^2 / (1.0 + exp( (r-fermiC_au)/fermiA_au ) )   end
     N = 1. / QuadGK.quadgk(rr_rho, 0., 1.3, rtol=1.0e-10)[1]
-    #
-    #
+
+
     for  i = 2:length(zznew)   
         zznew[i] = 1 / grid.r[i] * quadgk(rr_rho, Nuclear.innerBreakPoints(grid.r[i])..., rtol=1.0e-8)[1] 
         zznew[i] = zznew[i] + quadgk(r_rho, Nuclear.outerBreakPoints(grid.r[i])..., rtol=1.0e-8)[1]
@@ -869,14 +869,14 @@ function threeParameterFermiNucleus(Rrms::Float64, Z::Float64, model::Nuclear.Th
     fermiA_au = Defaults.convertUnits("length: from fm to atomic", model.a)
     fermiC_au = Defaults.convertUnits("length: from fm to atomic", c)
     w         = model.w
-    ## The shape weight; for w < 0 it turns negative beyond r = c/sqrt(|w|), which for the tabulated
-    ## magnitudes lies beyond 3c where the Fermi factor has already fallen to ~exp(-2c/a).  See the docstring
-    ## of Nuclear.ThreeParameterFermiNucleus: this belongs to the parametrisation, and is not clamped here.
+    # The shape weight; for w < 0 it turns negative beyond r = c/sqrt(|w|), which for the tabulated
+    # magnitudes lies beyond 3c where the Fermi factor has already fallen to ~exp(-2c/a).  See the docstring
+    # of Nuclear.ThreeParameterFermiNucleus: this belongs to the parametrisation, and is not clamped here.
     function  shape(r::Float64)   1.0 + w * (r/fermiC_au)^2                                    end
     function  r_rho(r::Float64)   r   * shape(r) / (1.0 + exp( (r-fermiC_au)/fermiA_au ) )     end
     function  rr_rho(r::Float64)  r^2 * shape(r) / (1.0 + exp( (r-fermiC_au)/fermiA_au ) )     end
     N = 1. / QuadGK.quadgk(rr_rho, 0., 1.3, rtol=1.0e-10)[1]
-    #
+
     for  i = 2:length(zznew)
         zznew[i] = 1 / grid.r[i] * quadgk(rr_rho, Nuclear.innerBreakPoints(grid.r[i])..., rtol=1.0e-8)[1]
         zznew[i] = zznew[i] + quadgk(r_rho, Nuclear.outerBreakPoints(grid.r[i])..., rtol=1.0e-8)[1]
@@ -914,8 +914,8 @@ function deformedFermiNucleus(Rrms::Float64, Z::Float64, model::Nuclear.Deformed
     fermiA_au = Defaults.convertUnits("length: from fm to atomic", model.a)
     fermiC_au = Defaults.convertUnits("length: from fm to atomic", c)
     w         = model.w
-    ## The half-density radius at each theta node, in atomic units; the volume normalisation sits inside
-    ## Nuclear.deformedShape.  These are computed ONCE, not inside the radial quadratures below.
+    # The half-density radius at each theta node, in atomic units; the volume normalisation sits inside
+    # Nuclear.deformedShape.  These are computed ONCE, not inside the radial quadratures below.
     tGrid = Radial.GridGL(Radial.GridGaussLegendreFinite(), -1., 1., 24; printout=false)
     cx    = [ fermiC_au * Nuclear.deformedShape(tGrid.t[j], model)  for j = 1:tGrid.nt ]
     ##
@@ -928,7 +928,7 @@ function deformedFermiNucleus(Rrms::Float64, Z::Float64, model::Nuclear.Deformed
     function  r_rho(r::Float64)   r   * shape(r) * monopole(r)            end
     function  rr_rho(r::Float64)  r^2 * shape(r) * monopole(r)            end
     N = 1. / QuadGK.quadgk(rr_rho, 0., 1.3, rtol=1.0e-10)[1]
-    #
+
     for  i = 2:length(zznew)
         zznew[i] = 1 / grid.r[i] * quadgk(rr_rho, Nuclear.innerBreakPoints(grid.r[i])..., rtol=1.0e-8)[1]
         zznew[i] = zznew[i] + quadgk(r_rho, Nuclear.outerBreakPoints(grid.r[i])..., rtol=1.0e-8)[1]
@@ -966,7 +966,7 @@ function uniformNucleus(R::Float64, Z::Float64, grid::Radial.Grid)
 
     for i = 1:grid.NoPoints
         if     grid.r[i] <= R_au    zz[i] = Z / (2 * R_au) * (3. - grid.r[i]^2/R_au^2) * grid.r[i]
-        ## if     grid.r[i] <= R_au    zz[i] = Z / (2 * R_au) * (grid.r[i]^2/R_au^2 - 3.) * grid.r[i] * grid.r[i]
+        # if     grid.r[i] <= R_au    zz[i] = Z / (2 * R_au) * (grid.r[i]^2/R_au^2 - 3.) * grid.r[i] * grid.r[i]
         else   zz[i] = Z
         end
     end

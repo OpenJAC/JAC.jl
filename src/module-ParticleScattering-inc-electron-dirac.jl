@@ -1,7 +1,7 @@
 
 # The Dirac partial-wave core: phase shifts for BOTH signs of kappa, the reduced scattering channels built from them,
 # and the direct and spin-flip amplitudes f and g as a projection of those channels.
-#
+
 # The projection is what ELSEPA computes, and it is valid only for elastic scattering from a spinless target: the
 # decomposition M = f + g (sigma . n) follows from rotational invariance and parity when the projectile is spin-1/2 and
 # the target neither carries angular momentum nor changes state. The channels above it stay general, so that a target

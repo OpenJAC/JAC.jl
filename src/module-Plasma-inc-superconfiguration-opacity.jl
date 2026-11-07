@@ -1,5 +1,5 @@
 # Functions and methods for scheme::Plasma.SuperConfigurationOpacityScheme computations.
-#
+
 # THIS FILE DOES NOT `using ..SuperConfigurations` AT MODULE TOP LEVEL, unlike most sibling -inc- files'
 # dependencies. `SuperConfigurations` is included in JenaAtomicCalculator.jl AFTER module-Plasma.jl -- it
 # depends on BasicsAZ.meanEnergyInClosedForm, and BasicsAZ is deliberately included near the very end of

@@ -62,7 +62,7 @@ struct   GslWigner       <:  AbstractWignerMethod                       end
 # The Wigner method in force. It is deliberately NOT const: it is switched at run time, normally through
 # `Defaults.setDefaults("method: Wigner symbols, ...")`. Reading it costs one dynamic dispatch per symbol, which is
 # why every function below also has a form that TAKES the method, so that a hot loop can read it once and pass it on.
-#
+
 # THE DEFAULT IS FloatingWigner AS OF 25-Aug-2026, changed from ExactWigner on measurement rather than preference:
 # a mid-size cascade runs 4.16x faster and its results are BIT-IDENTICAL, and all 54 approved test references pass
 # unmodified under it. `GslWigner` is faster again but differs in the ninth digit, which would re-open every approved
@@ -115,6 +115,7 @@ function  allowedDoubleKappaCouplingSequence(syma::LevelSymmetry, symb::LevelSym
     return( couplings )         
 end
 
+
 """
 `AngularMomentum.allowedDoubleKappas(syma::LevelSymmetry, symb::LevelSymmetry, maxKappa::Int64)`  
     ... to determine all allowed pairs of kappa that fulfill  syma + (kappa1, kappa2) --> symb,
@@ -134,6 +135,7 @@ function  allowedDoubleKappas(syma::LevelSymmetry, symb::LevelSymmetry, maxKappa
     return( kappaPairs )         
 end
 
+
 """
 `AngularMomentum.allowedDoubleKappaSymmetries(syma::LevelSymmetry, kappa1::Int64, kappa2::Int64, symb::LevelSymmetry)`  
     ... to determine all allowed level symmetries symx that can be coupled to the sequence 
@@ -145,6 +147,7 @@ function  allowedDoubleKappaSymmetries(syma::LevelSymmetry, kappa1::Int64, kappa
     symx  = intersect(symx1, symx2)
     return( symx )         
 end
+
 
 """
 `AngularMomentum.allowedKappaSymmetries(syma::LevelSymmetry, symb::LevelSymmetry)`  
@@ -166,6 +169,7 @@ function  allowedKappaSymmetries(syma::LevelSymmetry, symb::LevelSymmetry)
     return( kappaList )         
 end
 
+
 """
 `AngularMomentum.allowedMultipoleSymmetries(syma::LevelSymmetry, multipole::EmMultipole)`  
     ... to determine all allowed level symmetries for which the given multipole can give rise to a non-zero (transition) 
@@ -183,6 +187,7 @@ function  allowedMultipoleSymmetries(syma::LevelSymmetry, multipole::EmMultipole
     return( symList )           
 end
 
+
 """
 `AngularMomentum.allowedTotalSymmetries(syma::LevelSymmetry, kappa::Int64)`  
     ... to determine all allowed total symmetries J^P that can be constructed by coupling a partial wave kappa (l,j) 
@@ -192,7 +197,7 @@ function allowedTotalSymmetries(syma::LevelSymmetry, kappa::Int64)
     symtList = LevelSymmetry[]
     if  kappa < 0    l  = abs(kappa) -1   else   l  = kappa   end
     j = AngularJ64( abs(kappa) - 1//2 )
-    # 
+
     JList = Basics.oplus(syma.J, j)
     for J in JList
         if    iseven(l)   push!( symtList, LevelSymmetry(J, syma.parity) )
@@ -201,6 +206,7 @@ function allowedTotalSymmetries(syma::LevelSymmetry, kappa::Int64)
     end
     return( symtList )         
 end
+
 
 """
 `AngularMomentum.allowedTotalSymmetries(symf::LevelSymmetry, mp2::EmMultipole, mp1::EmMultipole, symi::LevelSymmetry)`  
@@ -224,6 +230,7 @@ function allowedTotalSymmetries(symf::LevelSymmetry, mp2::EmMultipole, mp1::EmMu
     return( symtList )         
 end
 
+
 """
 `AngularMomentum.bracket(jList::Array{AngularJ64,1})`  
     ... to compute the bracket [a, b, c, ... ] = (2a+1) * (2b+1) * (2b+1) * ... of the given angular momenta. 
@@ -233,6 +240,7 @@ function bracket(jList::Array{AngularJ64,1})
     value = 1;    for  j in jList    value = value * (Basics.twice(j) + 1)    end
     return( value )         
 end
+
 
 """
 `AngularMomentum.ChengI
@@ -244,16 +252,17 @@ end
 function ChengI(kapa::Int64, ma::AngularM64, kapb::Int64, mb::AngularM64, L::AngularJ64, M::AngularM64)
     ja = Basics.subshell_j( Subshell(9, kapa) );    jb = Basics.subshell_j( Subshell(9, kapb) )   # Use principal QN n=9 arbitrarely here 
     la = Basics.subshell_l( Subshell(9, kapa) );    lb = Basics.subshell_l( Subshell(9, kapb) ) 
-    #
+
     # Test for parity
     if  L.den != 1   error("AngularMomentum.ChengI(): the multipole rank L = $L is not an integer.")                end 
     if  isodd( la + lb + L.num )    return( 0. )    end
-    # 
+
     wa = AngularMomentum.phaseFactor([jb, +1, L, -1, ja]) * sqrt( (Basics.twice(jb)+1)*(Basics.twice(L)+1) / (4*pi*(Basics.twice(ja)+1) ) ) *
             AngularMomentum.ClebschGordan(jb, AngularM64(1//2), L, AngularM64(0), ja, AngularM64(1//2)) *
             AngularMomentum.ClebschGordan(jb, mb, L, M, ja, ma) 
     return( wa )
 end
+
 
 """
 + (kapa::Int64, kapb::Int64, L::AngularJ64)` 
@@ -263,20 +272,21 @@ end
 function ChengI(kapa::Int64, kapb::Int64, L::AngularJ64)
     ja = Basics.subshell_j( Subshell(9, kapa) );    jb = Basics.subshell_j( Subshell(9, kapb) )   # Use principal QN n=9 arbitrarely here 
     la = Basics.subshell_l( Subshell(9, kapa) );    lb = Basics.subshell_l( Subshell(9, kapb) ) 
-    #
+
     # Test for parity
     if  L.den != 1   error("AngularMomentum.ChengI(): the multipole rank L = $L is not an integer.")                end 
     if  isodd( la + lb + L.num )    return( 0. )    end
-    # 
+
     # There occurs here two changes with regard to Cheng formulas: 
     # i)  We now divide by sqrt(twoJ(jb)+1) instead of sqrt(twoJ(ja)+1) ... which is likely related to change emission - absorption
     # ii) The phase (-1)^(ja + L - jb) is replaced by (-1)^L  to get a proper phase between 1/2 --> 3/2 ME (compared to 3/2 --> 3/2) ...
     #     but which already comes from the Clebsch-Gordan
     wa = AngularMomentum.phaseFactor([ja, +1, L, -1, jb]) *  (-1)^L.num  * 
-    ## wa = (-1)^L.num  * sqrt( (Basics.twice(jb)+1)*(Basics.twice(L)+1) / (4*pi) ) / sqrt(Basics.twice(jb)+1) *  
+    # wa = (-1)^L.num  * sqrt( (Basics.twice(jb)+1)*(Basics.twice(L)+1) / (4*pi) ) / sqrt(Basics.twice(jb)+1) *  
             AngularMomentum.ClebschGordan(jb, AngularM64(1//2), L, AngularM64(0), ja, AngularM64(1//2)) 
     return( wa )
 end
+
 
 """
 `AngularMomentum.ClebschGordan(ja, ma, jb, mb, Jab, Mab)`
@@ -303,6 +313,7 @@ function ClebschGordan(ja, ma, jb, mb, Jab, Mab)
     cg  = (-1)^pp * sqrt(Basics.twice(Jab) + 1) * AngularMomentum.Wigner_3j(ja, jb, Jab, ma, mb, mab)
     return( cg )
 end
+
 
 """
 `AngularMomentum.CL_reduced_me(suba::Subshell, L::Int64, subb::Subshell)`  
@@ -362,6 +373,7 @@ function  isAllowedMultipole(syma::LevelSymmetry, multipole::EmMultipole, symb::
     end
 end
 
+
 """
 `AngularMomentum.isTriangle(ja::AngularJ64, jb::AngularJ64, jc::AngularJ64)`  
     ... evaluates to true if Delta(ja,jb,jc) = 1, ie. if the angular momenta ja, jb and jc can couple to each other, 
@@ -377,6 +389,7 @@ function isTriangle(ja::AngularJ64, jb::AngularJ64, jc::AngularJ64)
     end
 end
 
+
 """
 `AngularMomentum.isTriangle(ja::Int64, jb::Int64, jc::Int64)`  
     ... evaluates to true if Delta(ja,jb,jc) = 1, ie. if the three integer (length) ja, jb and jc can form a triangle, 
@@ -388,6 +401,7 @@ function isTriangle(ja::Int64, jb::Int64, jc::Int64)
     end
 end
 
+
 """
 `AngularMomentum.JohnsonI(kapa::Int64, kapb::Int64, L::AngularJ64)` 
     ... evaluates the angular CL (kappa m, kappa' m', L M) integral as defined in his book. A value::Float64 is returned.
@@ -395,27 +409,28 @@ end
 function JohnsonI(kapa::Int64, kapb::Int64, L::AngularJ64)
     ja = Basics.subshell_j( Subshell(9, kapa) );    jb = Basics.subshell_j( Subshell(9, kapb) )   # Use principal QN n=9 arbitrarely here 
     la = Basics.subshell_l( Subshell(9, kapa) );    lb = Basics.subshell_l( Subshell(9, kapb) ) 
-    #
+
     # Test for parity
     if  L.den != 1   error("AngularMomentum.JohnsonI(): the multipole rank L = $L is not an integer.")                end 
     if  isodd( la + lb + L.num )    return( 0. )    end
-    ## THE PHASE IS REAL, and was complex only through a slip (corrected 09-Aug-2026). The Racah phase here is
-    ## (-1)^(j_b + 1/2); j_b is half-integer, so that exponent is an INTEGER and the phase is +-1, ALTERNATING
-    ## with j_b. The previous expression raised (-1+0im) to `jb.num + 1/2` -- the NUMERATOR of j_b, i.e. 1, 3,
-    ## 5, ... -- making the exponent half-integer, so it returned a CONSTANT -i for every j_b:
-    ##      j_b      1/2     3/2     5/2     7/2
-    ##      was       -i      -i      -i      -i
-    ##      correct   -1      +1      -1      +1
-    ## Two things followed. Every multipole matrix element came out purely imaginary, which is why these
-    ## routines were documented as returning Float64 while in fact returning ComplexF64; and, more seriously,
-    ## the j_b-dependent SIGN was lost, so contributions from orbitals of different j_b carried the same phase
-    ## instead of opposite ones. For a single contributing orbital that is an overall phase and rates are
-    ## unaffected -- which is why the hydrogen benchmarks never showed it -- but wherever such contributions
-    ## interfere the relative signs were wrong.
+    # THE PHASE IS REAL, and was complex only through a slip (corrected 09-Aug-2026). The Racah phase here is
+    # (-1)^(j_b + 1/2); j_b is half-integer, so that exponent is an INTEGER and the phase is +-1, ALTERNATING
+    # with j_b. The previous expression raised (-1+0im) to `jb.num + 1/2` -- the NUMERATOR of j_b, i.e. 1, 3,
+    # 5, ... -- making the exponent half-integer, so it returned a CONSTANT -i for every j_b:
+    #      j_b      1/2     3/2     5/2     7/2
+    #      was       -i      -i      -i      -i
+    #      correct   -1      +1      -1      +1
+    # Two things followed. Every multipole matrix element came out purely imaginary, which is why these
+    # routines were documented as returning Float64 while in fact returning ComplexF64; and, more seriously,
+    # the j_b-dependent SIGN was lost, so contributions from orbitals of different j_b carried the same phase
+    # instead of opposite ones. For a single contributing orbital that is an overall phase and rates are
+    # unaffected -- which is why the hydrogen benchmarks never showed it -- but wherever such contributions
+    # interfere the relative signs were wrong.
     wa =  (-1)^Int((Basics.twice(jb)+1)/2) *sqrt((Basics.twice(jb)+1)*(Basics.twice(L)+1)*(Basics.twice(ja)+1)*(L.num+1) / 
             (4*pi*L.num ) ) *AngularMomentum.Wigner_3j(ja, L, jb, AngularM64(1//2), AngularM64(0),  AngularM64(-1//2))
     return( wa )
 end
+
 
 """
 `AngularMomentum.kappa_j(kappa::Int64)`  ... calculates the j::AngularJ64 value of a given kappa.
@@ -425,6 +440,7 @@ function  kappa_j(kappa::Int64)
     return( j )
 end
 
+
 """
 `AngularMomentum.kappa_l(kappa::Int64)`  ... calculates the l::AngularJ64 value of a given kappa.
 """
@@ -432,6 +448,7 @@ function  kappa_l(kappa::Int64)
     if  kappa < 0    l  = abs(kappa) -1   else   l  = kappa   end
     return( AngularJ64(l) )
 end
+
 
 """
 `AngularMomentum.j_values(j1::AngularJ64, j2::AngularJ64)`  
@@ -451,6 +468,7 @@ function  j_values(j1::AngularJ64, j2::AngularJ64)
     return( jList )
 end
 
+
 """
 `AngularMomentum.m_values(j::AngularJ64)`  ... returns a list of m-values for given j::AngularJ64.
 """
@@ -464,6 +482,7 @@ function  m_values(j::AngularJ64)
     return( mList )
 end
 
+
 """
 `AngularMomentum.oneJ(ja::AngularJ64)`  ... calculates ja; a (positive) value::Float64 is returned.
 """
@@ -472,6 +491,7 @@ function  oneJ(ja::AngularJ64)
     return( ja1 )
 end
 
+
 """
 `AngularMomentum.oneM(ma::AngularM64)`  ... calculates ma; a value::Float64 is returned.
 """
@@ -479,6 +499,7 @@ function  oneM(ma::AngularM64)
     if  ma.den  == 1    ma1 = 1.0 * ma.num   else   ma1 = ma.num / 2.   end
     return( ma1 )
 end
+
 
 """
 `AngularMomentum.parityEmMultipolePi(pa::Parity, multipole::EmMultipole, pb::Parity)`  
@@ -497,6 +518,7 @@ function  parityEmMultipolePi(pa::Parity, multipole::EmMultipole, pb::Parity)
     end
 end
 
+
 """
 `AngularMomentum.phaseFactor(list::Array{Any,1})` 
     ... checks and calculates the phase factor (-1)^(ja + mb -jc ...) that occur frequently in angular momentum theory; 
@@ -510,16 +532,17 @@ function phaseFactor(list::Array{Any,1})
             if  i == length(list)                                                    break                                 end
             if  list[i+1] != 1   &&  list[i+1] != -1                error("Wrong type of argument $(i+1); must be +-1")    end
     end
-    #
+
     ja = list[1];        if  ja.den  == 1    jm2 = 2ja.num                  else   jm2 = ja.num                         end 
     for  i = 2:2:length(list)
         ja = list[i+1];   if  ja.den  == 1    jm2 = jm2 + list[i]*2ja.num    else   jm2 = jm2 + list[i]*ja.num           end 
     end
-    #
+
     if rem(jm2,2) != 0    error("Improper combination of angular momenta")  end
 
     return( (-1.)^(jm2/2) )
 end
+
 
 """
 `AngularMomentum.phaseMultipole(x::ComplexF64, mp::EmMultipole)`  
@@ -554,7 +577,7 @@ end
 function  sigma_reduced_me(suba::Subshell, subb::Subshell)
     la = Basics.subshell_l(suba);    ja2 = Basics.subshell_2j(suba);
     lb = Basics.subshell_l(subb);    jb2 = Basics.subshell_2j(subb)
-    ## the parity rule is a genuine selection rule and its zero is a real answer, not a missing one
+    # the parity rule is a genuine selection rule and its zero is a real answer, not a missing one
     if rem(la + lb, 2) != 0   return 0.     end
 
     error("\n\nAngularMomentum.sigma_reduced_me():  STOP -- <$suba || sigma^(1) || $subb> is NOT implemented.\n" *
@@ -564,6 +587,7 @@ function  sigma_reduced_me(suba::Subshell, subb::Subshell)
           "    that is defined neither in the method nor among its arguments.\n"                                   *
           ">>> See sigma_reduced_me_ma / sigma_reduced_me_mb, which ARE implemented, for the intended structure.\n")
 end
+
 
 """
 `AngularMomentum.sigma_reduced_me_ma(mkapa::Int64, kapb::Int64)`
@@ -585,6 +609,7 @@ function  sigma_reduced_me_ma(mkapa::Int64, kapb::Int64)
     return (redme)
 end
 
+
 """
 `AngularMomentum.sigma_reduced_me_mb(kapa::Int64, mkapb::Int64)`
     ... computes the reduced matrix element <kappa_a || sigma^(1) || -kappa_b> of the Pauli spin operator, i.e. with
@@ -603,6 +628,7 @@ function  sigma_reduced_me_mb(kapa::Int64, mkapb::Int64)
 
     return (redme)
 end
+
 
 """
 `AngularMomentum.sphericalYlm(l::Int64, m::Int64, theta::Float64, phi::Float64)`
@@ -625,6 +651,7 @@ function sphericalYlm(l::Int64, m::Int64, theta::Float64, phi::Float64)
     return( ylm )
 end
 
+
 """
 `AngularMomentum.triangularDelta(ia2::Int64, ib2::Int64, ic2::Int64)`  
     ... calculates the tringular Delta(ja,jb,jc). The arguments in this integer function are i2a = 2*ja+1, ... 
@@ -635,6 +662,7 @@ function triangularDelta(ia2::Int64, ib2::Int64, ic2::Int64)
     if  ia2 >= abs(i) + 1   &&   ia2 <= ib2 + ic2 - 1    return( 1 )   else    return( 0 )    end 
 end
 
+
 """
 `AngularMomentum.triangularDelta(ja::AngularJ64, jb::AngularJ64, jc::AngularJ64)`  
     ... calculates the tringular Delta(ja,jb,jc). The result is 0 if the triangular condition failes and 1 otherwise. 
@@ -642,6 +670,7 @@ end
 function triangularDelta(ja::AngularJ64, jb::AngularJ64, jc::AngularJ64)    
     if  abs(ja.num//ja.den - jb.num//jb.den) <= jc.num//jc.den <= ja.num//ja.den + jb.num//jb.den  return( 1 )   else    return( 0 )    end
 end
+
 
 """
 `AngularMomentum.Wigner_DFunction(j, p, q, alpha::Float64, beta::Float64, gamma::Float64)`  
@@ -691,6 +720,7 @@ function Wigner_dmatrix(jj, mmp, mm, beta::Float64)
 
     return( factor*wa )
 end
+
 
 """
 `AngularMomentum.Wigner_3j(a, b, c, m_a, m_b, m_c)`  
@@ -821,71 +851,71 @@ function Wigner_6j(method::FloatingWigner, a, b, c, d, e, f)
 end
 
 
-    """
-    `AngularMomentum.Wigner_9j(j11, j12, j13, j21, j22, j23, j31, j32, j33)`
-        ... calculates the value of a Wigner NINE-j symbol for given quantum numbers as displayed in many texts on the
-            theory of angular momentum (see R. D. Cowan, The Theory of Atomic Structure and Spectra; University of
-            California Press, 1981, p. 142). It is not a library call: the symbol is summed from THREE 6-j symbols per
-            term, so a 9-j costs several 6-j and the choice of Wigner method matters here more than anywhere else. The
-            method in force is read once and passed down. A value::Float64 is returned.
-    """
-    function Wigner_9j( j11, j12, j13, j21, j22, j23, j31, j32, j33 )
+"""
+`AngularMomentum.Wigner_9j(j11, j12, j13, j21, j22, j23, j31, j32, j33)`
+    ... calculates the value of a Wigner NINE-j symbol for given quantum numbers as displayed in many texts on the
+        theory of angular momentum (see R. D. Cowan, The Theory of Atomic Structure and Spectra; University of
+        California Press, 1981, p. 142). It is not a library call: the symbol is summed from THREE 6-j symbols per
+        term, so a 9-j costs several 6-j and the choice of Wigner method matters here more than anywhere else. The
+        method in force is read once and passed down. A value::Float64 is returned.
+"""
+function Wigner_9j( j11, j12, j13, j21, j22, j23, j31, j32, j33 )
 
-        return( Wigner_9j(WIGNER_METHOD, j11, j12, j13, j21, j22, j23, j31, j32, j33) )
+    return( Wigner_9j(WIGNER_METHOD, j11, j12, j13, j21, j22, j23, j31, j32, j33) )
+end
+
+
+"""
+`AngularMomentum.Wigner_9j(method::AngularMomentum.AbstractWignerMethod, j11, j12, j13, j21, j22, j23, j31, j32, j33)`
+    ... as the previous method, but with the Wigner method given explicitly, so that the three 6-j symbols of each
+        term are evaluated without re-reading the global. A value::Float64 is returned.
+"""
+function Wigner_9j( method::GslWigner, j11, j12, j13, j21, j22, j23, j31, j32, j33 )
+
+    return( sf_coupling_9j(Basics.twice(j11), Basics.twice(j12), Basics.twice(j13),
+                           Basics.twice(j21), Basics.twice(j22), Basics.twice(j23),
+                           Basics.twice(j31), Basics.twice(j32), Basics.twice(j33)) )
+end
+
+
+"""
+`AngularMomentum.Wigner_9j(method::AngularMomentum.AbstractWignerMethod, j11, j12, j13, j21, j22, j23, j31, j32, j33)`
+    ... as the previous method, but summing the 9-j from THREE 6-j symbols per term, which is what is needed when the
+        method has no direct nine-j of its own. A value::Float64 is returned.
+"""
+function Wigner_9j( method::AbstractWignerMethod, j11, j12, j13, j21, j22, j23, j31, j32, j33 )
+    j11 = Basics.twice(j11) ;   j12 = Basics.twice(j12)   ;   j13 = Basics.twice(j13)
+    j21 = Basics.twice(j21) ;   j22 = Basics.twice(j22)   ;   j23 = Basics.twice(j23)
+    j31 = Basics.twice(j31) ;   j32 = Basics.twice(j32)   ;   j33 = Basics.twice(j33)
+
+    kmin1 = abs(j11 - j33)  ;   kmin2 = abs(j32 - j21)    ;    kmin3 = abs(j23 - j12)
+    kmax1 = j11 + j33       ;   kmax2 = j32 + j21         ;    kmax3 = j23 + j12
+
+    if (kmin2 > kmin1) kmin1 = kmin2 end
+    if (kmin3 > kmin1) kmin1 = kmin3 end
+    if (kmax2 < kmax1) kmax1 = kmax2 end
+    if (kmax3 < kmax1) kmax1 = kmax3 end
+
+    kmin1 = kmin1 + 1
+    kmax1 = kmax1 + 1
+
+    nineJ = 0.0
+
+    if (kmin1 > kmax1) return( nineJ ) end
+
+    for k1 = kmin1:2:kmax1
+       k = k1 - 1
+       s1 = wigner6jValue(method, j11/2, j21/2, j31/2, j32/2, j33/2, k/2)
+       s2 = wigner6jValue(method, j12/2, j22/2, j32/2, j21/2, k/2, j23/2)
+       s3 = wigner6jValue(method, j13/2, j23/2, j33/2, k/2, j11/2, j12/2)
+
+       p = (k+1) * (-1)^k
+
+       nineJ += p * s1 * s2 * s3
     end
 
-
-    """
-    `AngularMomentum.Wigner_9j(method::AngularMomentum.AbstractWignerMethod, j11, j12, j13, j21, j22, j23, j31, j32, j33)`
-        ... as the previous method, but with the Wigner method given explicitly, so that the three 6-j symbols of each
-            term are evaluated without re-reading the global. A value::Float64 is returned.
-    """
-    function Wigner_9j( method::GslWigner, j11, j12, j13, j21, j22, j23, j31, j32, j33 )
-
-        return( sf_coupling_9j(Basics.twice(j11), Basics.twice(j12), Basics.twice(j13),
-                               Basics.twice(j21), Basics.twice(j22), Basics.twice(j23),
-                               Basics.twice(j31), Basics.twice(j32), Basics.twice(j33)) )
-    end
-
-
-    """
-    `AngularMomentum.Wigner_9j(method::AngularMomentum.AbstractWignerMethod, j11, j12, j13, j21, j22, j23, j31, j32, j33)`
-        ... as the previous method, but summing the 9-j from THREE 6-j symbols per term, which is what is needed when the
-            method has no direct nine-j of its own. A value::Float64 is returned.
-    """
-    function Wigner_9j( method::AbstractWignerMethod, j11, j12, j13, j21, j22, j23, j31, j32, j33 )
-        j11 = Basics.twice(j11) ;   j12 = Basics.twice(j12)   ;   j13 = Basics.twice(j13)
-        j21 = Basics.twice(j21) ;   j22 = Basics.twice(j22)   ;   j23 = Basics.twice(j23)
-        j31 = Basics.twice(j31) ;   j32 = Basics.twice(j32)   ;   j33 = Basics.twice(j33)
-     
-        kmin1 = abs(j11 - j33)  ;   kmin2 = abs(j32 - j21)    ;    kmin3 = abs(j23 - j12)
-        kmax1 = j11 + j33       ;   kmax2 = j32 + j21         ;    kmax3 = j23 + j12
-     
-        if (kmin2 > kmin1) kmin1 = kmin2 end
-        if (kmin3 > kmin1) kmin1 = kmin3 end
-        if (kmax2 < kmax1) kmax1 = kmax2 end
-        if (kmax3 < kmax1) kmax1 = kmax3 end
-     
-        kmin1 = kmin1 + 1
-        kmax1 = kmax1 + 1
-     
-        nineJ = 0.0
-     
-        if (kmin1 > kmax1) return( nineJ ) end
-     
-        for k1 = kmin1:2:kmax1
-           k = k1 - 1
-           s1 = wigner6jValue(method, j11/2, j21/2, j31/2, j32/2, j33/2, k/2)
-           s2 = wigner6jValue(method, j12/2, j22/2, j32/2, j21/2, k/2, j23/2)
-           s3 = wigner6jValue(method, j13/2, j23/2, j33/2, k/2, j11/2, j12/2)
-     
-           p = (k+1) * (-1)^k
-     
-           nineJ += p * s1 * s2 * s3
-        end
-     
-        return( nineJ )
-    end
+    return( nineJ )
+end
 
 
 end # module

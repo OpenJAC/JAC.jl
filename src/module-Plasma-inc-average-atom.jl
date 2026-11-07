@@ -56,7 +56,7 @@ function computeFormFactors(qValues::Array{Float64,1}, orbitals::Dict{Subshell, 
         nrho = length(v.P)
         for    i = 1:nrho   density[i] = density[i] + occ * (v.P[i]^2 + v.Q[i]^2)    end
     end
-    #
+
     for  q in qValues
         # Compute the full integrant; the factor 4pi * r^2 is already in the density
         if     q == 0.    error("q = 0. is not supported for form-factor computations.")
@@ -147,14 +147,14 @@ function computePhotoionizationData(piSubshells::Array{Subshell,1}, orbitals::Di
                   "(2019) carries the angular factor of an s -> p transition only.  Only s subshells are supported.")
         end
         bOrb   = orbitals[sh];      epsB = bOrb.energy
-        fOcc   = Basics.FermiDirac(epsB, chemMu, temp)       ## the fractional occupation, occ/(2j+1)
+        fOcc   = Basics.FermiDirac(epsB, chemMu, temp)       # the fractional occupation, occ/(2j+1)
         sigmas = zeros(length(omegas))
         for  (io, omega)  in  enumerate(omegas)
-            eps = omega + epsB                               ## epsB < 0, so this is the photoelectron energy
-            if  eps <= 0.    continue    end                 ## below threshold
+            eps = omega + epsB                               # epsB < 0, so this is the photoelectron energy
+            if  eps <= 0.    continue    end                 # below threshold
             dSum = 0.;    wSum = 0.
-            for  kappa  in  (1, -2)                          ## p_1/2 and p_3/2
-                wk = abs(2kappa)                             ## 2j+1
+            for  kappa  in  (1, -2)                          # p_1/2 and p_3/2
+                wk = abs(2kappa)                             # 2j+1
                 cOrb, phase = Continuum.generateOrbitalLocalPotential(eps, Subshell(101, kappa), pot, cSettings)
                 mtp = min(length(cOrb.P), length(bOrb.P), length(grid.r))
                 dip = 0.
@@ -205,12 +205,12 @@ end
         over the subshells present in piData, since each contributes additively to the absorption.
 """
 function computeScatteringFactors(omegas::Array{Float64,1}, piData::Dict{Subshell, Array{Float64,1}}, nm::Nuclear.Model)
-    alpha = Defaults.getDefaults("alpha");     r0 = alpha^2        ## classical electron radius in a.u.
+    alpha = Defaults.getDefaults("alpha");     r0 = alpha^2        # classical electron radius in a.u.
     f2 = zeros(length(omegas));     muOverRho = zeros(length(omegas))
     for  (io, omega)  in  enumerate(omegas)
         sigTot = 0.;    for (sh, sg) in piData    sigTot = sigTot + sg[io]    end
         if  omega > 0.
-            lambda  = 2pi / (alpha * omega)                         ## lambda = 2 pi c / omega, c = 1/alpha
+            lambda  = 2pi / (alpha * omega)                         # lambda = 2 pi c / omega, c = 1/alpha
             f2[io]  = sigTot / (2 * r0 * lambda)
             # mu/rho = (N_A/A) sigma, with sigma converted from a.u. to cm^2 and A in g/mol
             sigCm2        = Defaults.convertUnits("cross section: from atomic to barn", sigTot) * 1.0e-24
@@ -353,8 +353,8 @@ function  perform(scheme::Plasma.AverageAtomScheme, computation::Plasma.Computat
         results["negative n_e"]  = negNe;                   results["positive n_e"]  = posNe;
         results["bound electrons"] = wScf.nBound;           results["radial density"] = wScf.rhot
     end
-    #
-    #
+
+
     # Calculate photoionization data and cross sections
     if  scheme.calcPhotoionizationCs
         # THE CONVERGED AVERAGE-ATOM POTENTIAL IS TAKEN FROM THE SCF, not rebuilt.  The continuum electron must be
@@ -371,7 +371,7 @@ function  perform(scheme::Plasma.AverageAtomScheme, computation::Plasma.Computat
             results["pi cross sections"] = piData
         end
     end
-    #
+
     # Calculate the Kubo-Greenwood conductivity and the optical constants
     if  scheme.calcConductivity
         if  isempty(scheme.condOmegas)
@@ -434,14 +434,14 @@ function  perform(scheme::Plasma.AverageAtomScheme, computation::Plasma.Computat
             results["optical"]         = optical
         end
     end
-    #
+
     # Calculate form factors
     if  scheme.calcFormFactor
         formF = Plasma.computeFormFactors(scheme.qValues, orbitals, chemMu, temp, computation.grid;
                                           radiusCell=RWS)
         if  output    results["ff q-values"] = scheme.qValues;    results["form factors"] = formF    end
     end
-    #
+
     # Calculate the scattering factor f_2 and the mass attenuation coefficient
     if  scheme.calcScatteringFactor
         if !scheme.calcPhotoionizationCs    

@@ -195,8 +195,8 @@ function  computeAmplitudesProperties(pathway::PhotoExcitationAutoion.Pathway, n
     neweChannels = MultipoleAmplitude[]
     for  ma in pathway.excitChannels
         mp = ma.multipole
-        ## The amplitude here is the stub this module has always used; the real call is commented out below,
-        ## exactly as it was.
+        # The amplitude here is the stub this module has always used; the real call is commented out below,
+        # exactly as it was.
         amplitude = 1.0im
         push!( neweChannels, MultipoleAmplitude(mp, EmPropertyC(amplitude)))
     end
@@ -209,17 +209,17 @@ function  computeAmplitudesProperties(pathway::PhotoExcitationAutoion.Pathway, n
         cOrbital, phase  = Continuum.generateOrbitalForLevel(pathway.electronEnergy, Subshell(101, aChannel.kappa), newfLevel, nm, grid, contSettings)
         newcLevel   = Basics.generateLevelWithExtraElectron(cOrbital, aChannel.symmetry, newfLevel)
         amplitude = 1.0
-        ## amplitude = AutoIonization.amplitude(CoulombInteraction(), pw.kappa, phase, newnLevel, newcLevel, grid)
+        # amplitude = AutoIonization.amplitude(CoulombInteraction(), pw.kappa, phase, newnLevel, newcLevel, grid)
         push!( newaChannels, AutoIonization.PartialWave( aChannel.kappa, aChannel.energy, phase, amplitude))
     end
     # Compute all photoionization channels
-    ## The photoionization step now carries PARTIAL WAVES, each holding the channels of one kappa and, in
-    ## each channel, one amplitude per multipole holding both gauges.  The amplitude here is still the stub
-    ## 1.0im that this module has always used -- the real call is commented out two lines below, as it was.
+    # The photoionization step now carries PARTIAL WAVES, each holding the channels of one kappa and, in
+    # each channel, one amplitude per multipole holding both gauges.  The amplitude here is still the stub
+    # 1.0im that this module has always used -- the real call is commented out two lines below, as it was.
     newpChannels = PhotoIonization.PartialWave[]
     for  pw in pathway.photoChannels
-        ## amplitude = PhotoIonization.amplitude("photoionization", ma.multipole, gauge, pw.kappa, pw.phase,
-        ##                                       pathway.excitEnergy, pathway.intermediateLevel, pathway.initialLevel, grid)
+        # amplitude = PhotoIonization.amplitude("photoionization", ma.multipole, gauge, pw.kappa, pw.phase,
+        #                                       pathway.excitEnergy, pathway.intermediateLevel, pathway.initialLevel, grid)
         newChannels = PhotoIonization.Channel[]
         for  ch in pw.channels
             newAmps = MultipoleAmplitude[]
@@ -228,7 +228,7 @@ function  computeAmplitudesProperties(pathway::PhotoExcitationAutoion.Pathway, n
         end
         push!( newpChannels, PhotoIonization.PartialWave(pw.kappa, pw.energy, pw.phase, newChannels) )
     end
-    #
+
     partialCs = EmProperty(-1., -1.)
     qFano     = EmProperty(-2., -2.)
     pathway = PhotoExcitationAutoion.Pathway( pathway.initialLevel, pathway.intermediateLevel, pathway.finalLevel, pathway.excitEnergy, 
@@ -259,7 +259,7 @@ function  computePathways(finalMultiplet::Multiplet, intermediateMultiplet::Mult
           ">>> results. That is why it now refuses instead of returning.\n\n"                                      *
           ">>> Nothing in the package depends on it: no dated example, no physics test. See the STATUS block in\n" *
           ">>> the module docstring for what remains.\n")
-    #
+
     pathways = PhotoExcitationAutoion.determinePathways(finalMultiplet, intermediateMultiplet, initialMultiplet, settings)
     # Display all selected lines before the computations start
     if  settings.printBefore    PhotoExcitationAutoion.displayPathways(stdout, pathways, settings)    end
@@ -281,7 +281,7 @@ function  computePathways(finalMultiplet::Multiplet, intermediateMultiplet::Mult
         if  settings.calcAngular        PhotoExcitationAutoion.displayAngular(iostream, newPathways)           end
         if  settings.calcFano           PhotoExcitationAutoion.displayFanoParameters(iostream, newPathways)    end
     end
-    #
+
     if    output    return( newPathways )
     else            return( nothing )
     end
@@ -353,7 +353,7 @@ function  displayPathways(stream::IO, pathways::Array{PhotoExcitationAutoion.Pat
     sa = sa * TableStrings.flushleft(57, "List of multipoles, gauges, kappas and total symmetries"; na=4)  
     sb = sb * TableStrings.flushleft(57, "partial (multipole, gauge, total J^P)                  "; na=4)
     println(stream, sa);    println(stream, sb);    println(stream, "  ", TableStrings.hLine(nx)) 
-    #   
+
     for  pathway in pathways
         sa  = " ";    isym = LevelSymmetry( pathway.initialLevel.J,      pathway.initialLevel.parity)
                         msym = LevelSymmetry( pathway.intermediateLevel.J, pathway.intermediateLevel.parity)
@@ -366,7 +366,7 @@ function  displayPathways(stream::IO, pathways::Array{PhotoExcitationAutoion.Pat
         kappaMultipoleSymmetryList = Tuple{Int64,EmMultipole,EmGauge,LevelSymmetry}[]
         for  ech in pathway.excitChannels
             for  ach in pathway.augerChannels
-                ## One row per (multipole, GAUGE); the gauge is a property of this table now.
+                # One row per (multipole, GAUGE); the gauge is a property of this table now.
                 if  string(ech.multipole)[1] == 'E'
                     push!( kappaMultipoleSymmetryList, (ach.kappa, ech.multipole, Basics.Coulomb,   ach.symmetry) )
                     push!( kappaMultipoleSymmetryList, (ach.kappa, ech.multipole, Basics.Babushkin, ach.symmetry) )
@@ -381,12 +381,12 @@ function  displayPathways(stream::IO, pathways::Array{PhotoExcitationAutoion.Pat
         for  i = 2:length(wa)   sb = TableStrings.hBlank( length(sa) ) * wa[i];    println(stream,  sb )    end
     end
     println(stream, "  ", TableStrings.hLine(nx))
-    #
+
     println(stream, "\n  + Given solid angles:  $(settings.solidAngles) ")
     if settings.calcPartialCs  println(stream, "  + Calculate the partial cross sections sigma(i-e-f) at the given solid angles.")           end
     if settings.calcAngular    println(stream, "  + Calculate the angular distribution of the Auger electrons at the given solid angles.")   end
     if settings.calcFano       println(stream, "  + Calculate the Fano parameters of the cross section resonance sigma(i-e-f).")             end
-    #
+
     return( nothing )
 end
 
@@ -412,7 +412,7 @@ function  displayAngular(stream::IO, pathways::Array{PhotoExcitationAutoion.Path
     sb = sb * TableStrings.center(30, TableStrings.inUnits("cross section")*"          "*
                                             TableStrings.inUnits("cross section"); na=2)
     println(stream, sa);    println(stream, sb);    println(stream, "  ", TableStrings.hLine(nx)) 
-    #   
+
     for  pathway in pathways
         sa  = " ";     isym = LevelSymmetry( pathway.initialLevel.J,      pathway.initialLevel.parity)
                         msym = LevelSymmetry( pathway.intermediateLevel.J, pathway.intermediateLevel.parity)
@@ -433,7 +433,7 @@ function  displayAngular(stream::IO, pathways::Array{PhotoExcitationAutoion.Path
         println(stream, sa)
     end
     println(stream, "  ", TableStrings.hLine(nx))
-    #
+
     return( nothing )
 end
 
@@ -460,7 +460,7 @@ function  displayFanoParameters(stream::IO, pathways::Array{PhotoExcitationAutoi
     sb = sb * TableStrings.center(30, TableStrings.inUnits("cross section")*"          "*
                                         TableStrings.inUnits("cross section"); na=2)
     println(stream, sa);    println(stream, sb);    println(stream, "  ", TableStrings.hLine(nx)) 
-    #   
+
     for  pathway in pathways
         sa  = " ";     isym = LevelSymmetry( pathway.initialLevel.J,      pathway.initialLevel.parity)
                         msym = LevelSymmetry( pathway.intermediateLevel.J, pathway.intermediateLevel.parity)
@@ -481,7 +481,7 @@ function  displayFanoParameters(stream::IO, pathways::Array{PhotoExcitationAutoi
         println(stream, sa)
     end
     println(stream, "  ", TableStrings.hLine(nx))
-    #
+
     return( nothing )
 end
 
@@ -508,7 +508,7 @@ function  displayPartialCs(stream::IO, pathways::Array{PhotoExcitationAutoion.Pa
     sb = sb * TableStrings.center(30, TableStrings.inUnits("cross section")*"          "*
                                         TableStrings.inUnits("cross section"); na=2)
     println(stream, sa);    println(stream, sb);    println(stream, "  ", TableStrings.hLine(nx)) 
-    #   
+
     for  pathway in pathways
         sa  = " ";     isym = LevelSymmetry( pathway.initialLevel.J,      pathway.initialLevel.parity)
                         msym = LevelSymmetry( pathway.intermediateLevel.J, pathway.intermediateLevel.parity)
@@ -529,7 +529,7 @@ function  displayPartialCs(stream::IO, pathways::Array{PhotoExcitationAutoion.Pa
         println(stream, sa)
     end
     println(stream, "  ", TableStrings.hLine(nx))
-    #
+
     return( nothing )
 end
 

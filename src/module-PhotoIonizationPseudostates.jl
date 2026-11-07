@@ -416,7 +416,7 @@ end
 function crossSectionAt(spectrum::PhotoIonizationPseudostates.Spectrum, omega::Float64)
     length(spectrum.states) == 0   &&   error("PhotoIonizationPseudostates.crossSectionAt(): spectrum carries no stick states.")
     totalEnergy = spectrum.initialLevel.energy + omega
-    states = spectrum.states                                    ## already sorted by energy (computeSpectrum)
+    states = spectrum.states                                    # already sorted by energy (computeSpectrum)
     sigmaOf(st) = EmProperty(st.dipoleStrength.Coulomb/st.localSpacing, st.dipoleStrength.Babushkin/st.localSpacing)
 
     if      totalEnergy <= states[1].energy       return( sigmaOf(states[1]) )
@@ -872,7 +872,7 @@ function displayResults(stream::IO, spectra::Array{PhotoIonizationPseudostates.S
     sa = sa * TableStrings.center(16, "E_photon"; na=2)
     sa = sa * TableStrings.center(16, "sigma (Coulomb)"; na=2)
     println(stream, sa);    println(stream, "  ", TableStrings.hLine(nx))
-    #
+
     for  spectrum in spectra,  omega in settings.photonEnergies
         omegaAu = Defaults.convertUnits("energy: to atomic", omega)
         sigma   = PhotoIonizationPseudostates.crossSectionAt(spectrum, omegaAu)

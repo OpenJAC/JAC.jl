@@ -1362,6 +1362,7 @@ function Base.show(io::IO, eeint::BreitInteraction)
     sa = "$(typeof(eeint)) [factor=$(eeint.factor)]";                print(io, sa)
 end
 
+
 function Base.show(io::IO, eeint::CoulombBreit) 
     sa = "$(typeof(eeint)) [factor=$(eeint.factor), quadrature=:$(eeint.quadrature)]";     print(io, sa)
 end
@@ -2179,7 +2180,7 @@ export  AbstractPolarization, LinearPolarization, LeftCircular, RightCircular, L
 # ever reached this copy: the abstract type and all four singletons were exported, but not one of them appeared in any dispatch, any call or
 # any example.  The live vocabulary is Basics.AbstractScField, which has twelve members and twelve Basics.computePotential methods
 # dispatching on it.
-#
+
 # The one apparent survivor is not a use of these types: module-BasicsAZ-inc-compute.jl builds Radial.Potential("CoreHartree", wb, grid),
 # where "CoreHartree" is the potential's NAME string.
 
@@ -2533,10 +2534,10 @@ struct     SeparateOrbitals         <:  AbstractOrbitalSource   end
 struct     InitialStateOrbitals     <:  AbstractOrbitalSource   end
 struct     FinalStateOrbitals       <:  AbstractOrbitalSource   end
 
-##  The field is PARAMETRIC for a mechanical reason, not a conceptual one: this file is included BEFORE
-##  module-Radial.jl, so `Radial.Orbital` cannot be named as a field type here at all.  `T` is in practice
-##  the `Dict{Subshell,Orbital}` that a basis carries, and `Hamiltonian.performCIwithFrozenOrbitals` is
-##  typed on that, so anything else raises a MethodError naming the type rather than failing quietly.
+#  The field is PARAMETRIC for a mechanical reason, not a conceptual one: this file is included BEFORE
+#  module-Radial.jl, so `Radial.Orbital` cannot be named as a field type here at all.  `T` is in practice
+#  the `Dict{Subshell,Orbital}` that a basis carries, and `Hamiltonian.performCIwithFrozenOrbitals` is
+#  typed on that, so anything else raises a MethodError naming the type rather than failing quietly.
 struct     GivenOrbitals{T<:AbstractDict}  <:  AbstractOrbitalSource
     orbitals             ::T
 end

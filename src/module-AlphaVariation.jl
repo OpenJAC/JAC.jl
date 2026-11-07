@@ -159,32 +159,32 @@ function computeOutcomes(multiplet::Multiplet, nm::Nuclear.Model, grid::Radial.G
     println("")
     printstyled("AlphaVariation.computeOutcomes(): The computation of the alpha-variation parameters starts now ... \n", color=:light_green)
     printstyled("-------------------------------------------------------------------------------------------------- \n", color=:light_green)
-    #
+
     # A minimal (elementary) consistency check between multiplet and configs -- just the electron number; a full CSF-by-CSF
     # comparison is not attempted here, since multiplet is trusted to be the direct performSCF(configs, ...) result.
     if  !isempty(multiplet.levels)  &&  configs[1].NoElectrons != multiplet.levels[1].basis.NoElectrons
         error("AlphaVariation.computeOutcomes(): multiplet and configs are inconsistent -- different electron numbers.")
     end
-    #
+
     outcomes = AlphaVariation.determineOutcomes(multiplet, settings)
     # Display all selected levels before the computations start
     if  settings.printBefore    AlphaVariation.displayOutcomes(stdout, outcomes)    end
-    #
+
     if  settings.calcQ
         x      = settings.variationX
         alpha0 = Defaults.getDefaults("alpha")
-        #
+
         printstyled(">> Compute the two auxiliary multiplets at alpha = alpha_0 * sqrt(1 +- x), x = $x ... \n", color=:light_green)
         Defaults.setDefaults("fine structure constant: alpha", alpha0 * sqrt(1.0 + x))
         multipletPlus  = SelfConsistent.performSCF(configs, nm, grid, asfSettings; printout=false)
         Defaults.setDefaults("fine structure constant: alpha", alpha0 * sqrt(1.0 - x))
         multipletMinus = SelfConsistent.performSCF(configs, nm, grid, asfSettings; printout=false)
         Defaults.setDefaults("fine structure constant: alpha", alpha0)
-        #
+
         if  length(multipletPlus.levels) != length(multiplet.levels)  ||  length(multipletMinus.levels) != length(multiplet.levels)
             error("AlphaVariation.computeOutcomes(): the auxiliary multiplets do not have the same number of levels as multiplet.")
         end
-        #
+
         # The lowest-energy level of the FULL multiplet is taken as the (Kozlov et al.) reference level; its own
         # q is needed below even if it is not itself among the selected outcomes. EACH LEVEL IS MATCHED BY
         # OVERLAP, NOT BY INDEX -- see matchLevelByOverlap's own docstring for why a positional match is unsafe
@@ -193,7 +193,7 @@ function computeOutcomes(multiplet::Multiplet, nm::Nuclear.Model, grid::Radial.G
         groundPlus,  _ = AlphaVariation.matchLevelByOverlap(groundLevel, multipletPlus.levels)
         groundMinus, _ = AlphaVariation.matchLevelByOverlap(groundLevel, multipletMinus.levels)
         qGround      = (groundPlus.energy - groundMinus.energy) / (2x)
-        #
+
         newOutcomes = AlphaVariation.Outcome[]
         for  outcome in outcomes
             levelPlus,  _  = AlphaVariation.matchLevelByOverlap(outcome.level, multipletPlus.levels)
@@ -215,7 +215,7 @@ function computeOutcomes(multiplet::Multiplet, nm::Nuclear.Model, grid::Radial.G
     AlphaVariation.displayResults(stdout, newOutcomes)
     printSummary, iostream = Defaults.getDefaults("summary flag/stream")
     if  printSummary    AlphaVariation.displayResults(iostream, newOutcomes)   end
-    #
+
     if    output    return( newOutcomes )
     else            return( nothing )
     end
@@ -255,7 +255,7 @@ function  displayOutcomes(stream::IO, outcomes::Array{AlphaVariation.Outcome,1})
     sa = sa * TableStrings.center(14, "Energy"; na=4);
     sb = sb * TableStrings.center(14, TableStrings.inUnits("energy"); na=4)
     println(stream, sa);    println(stream, sb);    println(stream, "  ", TableStrings.hLine(nx))
-    #
+
     for  outcome in outcomes
         sa  = "  ";    sym = LevelSymmetry( outcome.level.J, outcome.level.parity)
         sa = sa * TableStrings.center(10, TableStrings.level(outcome.level.index); na=2)
@@ -264,7 +264,7 @@ function  displayOutcomes(stream::IO, outcomes::Array{AlphaVariation.Outcome,1})
         println(stream,  sa )
     end
     println(stream, "  ", TableStrings.hLine(nx))
-    #
+
     return( nothing )
 end
 
@@ -290,7 +290,7 @@ function  displayResults(stream::IO, outcomes::Array{AlphaVariation.Outcome,1})
     sa = sa * TableStrings.center(14, "Q";     na=4)
     sb = sb * TableStrings.center(14, "    " ; na=4)
     println(stream, sa);    println(stream, sb);    println(stream, "  ", TableStrings.hLine(nx))
-    #
+
     for  outcome in outcomes
         sa  = "  ";    sym = LevelSymmetry( outcome.level.J, outcome.level.parity)
         sa = sa * TableStrings.center(10, TableStrings.level(outcome.level.index); na=2)
@@ -301,7 +301,7 @@ function  displayResults(stream::IO, outcomes::Array{AlphaVariation.Outcome,1})
         println(stream, sa )
     end
     println(stream, "  ", TableStrings.hLine(nx), "\n\n")
-    #
+
     return( nothing )
 end
 

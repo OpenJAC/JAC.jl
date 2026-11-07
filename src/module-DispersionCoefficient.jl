@@ -461,7 +461,7 @@ function checkSaturation(partner::DispersionCoefficient.Partner)
     for  terms in partner.terms
         isempty(terms.energies)   &&   continue
         dEmin = minimum(terms.energies);    dEmax = maximum(terms.energies)
-        dEmin <= 0.0              &&   continue      ## an excited partner;  checkGroundLevel refuses it anyway
+        dEmin <= 0.0              &&   continue      # an excited partner;  checkGroundLevel refuses it anyway
         span  = dEmax / dEmin
         if  span < 3.0
             println(">>> DispersionCoefficient: '$(partner.name)', $(terms.multipole): the $(length(terms.energies)) " *
@@ -554,8 +554,8 @@ function computeAtomWallCoefficient(partner::DispersionCoefficient.Partner, wall
         println(">>> DispersionCoefficient: '$(partner.name)' carries no E1 response, so no atom-wall C_3.")
         return( 0.0 )
     end
-    ## A perfect conductor has r = 1 at EVERY frequency, so no resonance can enter; the same closed form serves
-    ## the instantaneous-response limit, where r is the constant (eps-1)/(eps+1).
+    # A perfect conductor has r = 1 at EVERY frequency, so no resonance can enter; the same closed form serves
+    # the instantaneous-response limit, where r is the constant (eps-1)/(eps+1).
     if  isinf(wallDielectric)   ||   isinf(wallResonance)
         reflection = isinf(wallDielectric) ? 1.0 : (wallDielectric - 1.0) / (wallDielectric + 1.0)
         return( 0.125 * sum(terms.strengths) * reflection )
@@ -655,7 +655,7 @@ function computeOutcomes(multiplet::Multiplet, nm::Nuclear.Model, grid::Radial.G
                 color=:light_green)
     printstyled("------------------------------------------------------------------------------------------------- \n",
                 color=:light_green)
-    #
+
     printSummary, iostream = Defaults.getDefaults("summary flag/stream")
     DispersionCoefficient.checkWall(settings)
     outcomes = DispersionCoefficient.Outcome[]
@@ -699,7 +699,7 @@ function displayResults(stream::IO, outcome::DispersionCoefficient.Outcome)
     sa = sa * TableStrings.center( 8, "complete";  na=4)
     sa = sa * TableStrings.center(44, "(l1,l2) pieces [a.u.]";  na=2)
     println(stream, sa);    println(stream, "  ", TableStrings.hLine(nx))
-    #
+
     for  coefficient in outcome.coefficients
         sa = "  " * TableStrings.center(10, "C_$(coefficient.n)"; na=4)
         sa = sa * TableStrings.flushright(20, @sprintf("%.8e", coefficient.value) )                       * "    "
@@ -711,7 +711,7 @@ function displayResults(stream::IO, outcome::DispersionCoefficient.Outcome)
         println(stream, sa * sb)
     end
     println(stream, "  ", TableStrings.hLine(nx))
-    #
+
     if  outcome.atomWallC3 != 0.0
         wall = isinf(outcome.wallDielectric) ? "a perfectly conducting wall" :
                isinf(outcome.wallResonance)    ? "a wall of constant eps = " * @sprintf("%.4f", outcome.wallDielectric) :
@@ -735,7 +735,7 @@ function displayResults(stream::IO, outcome::DispersionCoefficient.Outcome)
         println(stream, "  >>> box from 64 to 775 a.u. costs alpha^(E1,0) 14 % and C_3 23 %, and alpha(0) does not")
         println(stream, "  >>> show it.  Read the saturation warnings above before quoting C_3.")
     end
-    #
+
     println(stream, " ")
     println(stream, "  The static polarizabilities these coefficients rest on:")
     for  partner in (outcome.partnerA, outcome.partnerB)

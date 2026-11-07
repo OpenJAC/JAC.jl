@@ -64,7 +64,7 @@ function qedLocal(a::Orbital, b::Orbital, nm::Nuclear.Model, qed::ManyElectron.A
                 RadialIntegrals.qedMagneticFormFactor(a, b, nm, grid, qgrid) +
                 RadialIntegrals.qedLowFrequency(a, b, nm, grid, qgrid)
     elseif   qed == QedPetersburg()
-        ## RadialIntegrals.qedUehling(a, b, nm, grid, qgrid)
+        # RadialIntegrals.qedUehling(a, b, nm, grid, qgrid)
         wa = RadialIntegrals.qedUehlingSimple(a, b, pot, grid, qgrid) + 
                 InteractionStrengthQED.selfEnergyVolotka(a, b, nm, grid, qgrid)
     else    error("stop a")
@@ -96,14 +96,14 @@ function selfEnergyVolotka(a::Orbital, b::Orbital, nm::Nuclear.Model, grid::Radi
     wb          = RadialIntegrals.qedDampedOverlap(alpha, a, a, grid)
     wa          = whydrogenic * wb
     
-    ## println("<e^-r>, Coulomb   = $(wb)")
-    ## println("<e^-r>, DH        = $(wb)")
-    ## println("local SE, DHF     = $(wa)  [a.u.]")
+    # println("<e^-r>, Coulomb   = $(wb)")
+    # println("<e^-r>, DH        = $(wb)")
+    # println("local SE, DHF     = $(wa)  [a.u.]")
     
     # Printout the corresponding  F(alpha Z) value for the given orbital if a == b
-    ## FalphaZ = alpha/pi * (alpha*nm.Z)^4 / a.subshell.n^3 / alpha^2
-    ## FalphaZ = wa / FalphaZ
-    ## println("Self-energy function for $(a.subshell) and $(a.subshell) is F(alpha Z) = $FalphaZ,  wdamped = $wb,  wa = $wa ")
+    # FalphaZ = alpha/pi * (alpha*nm.Z)^4 / a.subshell.n^3 / alpha^2
+    # FalphaZ = wa / FalphaZ
+    # println("Self-energy function for $(a.subshell) and $(a.subshell) is F(alpha Z) = $FalphaZ,  wdamped = $wb,  wa = $wa ")
     
     println("QED single-electron strength <$(a.subshell)| h^(SE, Volotka) | $(b.subshell)> = $wa    with <$(a.subshell)| e^-alpha r | $(b.subshell)> = $wb")
     
@@ -144,9 +144,9 @@ function tabulateFzeOverHydrogenic(Z::Float64, sh::Subshell)
     end
     
     wb = Defaults.GBL_QED_HYDROGENIC_LAMBDAC[k]
-    ## println("QED  <$(sh)| h^(SE, hydrogenic) | $(sh)> = $wa      e^-alpha r, hydrogenic = $wb")
-    ## println("local SE, Coulomb = $(wa)    [F]")
-    ## println("<e^-r>, Coulomb   = $(wb)    from storage")
+    # println("QED  <$(sh)| h^(SE, hydrogenic) | $(sh)> = $wa      e^-alpha r, hydrogenic = $wb")
+    # println("local SE, Coulomb = $(wa)    [F]")
+    # println("<e^-r>, Coulomb   = $(wb)    from storage")
     
     return( wa / Defaults.GBL_QED_HYDROGENIC_LAMBDAC[k] )
 end

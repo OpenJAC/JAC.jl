@@ -1,5 +1,5 @@
 
-## f^3  shell;  249 ME in total					    		
+# f^3  shell;  249 ME in total					    		
 const   LS_jj_f_3 = [ LS_jj_me( LS_jj_qn(1, 4, 4, 3, 1, 1, 2, 5, 2, 4), -1,         2, 	      7), ## 1  
                         LS_jj_me( LS_jj_qn(1, 4, 4, 3, 1, 2, 1, 8, 3, 7), -1,         5, 	      7), ## 2  
                         LS_jj_me( LS_jj_qn(1, 4, 2, 1, 1, 1, 2, 5, 2, 4),  1,         5, 	      7), ## 3  
@@ -218,7 +218,7 @@ const   LS_jj_f_3 = [ LS_jj_me( LS_jj_qn(1, 4, 4, 3, 1, 1, 2, 5, 2, 4), -1,     
                         LS_jj_me( LS_jj_qn(1, 4,16, 1,17, 1, 2, 5, 2,12), -1,         1,            1)] ## 231
 
     
-## f^4  shell;  1210 ME in total                                            	       
+# f^4  shell;  1210 ME in total                                            	       
 const   LS_jj_f_4 = [ LS_jj_me( LS_jj_qn(1, 3, 4, 4, 0, 0, 3, 0, 4, 0),  1,        30, 	    343), ## 1    
                         LS_jj_me( LS_jj_qn(1, 3, 4, 4, 0, 1, 2, 5, 1, 5), -1,        11, 	    343), ## 2    
                         LS_jj_me( LS_jj_qn(1, 3, 4, 4, 0, 2, 3, 0, 4, 0), -1,        60, 	    343), ## 3    
@@ -1431,7 +1431,7 @@ const   LS_jj_f_4 = [ LS_jj_me( LS_jj_qn(1, 3, 4, 4, 0, 0, 3, 0, 4, 0),  1,     
                         LS_jj_me( LS_jj_qn(1, 3,20, 0,20, 2, 1, 8, 2,12), -1, 	5, 	      7)] ## 1375 
                                     
 
-## f^5  shell;  3799 ME in total					 		
+# f^5  shell;  3799 ME in total					 		
 const   LS_jj_f_5 = [ LS_jj_me( LS_jj_qn(0, 2, 6, 5, 1, 1, 2, 5, 2, 4),  1,        12, 	    343), ## 1        
                         LS_jj_me( LS_jj_qn(0, 2, 6, 5, 1, 1, 2, 5, 0, 4),  1,        33, 	    343), ## 2    
                         LS_jj_me( LS_jj_qn(0, 2, 6, 5, 1, 2, 1, 4, 1, 3), -1,        96, 	  12005), ## 3    
@@ -5233,7 +5233,7 @@ const   LS_jj_f_5 = [ LS_jj_me( LS_jj_qn(0, 2, 6, 5, 1, 1, 2, 5, 2, 4),  1,     
                         LS_jj_me( LS_jj_qn(0, 2,22, 1,23, 2, 1, 8, 1,15),  1, 	1, 	      1)] ## 4514 
 
 
-## f^6  shell;  ... ME in total					 		
+# f^6  shell;  ... ME in total					 		
 const   LS_jj_f_6 = [ LS_jj_me( LS_jj_qn(0, 1, 6, 6, 0, 0, 3, 0, 4, 0),  1,       180, 	  16807), ## 1      
                         LS_jj_me( LS_jj_qn(0, 1, 6, 6, 0, 1, 2, 5, 1, 5), -1,       396, 	  16807), ## 2    
                         LS_jj_me( LS_jj_qn(0, 1, 6, 6, 0, 2, 3, 0, 4, 0), -1,       360, 	  16807), ## 3    
@@ -12548,7 +12548,7 @@ const   LS_jj_f_6 = [ LS_jj_me( LS_jj_qn(0, 1, 6, 6, 0, 0, 3, 0, 4, 0),  1,     
                         LS_jj_me( LS_jj_qn(0, 1,24, 0,24, 2, 1, 8, 0,16),  1, 	3, 	      7), ## 9392 
                         LS_jj_me( LS_jj_qn(0, 1,24, 0,24, 3, 0, 9, 1,15),  1, 	4, 	      7)] ## 9393 
 
-## f^7  shell;  8003 ME in total
+# f^7  shell;  8003 ME in total
 const   LS_jj_f_7 = [ LS_jj_me( LS_jj_qn( 0,  0,  4,  5,  1,  1,  2,  5,  2,  4),  1,          6,        1715), ## 1
                         LS_jj_me( LS_jj_qn( 0,  0,  4,  5,  1,  2,  1,  4,  1,  3),  1,        864,       60025), ## 2
                         LS_jj_me( LS_jj_qn( 0,  0,  4,  5,  1,  2,  1,  4,  1,  5), -1,         88,        8575), ## 3

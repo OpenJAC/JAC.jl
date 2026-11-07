@@ -304,7 +304,7 @@ function  perform(scheme::Liouville.StimulatedRamanScheme, computation::Liouvill
 
     # Compute the level structure for all reference configurations
     multiplet = SelfConsistent.performSCF(computation.refConfigs, computation.nuclearModel, computation.grid, computation.asfSettings)
-    #
+
     # Initialize the Liouville levels as well as the density and Hamiltonian matrix
     levels      = Liouville.initializeLevels(scheme, multiplet)
     densityM    = Liouville.initializeDensityMatrix(levels)
@@ -321,10 +321,10 @@ function  perform(scheme::Liouville.StimulatedRamanScheme, computation::Liouvill
     
     # Evolve the density matrix for the given light field and by using the proper evolution approach
     # Where do we need to evaluate the Hamiltonian with the parameters of the field: Liouville.evaluateHamiltonian(.. with current parameters)
-    ## finalDM = Liouville.evolveDensityMatrix(scheme, computation.approach, densityM, hamiltonianM, lightField)
+    # finalDM = Liouville.evolveDensityMatrix(scheme, computation.approach, densityM, hamiltonianM, lightField)
     
     # Analyze the final density matrix for its stimulated-Raman spectrum
-    ## Liouville.analyzeDensityMatrix()
+    # Liouville.analyzeDensityMatrix()
         
     # Return results if required   ... collect all relevant information into this dictionary
     if  output   

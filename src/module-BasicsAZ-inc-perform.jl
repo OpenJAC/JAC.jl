@@ -276,7 +276,7 @@ function  Base.getindex(r::PerformResults, key::AbstractString)
         # would mean defining `getindex(::Dict{String,Any}, ::Type)`, which is type piracy on Base and would reach
         # every Dict in every package.  So the stored path keeps its strings deliberately, and the warnings it
         # raises here are correct rather than a conversion anybody forgot.
-        #
+
         # STEP 4 OF THE MIGRATION, 06-Oct-2026: a string key that HAS a typed replacement now RAISES.
         #   It warned between 05 and 06-Oct, and the deprecation period ended when the evidence it was waiting on
         # arrived: two `/testExamples` sweeps, 254 branch runs, with ZERO KeyErrors and ZERO UndefVarErrors naming
@@ -475,7 +475,7 @@ function Basics.perform(computation::Atomic.Computation; output::Bool=false)
     if   length(computation.configs) != 0
         multiplet = SelfConsistent.performSCF(computation.configs, nModel, computation.grid, computation.asfSettings)
         LSjj.expandLevelsIntoLS(multiplet, computation.asfSettings.jjLS)
-        #
+
         if output    results = Base.merge( results, Dict("multiplet:" => multiplet) ) 
                         results = Base.merge( results, Dict("grid:"      => computation.grid) )  end
         
@@ -484,73 +484,73 @@ function Basics.perform(computation::Atomic.Computation; output::Bool=false)
             if      typeof(settings) == Einstein.Settings
                 outcome = Einstein.computeLines(multiplet,        computation.grid, settings)    
                 if output    results = Base.merge( results, Dict("Einstein lines:" => outcome) )                  end
-                #
-            ## elseif  typeof(settings) == Hfs.Settings    && settings.calcIJFexpansion  
-            ##     outcome = Hfs.computeHyperfineMultiplet(multiplet, nModel, computation.grid, settings)         
-            ##     if output    results = Base.merge( results, Dict("IJF multiplet:" => outcome) )                   end
-            ##     #
+
+            # elseif  typeof(settings) == Hfs.Settings    && settings.calcIJFexpansion  
+            #     outcome = Hfs.computeHyperfineMultiplet(multiplet, nModel, computation.grid, settings)         
+            #     if output    results = Base.merge( results, Dict("IJF multiplet:" => outcome) )                   end
+            #     #
             elseif  typeof(settings) == Hfs.Settings
                 outcome = Hfs.computeOutcomes(multiplet, nModel,  computation.grid, settings)         
                 if output    results = Base.merge( results, Dict("HFS outcomes:" => outcome) )                    end
-                #
+
             elseif  typeof(settings) == LandeZeeman.Settings 
                 outcome = LandeZeeman.computeOutcomes(multiplet, nModel,  computation.grid, settings)      
                 if output    results = Base.merge( results, Dict("Zeeman parameter outcomes:" => outcome) )       end
-                #
+
             elseif  typeof(settings) == StarkShift.Settings
                 outcome = StarkShift.computeOutcomes(multiplet, nModel,  computation.grid, settings)
                 if output    results = Base.merge( results, Dict("Stark-shift outcomes:" => outcome) )            end
-                #
+
             elseif  typeof(settings) == StarkZeeman.Settings
                 outcome = StarkZeeman.computeOutcomes(multiplet, nModel, computation.grid, settings)
                 if output    results = Base.merge( results, Dict("Stark-Zeeman outcomes:" => outcome) )           end
-                #
+
             elseif  typeof(settings) == HfsPaschenBack.Settings
                 outcome = HfsPaschenBack.computeOutcomes(multiplet, nModel, computation.grid, settings)
                 if output    results = Base.merge( results, Dict("Hfs Paschen-Back outcomes:" => outcome) )       end
-                #
+
             elseif  typeof(settings) == IsotopeShift.Settings 
                 outcome = IsotopeShift.computeOutcomes(multiplet, nModel, computation.grid, settings)         
                 if output    results = Base.merge( results, Dict("Isotope parameter outcomes:" => outcome) )      end
-                #
+
             elseif  typeof(settings) == AlphaVariation.Settings
                 outcome = AlphaVariation.computeOutcomes(multiplet, nModel, computation.grid, computation.configs,
                                                           computation.asfSettings, settings)
                 if output    results = Base.merge( results, Dict("alpha variation parameter outcomes:" => outcome) )      end
-                #
+
             elseif  typeof(settings) == FormFactor.Settings 
                 outcome = FormFactor.computeOutcomes(multiplet, nModel, computation.grid, settings)         
                 if output    results = Base.merge( results, Dict("Form factor outcomes:" => outcome) )            end
-                #
+
             elseif  typeof(settings) == DecayYield.Settings 
                 outcome = DecayYield.computeOutcomes(computation.configs, computation.asfSettings, 
                                                         multiplet, nModel, computation.grid, settings)     
                 if output    results = Base.merge( results, Dict("Fluorescence and AutoIonization yield outcomes:" => outcome) )   end
-                #
+
             elseif  typeof(settings) == MultipolePolarizibility.Settings
                 outcome = MultipolePolarizibility.computeOutcomes(multiplet, nModel, computation.grid, settings)
                 if output    results = Base.merge( results, Dict("Polarizibility outcomes:" => outcome) )         end
-                #
+
             elseif  typeof(settings) == DispersionCoefficient.Settings
                 outcome = DispersionCoefficient.computeOutcomes(multiplet, nModel, computation.grid, settings)
                 if output    results = Base.merge( results, Dict("Dispersion coefficient outcomes:" => outcome) )  end
-                #
+
             elseif  typeof(settings) == ReducedDensityMatrix.Settings
                 outcome = ReducedDensityMatrix.computeOutcomes(multiplet, nModel, computation.grid, settings)
                 if output    results = Base.merge( results, Dict("RDM outcomes:" => outcome) )         end
-                #
+
             elseif  typeof(settings) == WeakInteractionEnhancement.Settings
                 outcome = WeakInteractionEnhancement.computeOutcomes(multiplet, nModel, computation.grid, settings)
                 if output    results = Base.merge( results, Dict("Weak-interaction enhancement outcomes:" => outcome) )   end
-                #
+
             elseif  typeof(settings) == CrystalField.Settings
                 outcome = CrystalField.computeOutcomes(multiplet, nModel, computation.grid, settings)
                 if output    results = Base.merge( results, Dict("Crystal-field splitting outcomes:" => outcome) )        end
-                #
+
             elseif  typeof(settings) == NuclearShielding.Settings
                 outcome = NuclearShielding.computeOutcomes(multiplet, nModel, computation.grid, settings)
                 if output    results = Base.merge( results, Dict("Nuclear-shielding outcomes:" => outcome) )              end
-                #
+
             end
         end
         
@@ -613,7 +613,7 @@ function Basics.perform(computation::Atomic.Computation; output::Bool=false)
         # key for FinalStateOrbitals().  Hand that dictionary to Hamiltonian.performCIwithFrozenOrbitals to build the
         # Green space on it.  NO separate result entry is added on purpose:  it would need its own ResultKeys type to be
         # readable at all, and that is a new promise in the public surface for something already reachable.
-        #
+
         if typeof(computation.processSettings) in [PhotoExcitationFluores.Settings, PhotoExcitationAutoion.Settings,
                                                    DielectronicRecombination.Settings, ResonantInelastic.Settings,
                                                    PhotoRecombinationInterference.Settings, PhotoIonizationInterference.Settings]
@@ -621,7 +621,7 @@ function Basics.perform(computation::Atomic.Computation; output::Bool=false)
                                                               computation.intermediateAsfSettings)
             if  output   results["intermediateMultiplet"] = intermediateMultiplet    end 
         end
-        #
+
         if      typeof(computation.processSettings) == AutoIonization.Settings
             # continuumExchange is resolved HERE, where computation.finalAsfSettings.scField is in scope, and travels on as an
             # ordinary (now concrete) field of the settings object handed to computeLines -- see Continuum.resolveExchangeDefault,
@@ -634,10 +634,10 @@ function Basics.perform(computation::Atomic.Computation; output::Bool=false)
             outcome = RayleighCompton.computeLines(finalMultiplet, initialMultiplet, computation.grid, computation.processSettings) 
             if output    results = Base.merge( results, Dict("Rayleigh-Compton lines:" => outcome) )                end
         elseif  typeof(computation.processSettings) == ElectronCapture.Settings
-            ## The capture is the time reverse of an Auger transition, so `initialConfigs` are the ion BEFORE the
-            ## capture and `finalConfigs` the doubly excited resonance it forms. The free electron approaches that
-            ## INITIAL ion (see ElectronCapture.computeAmplitudesProperties), so it is initialAsfSettings.scField
-            ## that decides the automatic default here, unlike every OUTGOING-electron process above.
+            # The capture is the time reverse of an Auger transition, so `initialConfigs` are the ion BEFORE the
+            # capture and `finalConfigs` the doubly excited resonance it forms. The free electron approaches that
+            # INITIAL ion (see ElectronCapture.computeAmplitudesProperties), so it is initialAsfSettings.scField
+            # that decides the automatic default here, unlike every OUTGOING-electron process above.
             exchangex = Continuum.resolveExchangeDefault(computation.processSettings.continuumExchange, computation.initialAsfSettings.scField)
             outcome = ElectronCapture.computeLines(finalMultiplet, initialMultiplet, nModel, computation.grid,
                            ElectronCapture.Settings(computation.processSettings; continuumExchange=exchangex))
@@ -648,17 +648,17 @@ function Basics.perform(computation::Atomic.Computation; output::Bool=false)
                            DoubleAutoIonization.Settings(computation.processSettings; continuumExchange=exchangex))
             if output    results = Base.merge( results, Dict("Double-Auger lines:" => outcome) )                    end
         elseif  typeof(computation.processSettings) == ThreeBodyRecombination.Settings
-            ## initialConfigs are the ion BEFORE capture (one electron fewer); finalConfigs the bound level the
-            ## two free electrons recombine into -- the same direction as ElectronCapture, above.
+            # initialConfigs are the ion BEFORE capture (one electron fewer); finalConfigs the bound level the
+            # two free electrons recombine into -- the same direction as ElectronCapture, above.
             outcome = ThreeBodyRecombination.computeLines(finalMultiplet, initialMultiplet, nModel, computation.grid,
                                                            computation.processSettings)
             if output    results = Base.merge( results, Dict("three-body recombination lines:" => outcome) )        end
         elseif  typeof(computation.processSettings) == DielectronicRecombination.Settings
-            ## settings.calcHyperfineResolved selects the hyperfine-resolved route, which builds the hyperfine
-            ## multiplets itself from these same three ELECTRONIC multiplets and recouples the electronic
-            ## amplitudes; it is a strict analogue of the fine-structure one and needs no separate entry.
-            ## The captured electron approaches the INITIAL ion in both routes (as in ElectronCapture and
-            ## PhotoRecombination), so initialAsfSettings.scField decides the automatic default.
+            # settings.calcHyperfineResolved selects the hyperfine-resolved route, which builds the hyperfine
+            # multiplets itself from these same three ELECTRONIC multiplets and recouples the electronic
+            # amplitudes; it is a strict analogue of the fine-structure one and needs no separate entry.
+            # The captured electron approaches the INITIAL ion in both routes (as in ElectronCapture and
+            # PhotoRecombination), so initialAsfSettings.scField decides the automatic default.
             exchangex = Continuum.resolveExchangeDefault(computation.processSettings.continuumExchange, computation.initialAsfSettings.scField)
             dcrSettings = DielectronicRecombination.Settings(computation.processSettings; continuumExchange=exchangex)
             if  computation.processSettings.calcHyperfineResolved
@@ -711,8 +711,8 @@ function Basics.perform(computation::Atomic.Computation; output::Bool=false)
             outcome = RadiativeAuger.computeLines(finalMultiplet, initialMultiplet, computation.grid, computation.processSettings) 
             if output    results = Base.merge( results, Dict("radiative Auger sharings:" => outcome) )                   end
         elseif  typeof(computation.processSettings) == PhotoRecombination.Settings
-            ## The captured electron approaches the INITIAL ion (see PhotoRecombination.computeAmplitudesProperties), so
-            ## initialAsfSettings.scField decides the automatic default here, not finalAsfSettings.
+            # The captured electron approaches the INITIAL ion (see PhotoRecombination.computeAmplitudesProperties), so
+            # initialAsfSettings.scField decides the automatic default here, not finalAsfSettings.
             exchangex = Continuum.resolveExchangeDefault(computation.processSettings.continuumExchange, computation.initialAsfSettings.scField)
             outcome = PhotoRecombination.computeLines(finalMultiplet, initialMultiplet, nModel, computation.grid,
                            PhotoRecombination.Settings(computation.processSettings; continuumExchange=exchangex))
@@ -726,10 +726,10 @@ function Basics.perform(computation::Atomic.Computation; output::Bool=false)
             outcome = InternalRecombination.computeLines(finalMultiplet, initialMultiplet, nModel, computation.grid, computation.processSettings) 
             if output    results = Base.merge( results, Dict("internal-recombination lines:" => outcome) )          end
         elseif  typeof(computation.processSettings) == TwoElectronOnePhoton.Settings
-            ## The Green-function (intermediate) multiplet is NOT generated here; it is prepared by the user in a
-            ## separate, standard Atomic.Computation -- whose configurations are chosen to include just those levels
-            ## that are expected to contribute strongly to the second-order amplitude -- and handed over explicitly
-            ## as settings.gMultiplet.
+            # The Green-function (intermediate) multiplet is NOT generated here; it is prepared by the user in a
+            # separate, standard Atomic.Computation -- whose configurations are chosen to include just those levels
+            # that are expected to contribute strongly to the second-order amplitude -- and handed over explicitly
+            # as settings.gMultiplet.
             outcome = TwoElectronOnePhoton.computeLines(finalMultiplet, initialMultiplet, nModel, computation.grid, computation.processSettings)
             if output    results = Base.merge( results, Dict("two-electron-one-photon lines:" => outcome) )         end
         elseif  typeof(computation.processSettings) == ParticleScattering.Settings 
@@ -744,20 +744,20 @@ function Basics.perform(computation::Atomic.Computation; output::Bool=false)
         elseif  typeof(computation.processSettings) == HyperfineInduced.Settings 
             outcome = HyperfineInduced.computeLines(finalMultiplet, initialMultiplet, nModel, computation.grid, computation.processSettings) 
             if output    results = Base.merge( results, Dict("hyperfine-induced transitions:" => outcome) )         end
-            #
-            #
-        ## THE SEVEN TESTS BELOW USED TO COMPARE A TYPE WITH AN INSTANCE -- `typeof(x) == Coulex()` and its six
-        ## siblings -- which is false for every x, so all seven processes fell through to error("stop b") and were
-        ## unreachable.  They also tested the wrong THING: computation.processSettings is declared
-        ## ::Basics.AbstractProcessSettings, so it is a Settings object and never one of the AbstractProcess
-        ## singletons.  Each now tests the Settings type of the module whose function the branch calls, which is
-        ## the form the rest of this chain already uses.  Fixed 24-Aug-2026.
+
+
+        # THE SEVEN TESTS BELOW USED TO COMPARE A TYPE WITH AN INSTANCE -- `typeof(x) == Coulex()` and its six
+        # siblings -- which is false for every x, so all seven processes fell through to error("stop b") and were
+        # unreachable.  They also tested the wrong THING: computation.processSettings is declared
+        # ::Basics.AbstractProcessSettings, so it is a Settings object and never one of the AbstractProcess
+        # singletons.  Each now tests the Settings type of the module whose function the branch calls, which is
+        # the form the rest of this chain already uses.  Fixed 24-Aug-2026.
         elseif  typeof(computation.processSettings) == CoulombExcitation.Settings
             outcome = CoulombExcitation.computeLines(finalMultiplet, initialMultiplet, computation.grid, computation.processSettings) 
             if output    results = Base.merge( results, Dict("Coulomb excitation lines:" => outcome) )               end
         elseif  typeof(computation.processSettings) == CoulombIonization.Settings
-            ## Reserved and empty until 25-Aug-2026, when the module was written; this branch used to raise and say
-            ## that CoulombIonization held no computation to reach.  It now does.
+            # Reserved and empty until 25-Aug-2026, when the module was written; this branch used to raise and say
+            # that CoulombIonization held no computation to reach.  It now does.
             exchangex = Continuum.resolveExchangeDefault(computation.processSettings.continuumExchange, computation.finalAsfSettings.scField)
             outcome = CoulombIonization.computeLines(finalMultiplet, initialMultiplet, nModel, computation.grid,
                            CoulombIonization.Settings(computation.processSettings; continuumExchange=exchangex))
@@ -775,8 +775,8 @@ function Basics.perform(computation::Atomic.Computation; output::Bool=false)
             outcome = CrystalFieldEmission.computeLines(finalMultiplet, initialMultiplet, computation.grid, computation.processSettings)
             if output    results = Base.merge( results, Dict("crystal-field-resolved emission lines:" => outcome) )    end
         elseif  typeof(computation.processSettings) == PhotoRecombinationInterference.Settings
-            ## As in PhotoRecombination: the captured electron approaches the INITIAL ion, so initialAsfSettings.scField
-            ## decides the automatic default here.
+            # As in PhotoRecombination: the captured electron approaches the INITIAL ion, so initialAsfSettings.scField
+            # decides the automatic default here.
             exchangex = Continuum.resolveExchangeDefault(computation.processSettings.continuumExchange, computation.initialAsfSettings.scField)
             outcome = PhotoRecombinationInterference.computePathways(finalMultiplet, intermediateMultiplet, initialMultiplet, nModel,
                            computation.grid, PhotoRecombinationInterference.Settings(computation.processSettings; continuumExchange=exchangex))

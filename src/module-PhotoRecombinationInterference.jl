@@ -313,11 +313,11 @@ function computeAmplitudesProperties(pathway::PhotoRecombinationInterference.Pat
         newfLevel = Basics.generateLevelWithExtraSubshell(cSubshell, redFLevel)
         cOrbital, phase = Continuum.generateOrbitalForLevel(pathway.electronEnergy, cSubshell, newiLevel, nm, grid, contSettings)
         newChannels = PhotoRecombinationInterference.Channel[]
-        #
+
         for  ch  in  pw.channels
             newcLevel = Basics.generateLevelWithExtraElectron(cOrbital, ch.symmetry, newiLevel)
             ampsRR    = MultipoleAmplitude[];    ampsDR = MultipoleAmplitude[];    ampsTot = MultipoleAmplitude[]
-            #
+
             for  mp  in  settings.multipoles
                 # The direct, radiative-recombination term
                 if  settings.includeRR
@@ -353,7 +353,7 @@ function computeAmplitudesProperties(pathway::PhotoRecombinationInterference.Pat
         end
         push!( newPartialWaves, PhotoRecombinationInterference.PartialWave(pw.kappa, pathway.electronEnergy, phase, newChannels) )
     end
-    #
+
     # The three cross sections, each through the SAME function of PhotoRecombination, so that they are commensurable by construction
     csTot = PhotoRecombination.computeCrossSectionForMultipoles( settings.multipoles,
                 PhotoRecombinationInterference.toPhotoRecombinationLine(pathway, newPartialWaves, :total) )
@@ -362,7 +362,7 @@ function computeAmplitudesProperties(pathway::PhotoRecombinationInterference.Pat
     csDR  = PhotoRecombination.computeCrossSectionForMultipoles( settings.multipoles,
                 PhotoRecombinationInterference.toPhotoRecombinationLine(pathway, newPartialWaves, :dr) )
     interference = csTot - csRR - csDR
-    #
+
     betaNu = EmPropertyC[];    linPol = EmPropertyC(0.0im)
     totLine = PhotoRecombinationInterference.toPhotoRecombinationLine(pathway, newPartialWaves, :total)
     if  settings.calcAnisotropy
@@ -398,10 +398,10 @@ function amplitudeDR(mp::EmMultipole, kappa::Int64, phase::Float64, dLevel::Leve
                      settings::PhotoRecombinationInterference.Settings)
     denominator = Complex(totalEnergy - dLevel.energy, 0.5 * gammaD)
     if  abs(denominator) < 1.0e-30    return( EmPropertyC(0.0im) )    end
-    #
+
     ampCapture = AutoIonization.captureAmplitude(settings.augerOperator, kappa, phase, newcLevel, dLevel, grid; printout=false)
     if  ampCapture == ComplexF64(0.)    return( EmPropertyC(0.0im) )    end
-    #
+
     if  string(mp)[1] == 'E'
         aC = PhotoEmission.amplitude(Emission(), mp, Basics.Coulomb,   omega, redFLevel, dLevel, grid, display=false, printout=false)
         aB = PhotoEmission.amplitude(Emission(), mp, Basics.Babushkin, omega, redFLevel, dLevel, grid, display=false, printout=false)
@@ -467,7 +467,7 @@ function computePathways(finalMultiplet::Multiplet, intermediateMultiplet::Multi
     if  settings.printBefore    PhotoRecombinationInterference.displayPathways(stdout, pathways, widths)    end
     maxEnergy = 0.;    for  pathway in pathways   maxEnergy = max(maxEnergy, pathway.electronEnergy)   end
     nrContinuum = Continuum.gridConsistency(maxEnergy, grid)
-    #
+
     newPathways = PhotoRecombinationInterference.Pathway[]
     for  pathway in pathways
         push!( newPathways, PhotoRecombinationInterference.computeAmplitudesProperties(pathway, intermediateMultiplet, widths, nm, grid,
@@ -503,7 +503,7 @@ function computeTotalWidths(intermediateMultiplet::Multiplet, initialMultiplet::
                                             gauges=[UseCoulomb, UseBabushkin], printBefore=false)
     augerLines  = AutoIonization.computeLines(initialMultiplet, intermediateMultiplet, nm, grid, augerSettings; output=true)
     photonLines = PhotoEmission.computeLines(finalMultiplet, intermediateMultiplet, grid, photonSettings; output=true)
-    #
+
     println("\n  Total widths Gamma_d of the intermediate levels, from the configurations named in this computation only:")
     println("  ", TableStrings.hLine(96))
     println("     level     J^P            Gamma_a [a.u.]      Gamma_r [a.u.]      Gamma_d [a.u.]     source")
@@ -635,7 +635,7 @@ function displayPathways(stream::IO, pathways::Array{PhotoRecombinationInterfere
     sa = sa * TableStrings.center(14, "no. of kappa"; na=2)
     sa = sa * TableStrings.center(16, "no. of resonances"; na=2)
     println(stream, sa);    println(stream, "  ", TableStrings.hLine(nx))
-    #
+
     for  pathway in pathways
         isym = LevelSymmetry(pathway.initialLevel.J, pathway.initialLevel.parity)
         fsym = LevelSymmetry(pathway.finalLevel.J,   pathway.finalLevel.parity)
@@ -676,7 +676,7 @@ function displayResults(stream::IO, pathways::Array{PhotoRecombinationInterferen
     sa = sa * TableStrings.center(13, "beta_2"; na=1)
     sa = sa * TableStrings.center(13, "lin. polar."; na=1)
     println(stream, sa);    println(stream, "  ", TableStrings.hLine(nx))
-    #
+
     for  pathway in pathways
         sa = "  " * TableStrings.center(16, TableStrings.levels_if(pathway.initialLevel.index, pathway.finalLevel.index); na=1)
         sa = sa * @sprintf("%14.6e", Defaults.convertUnits("energy: from atomic", pathway.electronEnergy)) * " "

@@ -339,8 +339,8 @@ function  computeAmplitudesProperties(outcome::StarkShift.Outcome, grid::Radial.
         alpha0, alpha2, Jsublevels = StarkShift.computeStarkShifts(outcome.Jlevel, settings.gMultiplet, grid, settings)
     end
 
-    ## THE BLACK-BODY SHIFT IS INDEPENDENT OF EField AND omega and is therefore gated on its own temperature
-    ## alone, not on calcStarkshifts: a caller may want the thermal shift and no applied field at all.
+    # THE BLACK-BODY SHIFT IS INDEPENDENT OF EField AND omega and is therefore gated on its own temperature
+    # alone, not on calcStarkshifts: a caller may want the thermal shift and no applied field at all.
     bbrShift = EmProperty(0.);   bbrEta = 0.
     if  settings.temperature > 0.0
         bbrShift, bbrEta = StarkShift.computeBlackbodyShift(outcome.Jlevel, settings.gMultiplet, grid,
@@ -470,7 +470,7 @@ function polarizabilityTerms(level::Level, gMultiplet::Multiplet, grid::Radial.G
     _, contributions = MultipolePolarizibility.computeMultipolePolarizabilities(E1, level, gMultiplet, grid)
     for  c in contributions
         push!( strengths, MultipolePolarizibility.rankCoefficient(1, 0, level.J, c.nuLevel.J) * abs2(c.reducedMe) )
-        push!( energies,  -c.deltaE )             ## = W_J' - W_J
+        push!( energies,  -c.deltaE )             # = W_J' - W_J
     end
 
     return( (strengths, energies) )
@@ -535,13 +535,13 @@ function computeBlackbodyShift(level::Level, gMultiplet::Multiplet, grid::Radial
 
     StarkShift.checkBlackbodyResonance(temperature, energies, nPoints, xMax)
 
-    ## THE PLANCK WEIGHT IS NORMALISED BY ITS OWN QUADRATURE, on the SAME nodes, and NOT by the analytic
-    ## pi^4/15.  The two differ by the quadrature error -- +2.57e-07 relative at these 400 nodes -- and dividing
-    ## a Simpson numerator by an exact denominator puts that error straight into the answer, giving eta a FLOOR
-    ## that is not physics: measured on H 2p, eta came out 5.97e-07 at 3 K where the T^2 law demands 3.4e-07, and
-    ## the 3 K -> 10 K ratio was 6.8 against the required 11.1.  Sharing the quadrature makes alphaEff an exact
-    ## weighted average of alpha_0 over the nodes, so it is EXACTLY alpha_0 for a flat polarizability and eta
-    ## measures the dynamic departure alone.  Do not "simplify" this back to pi^4/15.
+    # THE PLANCK WEIGHT IS NORMALISED BY ITS OWN QUADRATURE, on the SAME nodes, and NOT by the analytic
+    # pi^4/15.  The two differ by the quadrature error -- +2.57e-07 relative at these 400 nodes -- and dividing
+    # a Simpson numerator by an exact denominator puts that error straight into the answer, giving eta a FLOOR
+    # that is not physics: measured on H 2p, eta came out 5.97e-07 at 3 K where the T^2 law demands 3.4e-07, and
+    # the 3 K -> 10 K ratio was 6.8 against the required 11.1.  Sharing the quadrature makes alphaEff an exact
+    # weighted average of alpha_0 over the nodes, so it is EXACTLY alpha_0 for a flat polarizability and eta
+    # measures the dynamic departure alone.  Do not "simplify" this back to pi^4/15.
     h = xMax/nPoints;      wa = 0.0;      wb = 0.0
     for  i = 0:nPoints
         x  = i*h
@@ -550,7 +550,7 @@ function computeBlackbodyShift(level::Level, gMultiplet::Multiplet, grid::Radial
         wa = wa + w * gx * StarkShift.rebuiltPolarizability(strengths, energies, T*x)
         wb = wb + w * gx
     end
-    alphaEff = wa / wb                    ## the h/3 of the Simpson rule cancels in the ratio
+    alphaEff = wa / wb                    # the h/3 of the Simpson rule cancels in the ratio
     shift    = -0.5 * StarkShift.blackbodyFieldSquare(temperature) * alphaEff
 
     return( (EmProperty(shift, shift), alphaEff/alpha0 - 1.0) )
@@ -708,7 +708,7 @@ end
 function computeStarkShifts(level::Level, gMultiplet::Multiplet, grid::Radial.Grid, settings::StarkShift.Settings)
     if  settings.omega == 0.0
         alpha0, alpha2, _ = MultipolePolarizibility.computeScalarTensorPolarizability(level, gMultiplet, grid)
-        cycleFactor = 0.5                ## a constant field
+        cycleFactor = 0.5                # a constant field
     else
         alphas, _ = MultipolePolarizibility.computeMultipolePolarizabilities(E1, level, gMultiplet, grid;
                                                                               omega = settings.omega)
@@ -718,7 +718,7 @@ function computeStarkShifts(level::Level, gMultiplet::Multiplet, grid::Radial.Gr
             elseif  K == 2   alpha2 = alphaK
             end
         end
-        cycleFactor = 0.25               ## a field oscillating at omega, averaged over the cycle
+        cycleFactor = 0.25               # a field oscillating at omega, averaged over the cycle
     end
     Efield  = settings.EField / StarkShift.AU_EFIELD_IN_VCM
     Efield2 = Efield^2
@@ -748,7 +748,7 @@ function  computeTheta1(level::Level, grid::Radial.Grid)
     print(">>> Calculate the Theta^(1) (shift) coefficient for level (index=$(level.index), J=$(level.J)) ...")
     M = AngularM64(level.J.num, level.J.den)
     Theta1 = MultipoleMoment.emmStaticAmplitude(1, level, level, grid; display=false)
-             ## AngularMomentum.ClebschGordan(level.J, M, AngularJ64(1), AngularM64(0), level.J, M) / sqrt(Basics.twice(level.J) + 1)
+             # AngularMomentum.ClebschGordan(level.J, M, AngularJ64(1), AngularM64(0), level.J, M) / sqrt(Basics.twice(level.J) + 1)
     J      = level.J.num/level.J.den
     w3j    = AngularMomentum.Wigner_3j(J, 2, J, J, 0, -J)
     Theta1 = Theta1 * (-1)^(2*J - 1 + 1) * w3j * sqrt(2*J+1)
@@ -769,7 +769,7 @@ function  computeTheta2(level::Level, grid::Radial.Grid)
     print(">>> Calculate the Theta^(2) (shift) coefficient for level (index=$(level.index), J=$(level.J)) ...")
     M = AngularM64(level.J.num, level.J.den)
     Theta2 = MultipoleMoment.emmStaticAmplitude(2, level, level, grid; display=false) 
-             ## AngularMomentum.ClebschGordan(level.J, M, AngularJ64(2), AngularM64(0), level.J, M) / sqrt(Basics.twice(level.J) + 1)
+             # AngularMomentum.ClebschGordan(level.J, M, AngularJ64(2), AngularM64(0), level.J, M) / sqrt(Basics.twice(level.J) + 1)
     # Use the conversion factor by Jan Gilles (2024)
     J      = level.J.num/level.J.den
     w3j    = AngularMomentum.Wigner_3j(J, 2, J, J, 0, -J)
@@ -811,7 +811,7 @@ function computeOutcomes(multiplet::Multiplet, nm::Nuclear.Model, grid::Radial.G
     StarkShift.displayResults(stdout, newOutcomes, settings)
     printSummary, iostream = Defaults.getDefaults("summary flag/stream")
     if  printSummary    StarkShift.displayResults(iostream, newOutcomes, settings)   end
-    #
+
     if    output    return( newOutcomes )
     else            return( nothing )
     end
@@ -916,7 +916,7 @@ function  displayOutcomes(outcomes::Array{StarkShift.Outcome,1})
     sa = sa * TableStrings.center(14, "Energy"; na=4);              
     sb = sb * TableStrings.center(14, TableStrings.inUnits("energy"); na=4)
     println(sa);    println(sb);    println("  ", TableStrings.hLine(nx)) 
-    #  
+
     for  outcome in outcomes
         sa  = "  ";    sym = LevelSymmetry( outcome.Jlevel.J, outcome.Jlevel.parity)
         sa = sa * TableStrings.center(10, TableStrings.level(outcome.Jlevel.index); na=2)
@@ -925,7 +925,7 @@ function  displayOutcomes(outcomes::Array{StarkShift.Outcome,1})
         println( sa )
     end
     println("  ", TableStrings.hLine(nx))
-    #
+
     return( nothing )
 end
 
@@ -936,7 +936,7 @@ end
         returned otherwise.
 """
 function  displayResults(stream::IO, outcomes::Array{StarkShift.Outcome,1}, settings::StarkShift.Settings)
-    #
+
     if  settings.calcEDM  ||  settings.calcEQM
         nx = 82
         println(stream, " ")
@@ -953,7 +953,7 @@ function  displayResults(stream::IO, outcomes::Array{StarkShift.Outcome,1}, sett
         sa = sa * TableStrings.center(14, "Theta^(2)/EQM"; na=5)                          
         sb = sb * TableStrings.center(14, "[e a_o^2]"; na=5)        
         println(stream, sa);    println(stream, sb);    println(stream, "  ", TableStrings.hLine(nx)) 
-        #  
+
         for  outcome in outcomes
             sa  = "  ";    sym = LevelSymmetry( outcome.Jlevel.J, outcome.Jlevel.parity)
             sa = sa * TableStrings.center(10, TableStrings.level(outcome.Jlevel.index); na=2)
@@ -966,7 +966,7 @@ function  displayResults(stream::IO, outcomes::Array{StarkShift.Outcome,1}, sett
         end
         println(stream, "  ", TableStrings.hLine(nx))
     end
-    #
+
     if  settings.calcStarkshifts
         nx1 = 106
         println(stream, " ")
@@ -988,7 +988,7 @@ function  displayResults(stream::IO, outcomes::Array{StarkShift.Outcome,1}, sett
         sa = sa * TableStrings.center(15, "alpha_2 [Coul]"; na=3);                    sb = sb * TableStrings.center(15, "[a.u.]" ; na=3)
         sa = sa * TableStrings.center(15, "alpha_2 [Bab]" ; na=3);                    sb = sb * TableStrings.center(15, "[a.u.]" ; na=3)
         println(stream, sa);    println(stream, sb);    println(stream, "  ", TableStrings.hLine(nx1))
-        #
+
         for  outcome in outcomes
             sa  = "  ";    sym = LevelSymmetry( outcome.Jlevel.J, outcome.Jlevel.parity)
             sa = sa * TableStrings.center(10, TableStrings.level(outcome.Jlevel.index); na=2)
@@ -1000,7 +1000,7 @@ function  displayResults(stream::IO, outcomes::Array{StarkShift.Outcome,1}, sett
             println(stream, sa )
         end
         println(stream, "  ", TableStrings.hLine(nx1))
-        #
+
         nx2 = 92
         println(stream, " ")
         println(stream, "  Stark-shifts (energy-shifts) of the atomic sublevels at E = $(settings.EField) V/cm:")
@@ -1013,7 +1013,7 @@ function  displayResults(stream::IO, outcomes::Array{StarkShift.Outcome,1}, sett
         sa = sa * TableStrings.center(17, "Delta-E [Coul]"; na=3);                    sb = sb * TableStrings.center(17, "[Hz]"; na=3)
         sa = sa * TableStrings.center(17, "Delta-E [Bab]" ; na=3);                    sb = sb * TableStrings.center(17, "[Hz]"; na=3)
         println(stream, sa);    println(stream, sb);    println(stream, "  ", TableStrings.hLine(nx2))
-        #
+
         for  outcome in outcomes
             sym = LevelSymmetry( outcome.Jlevel.J, outcome.Jlevel.parity)
             for  Jsublevel in outcome.Jsublevels
@@ -1028,7 +1028,7 @@ function  displayResults(stream::IO, outcomes::Array{StarkShift.Outcome,1}, sett
         end
         println(stream, "  ", TableStrings.hLine(nx2))
     end
-    #
+
     if  settings.temperature > 0.0
         nx3 = 104
         println(stream, " ")
@@ -1047,7 +1047,7 @@ function  displayResults(stream::IO, outcomes::Array{StarkShift.Outcome,1}, sett
         sa = sa * TableStrings.center(17, "Delta-E [Bab]";  na=3);          sb = sb * TableStrings.center(17, "[Hz]"; na=3)
         sa = sa * TableStrings.center(15, "eta";            na=3);          sb = sb * TableStrings.center(15, " "   ; na=3)
         println(stream, sa);    println(stream, sb);    println(stream, "  ", TableStrings.hLine(nx3))
-        #
+
         for  outcome in outcomes
             sa  = "  ";    sym = LevelSymmetry( outcome.Jlevel.J, outcome.Jlevel.parity)
             sa = sa * TableStrings.center(10, TableStrings.level(outcome.Jlevel.index); na=2)
@@ -1061,7 +1061,7 @@ function  displayResults(stream::IO, outcomes::Array{StarkShift.Outcome,1}, sett
         end
         println(stream, "  ", TableStrings.hLine(nx3))
     end
-    #
+
     if  settings.calcMagicWavelengths  &&  any(oc -> !isempty(oc.magicWavelengths), outcomes)
         nx4 = 112
         println(stream, " ")
@@ -1076,7 +1076,7 @@ function  displayResults(stream::IO, outcomes::Array{StarkShift.Outcome,1}, sett
         sa = sa * TableStrings.center(16, "alpha_common"; na=2);            sb = sb * TableStrings.hBlank(18)
         sa = sa * TableStrings.center(14, "d(dalpha)/domega"; na=2)
         println(stream, sa);   println(stream, sb);   println(stream, "  ", TableStrings.hLine(nx4))
-        #
+
         for  outcome in outcomes
             isempty(outcome.magicWavelengths)  &&  continue
             sym = LevelSymmetry( outcome.Jlevel.J, outcome.Jlevel.parity)
@@ -1096,7 +1096,7 @@ function  displayResults(stream::IO, outcomes::Array{StarkShift.Outcome,1}, sett
         end
         println(stream, "  ", TableStrings.hLine(nx4))
     end
-    #
+
     return( nothing )
 end
 

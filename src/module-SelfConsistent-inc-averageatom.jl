@@ -445,7 +445,7 @@ function determineChemicalPotential(orbitals::Dict{Subshell, Orbital}, temp::Flo
     # THE ROOT IS UNIQUE AND BRACKETABLE: every Fermi factor increases with mu, so g is strictly increasing, g -> -Z
     # as mu -> -inf and g -> (sum of all 2j+1) - Z > 0 as mu -> +inf whenever the subshell set can hold Z electrons.
     # A bracket therefore always exists, and finding it first is what stops the iteration running away.
-    #
+
     # WHY THAT MATTERS HERE, measured 08-Oct-2026 on the version this replaces.  Its Newton derivative read
     # `occ * wc^2 / temp / (wc+1)^2` with wc = exp(w) -- exp(2w) where the derivative needs exp(w).  Against a
     # central difference of g itself, at its own starting point mu = -0.1 for Si at T = 10 eV: finite difference
@@ -554,7 +554,7 @@ function solveAverageAtomSpectra(orbitals::Dict{Subshell, Orbital}, nuclearModel
     end
     rhoBack = SelfConsistent.freeElectronDensity(chemMu, temp)
     pot = Basics.add( nuclearPotential, averageAtomPotential(scField, rhot, grid, iCell; backgroundDensity=rhoBack) )
-    #
+
     if  printout
         println("\n>> Average-atom SCF in density space:  lMax = $lMax, cell R^(WS) = " *
                 @sprintf("%.4f", radiusWS) * " a.u. (volume " * @sprintf("%.2f", 4pi/3*radiusWS^3) *

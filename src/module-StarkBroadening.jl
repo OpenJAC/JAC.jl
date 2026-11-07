@@ -136,8 +136,8 @@ function  Settings(set::StarkBroadening.Settings;
     if  isnothing(electronTemperature)     electronTemperaturex     = set.electronTemperature     else  electronTemperaturex     = electronTemperature     end
     if  isnothing(perturberCutoffEnergy)   perturberCutoffEnergyx   = set.perturberCutoffEnergy   else  perturberCutoffEnergyx   = perturberCutoffEnergy   end
     if  isnothing(lineSelection)           lineSelectionx           = set.lineSelection           else  lineSelectionx           = lineSelection           end
-    ## `missing`, not `nothing`, is the sentinel here: `nothing` is itself a meaningful VALUE for this field
-    ## (scaffold-only), so it must stay distinguishable from "the caller didn't mention `method` at all".
+    # `missing`, not `nothing`, is the sentinel here: `nothing` is itself a meaningful VALUE for this field
+    # (scaffold-only), so it must stay distinguishable from "the caller didn't mention `method` at all".
     if  ismissing(method)                  methodx                  = set.method                  else  methodx                  = method                  end
     if  isnothing(printBefore)             printBeforex             = set.printBefore             else  printBeforex             = printBefore             end
 
@@ -360,16 +360,16 @@ function  electronWidth(line::StarkBroadening.Line, method::Basics.SimplifiedMod
               (3*nStarL^2/(2*Z^2)) * (nStarL^2 - lL*(lL+1) - 1)
 
     cAU        = Defaults.getDefaults("speed of light: c")
-    lambdaAU   = 2*pi*cAU / line.omega                                 ## standard omega = 2 pi c / lambda, atomic units
+    lambdaAU   = 2*pi*cAU / line.omega                                 # standard omega = 2 pi c / lambda, atomic units
     bohrInCm   = Defaults.BOHR_RADIUS_SI * 100.0
     lambda_cm  = lambdaAU * bohrInCm
 
     widthAngstrom = 2.2151e-8 * lambda_cm^2 * settings.electronDensity / sqrt(settings.electronTemperature) *
                     (0.9 - 1.1/Z) * sumTerm
 
-    ## Convert the WIDTH, a wavelength interval (Angstrom), into an angular-frequency width (Hartree):
-    ## |domega/dlambda| = 2 pi c / lambda^2, evaluated at the line's own wavelength, same convention
-    ## throughout (atomic units in, atomic units out) -- an ordinary unit conversion, not broadening theory.
+    # Convert the WIDTH, a wavelength interval (Angstrom), into an angular-frequency width (Hartree):
+    # |domega/dlambda| = 2 pi c / lambda^2, evaluated at the line's own wavelength, same convention
+    # throughout (atomic units in, atomic units out) -- an ordinary unit conversion, not broadening theory.
     deltaLambda_au = (widthAngstrom * 1.0e-8) / bohrInCm
     widthAU        = (2*pi*cAU / lambdaAU^2) * deltaLambda_au
 
@@ -421,7 +421,7 @@ function  computeLines(finalMultiplet::Multiplet, initialMultiplet::Multiplet, g
             pxLines = PhotoExcitation.computeLines( Multiplet("u", [u]), Multiplet("l", [l]), grid, pxSettings; output=true )
             isempty(pxLines)   &&   continue
             osc = pxLines[1].oscStrength
-            ( osc.Coulomb == 0.   &&   osc.Babushkin == 0. )   &&   continue   ## not a real (dipole-forbidden) line
+            ( osc.Coulomb == 0.   &&   osc.Babushkin == 0. )   &&   continue   # not a real (dipole-forbidden) line
 
             perturbersUpper = gatherPerturbers(u, pool, grid, settings)
             perturbersLower = gatherPerturbers(l, pool, grid, settings)

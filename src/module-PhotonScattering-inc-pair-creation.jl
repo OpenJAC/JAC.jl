@@ -1,25 +1,25 @@
 
 # Bound-free pair creation:   gamma + |i(N)>  -->  |f(N+1)> + e^+ .
-#
+
 # A photon is absorbed and an electron-positron pair appears, the ELECTRON being captured directly into a bound orbital of the ion --
 # so the ion gains an electron -- while the POSITRON leaves as a continuum particle. Free pair creation in vacuum is impossible for a
 # single photon, for the same reason one-photon annihilation is: momentum cannot balance. Here the nucleus takes the recoil.
-#
+
 # THE THRESHOLD IS LOWERED BY THE BINDING ENERGY, and that is the cleanest qualitative signature of the process:
-#
+
 #         T_+ = omega - 2 m c^2 + B ,        so the channel opens at    omega > 2 m c^2 - B ,
-#
+
 # with B the binding energy gained by the captured electron. For a K-shell capture in a heavy ion B is of order 100 keV, so bound-free
 # pair creation sets in appreciably below the 1.022 MeV of the free process. It is not an exotic correction: at the LHC it is the
 # dominant beam-loss mechanism for fully stripped heavy ions, the created electron being captured by the very ion that made it.
-#
+
 # THIS IS THE CROSSING PARTNER of the one-photon annihilation in module-ParticleScattering-inc-annihilation.jl, and the two share
 # their machinery deliberately: the same charge-conjugate positron wave (ParticleScattering.chargeConjugateOrbital), the same photon
 # operator, run in the other direction -- absorption here, emission there. That is also the validation route this file was chosen for.
 # Detailed balance relates the two cross sections at the same total energy, so the annihilation module's unverified prefactor and this
 # one's can be checked against EACH OTHER without any literature at all; two prefactors that fail to satisfy detailed balance locate
 # the error between them, which no single absolute number can do.
-#
+
 # The retardation caveat of the annihilation file applies here unchanged: omega > 2 m c^2 means q a_0 > 274, so the multipole series
 # is short only where the captured electron sits close to the nucleus, i.e. for K-shell capture in a heavy ion.
 
@@ -82,7 +82,7 @@ function computePairCreationLines(finalMultiplet::Multiplet, initialMultiplet::M
                 color=:light_green)
     printstyled("--------------------------------------------------------------------------------------------------------- \n",
                 color=:light_green)
-    #
+
     lines = PhotonScattering.determinePairCreationLines(finalMultiplet, initialMultiplet, settings)
     if  settings.printBefore    PhotonScattering.displayPairCreationLines(stdout, lines)    end
     maxEnergy = 0.;   for  line in lines   maxEnergy = max(maxEnergy, line.particleEnergy)   end

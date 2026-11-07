@@ -146,7 +146,7 @@ function ManyElectron.matrixElement_Vee(kind::AbstractEeInteraction, leftBasis::
     subshellList = leftBasis.subshells
     opa = SpinAngular.TwoParticleOperator(0, plus)
     wa  = SpinAngular.computeCoefficients(opa, leftBasis.csfs[r], rightBasis.csfs[s], subshellList) 
-    #
+
     for  coeff in wa
         if   typeof(kind) in [ DiagonalCoulomb, CoulombInteraction, CoulombBreit, CoulombGaunt]    
             me = me + coeff.V * InteractionStrength.XL_Coulomb(coeff.nu, 

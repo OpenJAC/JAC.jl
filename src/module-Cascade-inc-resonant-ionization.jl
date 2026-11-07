@@ -2,16 +2,16 @@
 # Functions and methods for the two RESONANT channels of scheme::Cascade.ElectronIonizationScheme, in which the incident
 # electron is CAPTURED into a doubly-excited resonance which then sheds two electrons, so that the ion ends up one charge
 # state higher than it began:
-#
+
 #   resonant-electron-capture-with-sequential-double-autoionization     ResonantImpactIonization.SequentialAuger()
 #       ...  i(N) + e-  ->  d(N+1)  ->  n(N) + e-  ->  f(N-1) + 2e-     two Auger steps through an autoionizing n
 #   resonant-electron-capture-with-simultaneous-double-autoionization   ResonantImpactIonization.SimultaneousAuger()
 #       ...  i(N) + e-  ->  d(N+1)  ->  f(N-1) + 2e-                    one double-Auger step
-#
+
 # The impact-excitation channel of the same scheme lives in module-Cascade-inc-electron-ionization.jl; these two are kept
 # apart from it because they share nothing but the configuration lists: a capture is the time reverse of an Auger and
 # needs no partial-wave sum over impact energies, which is why they cost seconds where that one costs hours.
-#
+
 # THE SIMULTANEOUS CHANNEL GENERATES NO STEPS OF ITS OWN.  It uses the resonance's total Auger width -- which the
 # branching denominator needs anyway -- together with the shake-off estimate of ResonantImpactIonization, so requesting
 # it costs nothing beyond the sequential channel's resonances.  It does, however, require those resonances to exist, so
@@ -61,7 +61,7 @@ function determineResonantSteps(scheme::Cascade.ElectronIonizationScheme, comp::
         maxKappa = length(scheme.lValues) > 0 ? maximum(scheme.lValues) + 1 : 7
         aSettings = AutoIonization.Settings(AutoIonization.Settings(), maxKappa=maxKappa)
         rSettings = PhotoEmission.Settings(PhotoEmission.Settings(), multipoles=[E1], gauges=[UseCoulomb, UseBabushkin])
-        #
+
         # (1) the resonance decaying back to the initial block; this supplies the capture rate by detailed balance
         for  capturedBlock in capturedList
             for  initialBlock in initialList
@@ -102,7 +102,7 @@ function determineResonantSteps(scheme::Cascade.ElectronIonizationScheme, comp::
                 end
             end
         end
-        #
+
     else  error("Unsupported cascade approach.")
     end
 

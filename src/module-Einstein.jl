@@ -161,7 +161,7 @@ function  computeLines(multiplet::Multiplet, grid::Radial.Grid, settings::Einste
     Einstein.displayLifetimes(stdout, newLines)
     printSummary, iostream = Defaults.getDefaults("summary flag/stream")
     if  printSummary    Einstein.displayRates(iostream, newLines);    Einstein.displayLifetimes(iostream, newLines)   end
-    #
+
     if    output    return( newLines )
     else            return( nothing )
     end
@@ -177,9 +177,9 @@ function  computeAmplitudesProperties(line::Einstein.Line, grid::Radial.Grid, se
     global JAC_counter
     newChannels = Einstein.Channel[];    rateC = rateB = 0.
     for channel in line.channels
-        #
+
         amplitude = PhotoEmission.amplitude(Emission(), channel.multipole, channel.gauge, line.omega, line.finalLevel, line.initialLevel, grid)
-        #
+
         push!( newChannels, Einstein.Channel( channel.multipole, channel.gauge, amplitude) )
         if       channel.gauge == Basics.Coulomb     rateC = rateC + abs(amplitude)^2
         elseif   channel.gauge == Basics.Babushkin   rateB = rateB + abs(amplitude)^2
@@ -290,7 +290,7 @@ function  displayLifetimes(stream::IO, lines::Array{Einstein.Line,1})
     sa = sa * TableStrings.center(12, "Decay widths"; na=4);       
     sb = sb * TableStrings.center(12, TableStrings.inUnits("energy"); na=4)
     println(stream, sa);    println(stream, sb);    println(stream, "  ", TableStrings.hLine(nx)) 
-    #    
+
     for  ii = 1:length(ilevels)
         sa = istr[ii]
         sa = sa * "Coulomb          " * @sprintf("%.6e",              1.0/irates[ii].Coulomb)               * "  "
@@ -304,7 +304,7 @@ function  displayLifetimes(stream::IO, lines::Array{Einstein.Line,1})
         println(stream, sa)
     end
     println(stream, "  ", TableStrings.hLine(nx))
-    #
+
     return( nothing )
 end
 
@@ -327,7 +327,7 @@ function  displayLines(stream::IO, lines::Array{Einstein.Line,1})
     sb = sb * TableStrings.center(14, TableStrings.inUnits("energy"); na=4)
     sa = sa * TableStrings.flushleft(30, "List of multipoles"; na=4);             sb = sb * TableStrings.hBlank(34)
     println(stream, sa);    println(stream, sb);    println(stream, "  ", TableStrings.hLine(nx)) 
-    #   
+
     for  line in lines
         sa  = "  ";    isym = LevelSymmetry( line.initialLevel.J, line.initialLevel.parity)
                         fsym = LevelSymmetry( line.finalLevel.J,   line.finalLevel.parity)
@@ -343,7 +343,7 @@ function  displayLines(stream::IO, lines::Array{Einstein.Line,1})
     end
     println(stream, "  ", TableStrings.hLine(nx))
     println(stream, " ")
-    #
+
     return( nothing )
 end
 
@@ -372,7 +372,7 @@ function  displayRates(stream::IO, lines::Array{Einstein.Line,1})
     sa = sa * TableStrings.center(12, "Decay widths"; na=4);       
     sb = sb * TableStrings.center(12, TableStrings.inUnits("energy"); na=4)
     println(stream, sa);    println(stream, sb);    println(stream, "  ", TableStrings.hLine(nx)) 
-    #   
+
     for  line in lines
         for  ch in line.channels
             sa  = "  ";    isym = LevelSymmetry( line.initialLevel.J, line.initialLevel.parity)
@@ -409,7 +409,7 @@ function  displayRates(stream::IO, lines::Array{Einstein.Line,1})
         push!( rows, (label, Defaults.convertUnits("energy: from atomic", line.omega), line.photonRate) )
     end
     Basics.displayGaugeConsistency(stream, rows; caption="Einstein A coefficients")
-    #
+
     return( nothing )
 end
 

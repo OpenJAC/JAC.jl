@@ -474,7 +474,7 @@ function dumpDecayProbabilities(stream::IO, outcome::DecayYield.Outcome, subshEn
             idy = Cascade.dumpGeant4Index(subsh)
             sa  = "$idy            ";    sa = sa[1:13] * @sprintf("%.6e", rProbabilities[subsh])
             en  = subshEnergies[holeSubshell] - subshEnergies[subsh]
-            en  = Defaults.convertUnits("energy: from atomic to eV", en) * 1.0e-6 ## energies in MeV
+            en  = Defaults.convertUnits("energy: from atomic to eV", en) * 1.0e-6 # energies in MeV
             sa  = sa * " " * @sprintf("%.6e", abs(en));     println(stream, sa)
         end
     end
@@ -512,7 +512,7 @@ function dumpDecayProbabilities(stream::IO, outcome::DecayYield.Outcome, subshEn
                 ida = Cascade.dumpGeant4Index(subsha);    idb = Cascade.dumpGeant4Index(subshb)
                 sa  = "$ida            $idb            ";    sa = sa[1:26] * @sprintf("%.6e", aProbabilities[(subsha, subshb)])
                 en  = subshEnergies[holeSubshell] - subshEnergies[subsha] - subshEnergies[subshb]
-                en  = Defaults.convertUnits("energy: from atomic to eV", en) * 1.0e-6 ## energies in MeV
+                en  = Defaults.convertUnits("energy: from atomic to eV", en) * 1.0e-6 # energies in MeV
                 sa  = sa * " " * @sprintf("%.6e", abs(en));     println(stream, sa)
             end
         end
@@ -634,17 +634,17 @@ function generateBlocks(comp::Cascade.Computation, confs::Array{Configuration,1}
     # caller already passes in.  The machinery existed and was used in exactly one place (the
     # dielectronic-recombination cascade): ManyElectron.StartFromPrevious, honoured by
     # SelfConsistent.initializeBasis, which fills any subshell the seed lacks hydrogenically.
-    #
+
     # WHY BROADCAST AND NOT A CHAIN.  Until 15-Aug each block was seeded from the PREVIOUS block's converged
     # set.  That looks like the better guess -- adjacent blocks resemble each other more than either
     # resembles the initial ion -- but it makes the loop CARRY A DEPENDENCE, so the blocks cannot be run
     # concurrently.  Measured, the chain is not even faster.  Two cascades, RefinedSCA, MINIMUM OF FOUR runs
     # after a warm-up (total wall clock):
-    #
+
     #      case          chained     broadcast
     #      Mg 1s-hole    36.46 s      33.31 s     broadcast 9 % faster
     #      Ar 2p-hole    14.94 s      13.63 s     broadcast 9 % faster
-    #
+
     # Both give IDENTICAL line counts (Mg 99 Auger / 236 photon, Ar 21 / 55); the summed rates differ by
     # 3e-8 relative, i.e. two starting guesses landing at different points inside the same SCF convergence
     # tolerance.  Suite 48/48.
@@ -654,7 +654,7 @@ function generateBlocks(comp::Cascade.Computation, confs::Array{Configuration,1}
     # MEASUREMENT NOTE: single readings are worthless here.  The Ar case spreads 33 % between repeats
     # (13.63 - 18.14 s), and a first two-run comparison made the broadcast look 17 % SLOWER.  Take the
     # minimum of at least four.
-    #
+
     # Against no warm start at all (Mg): generateBlocks 25.61 s, total 45.18 s -- so the warm start is worth
     # about 1.28x on the whole cascade and has pulled generateBlocks from the 77.6 % of the 13-Aug profile
     # down to 48.5 %, which also caps what THREADING it could ever buy at roughly 2x.

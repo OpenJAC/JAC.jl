@@ -11,19 +11,19 @@ using  QuadGK, Printf, FastGaussQuadrature, JenaAtomicCalculator, ..Basics
 export Grid, Potential, Orbital, SingleElecSpectrum
 
 
-## Radial.AbstractMesh, with MeshNone, MeshGrasp and MeshGL, was REMOVED on 12-Aug-2026.
+# Radial.AbstractMesh, with MeshNone, MeshGrasp and MeshGL, was REMOVED on 12-Aug-2026.
 ##
-## Nothing in JAC could ever produce anything but a Gauss-Legendre mesh: meshType was assigned in exactly one
-## place, Radial.Grid(exponential::Bool), always to MeshGL(), and no file in src/, examples/ or test/ ever
-## passed the meshType= keyword.  All 26 MeshGrasp comparisons were therefore permanently false, and what
-## hung off them was substantial: 25 dead branches in module-RadialIntegrals.jl, the grid fields rp and rpor
-## (empty arrays on every grid that has ever existed), Math.integrateFit/integrateFitTransform, and the
-## Basics.integrate(::NewtonCotes/::SimpsonRule/::TrapezRule) family with its four exported type names.
+# Nothing in JAC could ever produce anything but a Gauss-Legendre mesh: meshType was assigned in exactly one
+# place, Radial.Grid(exponential::Bool), always to MeshGL(), and no file in src/, examples/ or test/ ever
+# passed the meshType= keyword.  All 26 MeshGrasp comparisons were therefore permanently false, and what
+# hung off them was substantial: 25 dead branches in module-RadialIntegrals.jl, the grid fields rp and rpor
+# (empty arrays on every grid that has ever existed), Math.integrateFit/integrateFitTransform, and the
+# Basics.integrate(::NewtonCotes/::SimpsonRule/::TrapezRule) family with its four exported type names.
 ##
-## That region had been unreachable long enough for a one-character typo to sit undetected in its central
-## routine -- Math.derivative read `JenaAtomicCalculatorDefaults.weights`, so its interior-point branch, the
-## common case, raised UndefVarError.  All of it is now gone, and Radial.Grid describes one thing: a
-## Gauss-Legendre mesh laid over B-spline break points, which is what every JAC calculation has actually used.
+# That region had been unreachable long enough for a one-character typo to sit undetected in its central
+# routine -- Math.derivative read `JenaAtomicCalculatorDefaults.weights`, so its interior-point branch, the
+# common case, raised UndefVarError.  All of it is now gone, and Radial.Grid describes one thing: a
+# Gauss-Legendre mesh laid over B-spline break points, which is what every JAC calculation has actually used.
 
 
 """
@@ -131,23 +131,23 @@ end
         `grid.mesh.r` at the point of use.  A literal `grid.r` is constant-folded and costs nothing.
 """
 function Base.getproperty(grid::Radial.Grid, s::Symbol)
-    ## the analytic definition
+    # the analytic definition
     s === :rnt       &&  return( getfield(grid, :parameters).rnt      )
     s === :h         &&  return( getfield(grid, :parameters).h        )
     s === :hp        &&  return( getfield(grid, :parameters).hp       )
     s === :NoPoints  &&  return( getfield(grid, :parameters).NoPoints )
     s === :orderGL   &&  return( getfield(grid, :parameters).orderGL  )
-    ## the knot sequence
+    # the knot sequence
     s === :tL        &&  return( getfield(grid, :knots).tL      )
     s === :tS        &&  return( getfield(grid, :knots).tS      )
     s === :orderL    &&  return( getfield(grid, :knots).orderL  )
     s === :orderS    &&  return( getfield(grid, :knots).orderS  )
-    ## ... and the four counts that used to be stored alongside it
+    # ... and the four counts that used to be stored alongside it
     s === :ntL       &&  return( length(getfield(grid, :knots).tL) )
     s === :ntS       &&  return( length(getfield(grid, :knots).tS) )
     s === :nsL       &&  return( length(getfield(grid, :knots).tL) - getfield(grid, :knots).orderL )
     s === :nsS       &&  return( length(getfield(grid, :knots).tS) - getfield(grid, :knots).orderS )
-    ## the mesh
+    # the mesh
     s === :r         &&  return( getfield(grid, :mesh).r  )
     s === :wr        &&  return( getfield(grid, :mesh).wr )
     return( getfield(grid, s) )
@@ -230,12 +230,12 @@ function Base.show(io::IO, grid::Radial.Grid)
 
     sa = Base.string(grid::Radial.Grid);    print(io, sa * "\n")
 
-    ## Indexed by the length of the MESH, not by NoPoints, which counts the physical grid of the definition
-    ## and is a different quantity even where the two happen to coincide.
+    # Indexed by the length of the MESH, not by NoPoints, which counts the physical grid of the definition
+    # and is a different quantity even where the two happen to coincide.
     nr = length(grid.r);   ntS = length(grid.tS);    if  nr < 6   return( nothing )    end
     print(io, "r:    ", grid.r[1:3],    "  ...  ", grid.r[nr-2:nr],         "\n")
     print(io, "wr:   ", grid.wr[1:3],   "  ...  ", grid.wr[nr-2:nr],        "\n") 
-    ## print(io, "tL:   ", grid.tL[1:3],   "  ...  ", grid.tL[ntL-2:ntL],   "\n") 
+    # print(io, "tL:   ", grid.tL[1:3],   "  ...  ", grid.tL[ntL-2:ntL],   "\n") 
     print(io, "tS:   ", grid.tS[1:3],   "  ...  ", grid.tS[ntS-2:ntS]           ) 
 end
 
@@ -261,10 +261,10 @@ function determineGrid(grid::Radial.Grid; printout::Bool=false)
     # Read the general parameters from the given grid
     rnt    = grid.rnt;       h      = grid.h;         hp      = grid.hp;        NoPoints = grid.NoPoints
     nth    = grid.orderGL;   orderL = grid.orderL;    orderS  = grid.orderS;    orderGL  = grid.orderGL
-    ## rphys is the PHYSICAL grid of the analytic definition below.  It exists only to place the B-spline
-    ## break points; the mesh that the returned Grid carries is the Gauss-Legendre one built further down.
-    ## Its derivatives rp and rpor used to be computed here and stored in the Grid, where they were then
-    ## overwritten with empty arrays for every grid JAC has ever built (12-Aug-2026).
+    # rphys is the PHYSICAL grid of the analytic definition below.  It exists only to place the B-spline
+    # break points; the mesh that the returned Grid carries is the Gauss-Legendre one built further down.
+    # Its derivatives rp and rpor used to be computed here and stored in the Grid, where they were then
+    # overwritten with empty arrays for every grid JAC has ever built (12-Aug-2026).
     nr     = grid.NoPoints;  rphys  = zeros(nr);      nsL = 0;   nsS = 0
         
     # Ensure that the largest grid points is always consistent with the largest break point of the B-splines
@@ -311,7 +311,7 @@ function determineGrid(grid::Radial.Grid; printout::Bool=false)
             rphys[i] = rn
         end
     else
-        ## Reachable only for hp = NaN, since every other Float64 satisfies one of the two branches above.
+        # Reachable only for hp = NaN, since every other Float64 satisfies one of the two branches above.
         error("Radial.determineGrid(): hp = $hp is not a usable asymptotic step size; use hp = 0 for a " *
               "purely exponential grid or hp > 0 for a log-linear one.")
     end
@@ -337,7 +337,7 @@ function determineGrid(grid::Radial.Grid; printout::Bool=false)
         end
         rlow = tL[i]
     end
-    #
+
     if  printout
         println("Define a radial grid with $nr Gauss-Legendre mesh points")
         println(" [rnt=" * @sprintf("%.3e",rnt) * ", h=" * @sprintf("%.3e",h) *
@@ -346,9 +346,9 @@ function determineGrid(grid::Radial.Grid; printout::Bool=false)
                 "ntL=$ntL, ntS=$ntS] ")
     end
 
-    ## ntL, ntS, nsL and nsS are no longer stored; they follow from the knots.  They are still computed
-    ## above because the printout below reports them, and they are asserted against the properties that
-    ## replace them, so that the two definitions cannot drift apart unnoticed.
+    # ntL, ntS, nsL and nsS are no longer stored; they follow from the knots.  They are still computed
+    # above because the printout below reports them, and they are asserted against the properties that
+    # replace them, so that the two definitions cannot drift apart unnoticed.
     newGrid = Grid( GridParameters(rnt, h, hp, NoPoints, orderGL), KnotSequence(tL, tS, orderL, orderS),
                     RadialMesh(r, wr) )
     @assert newGrid.ntL == ntL && newGrid.ntS == ntS && newGrid.nsL == nsL && newGrid.nsS == nsS
@@ -390,7 +390,7 @@ function GridGL(::GridGaussLegendreQED, orderGL::Int64; printout::Bool=false)
     for i = 1:100000
         # Define the exponential increase (1.5) and the maximum size (infinity=150.)
         txup = txlow * 1.3;    if  txup > 100.   break   end
-        #
+
         wax = QuadGK.gauss(orderGL);   tx = wax[1];   wtx = wax[2] 
         bma  = txup - txlow;   bpa = txup + txlow
         for  j = 1:orderGL
@@ -454,10 +454,10 @@ end
 function GridGH(orderGH::Int64; printout::Bool=false)
     t = Float64[];    wt = Float64[]
     
-    ## Qualified, and FastGaussQuadrature added to the module's `using` list (12-Aug-2026).  The call read
-    ## `gausshermite(orderGH)` with the package named only in a comment, so this constructor raised an
-    ## UndefVarError every time it was reached -- it cannot ever have worked.  Three call sites in
-    ## module-Pulse.jl reach it.
+    # Qualified, and FastGaussQuadrature added to the module's `using` list (12-Aug-2026).  The call read
+    # `gausshermite(orderGH)` with the package named only in a comment, so this constructor raised an
+    # UndefVarError every time it was reached -- it cannot ever have worked.  Three call sites in
+    # module-Pulse.jl reach it.
     wax = FastGaussQuadrature.gausshermite(orderGH)
     
     t = wax[1]
@@ -505,10 +505,10 @@ function Base.show(io::IO, density::Radial.Density)
 
     sa = Base.string(density);    print(io, sa * "\n")
 
-    ## Both the head/tail slices and the field name were wrong here (12-Aug-2026).  This method was copied
-    ## from Radial.Potential and kept its `Zr`, a field Radial.Density does not have, so printing any density
-    ## raised a FieldError; and the guard `n < 6` did not cover the [1:23] slices below it, so 6 <= n < 46
-    ## gave a BoundsError.  The window is now taken from n itself.
+    # Both the head/tail slices and the field name were wrong here (12-Aug-2026).  This method was copied
+    # from Radial.Potential and kept its `Zr`, a field Radial.Density does not have, so printing any density
+    # raised a FieldError; and the guard `n < 6` did not cover the [1:23] slices below it, so 6 <= n < 46
+    # gave a BoundsError.  The window is now taken from n itself.
     n = length(density.Dr);                    if  n < 6   return( nothing )    end
     nw = min(23, div(n, 2))
     print(io, "Dr:    ", density.Dr[1:nw],    "  ...  ", density.Dr[n-nw+1:n],    "\n")
@@ -554,8 +554,8 @@ function Base.show(io::IO, potential::Radial.Potential)
 
     sa = Base.string(potential);    print(io, sa * "\n")
 
-    ## The guard `n < 6` did not cover the [1:23] slices, so 6 <= n < 46 gave a BoundsError (12-Aug-2026);
-    ## the window is now taken from n itself.
+    # The guard `n < 6` did not cover the [1:23] slices, so 6 <= n < 46 gave a BoundsError (12-Aug-2026);
+    # the window is now taken from n itself.
     n = length(potential.Zr);                    if  n < 6   return( nothing )    end
     nw = min(23, div(n, 2))
     print(io, "Zr:    ", potential.Zr[1:nw],    "  ...  ", potential.Zr[n-nw+1:n],    "\n")
@@ -757,29 +757,29 @@ function Base.show(io::IO, spectrum::SingleElecSpectrum)
 end
 
 
-## Radial.OrbitalBunge1993, Radial.compute_McLean1981 and Radial.OrbitalPrimitiveSlater were REMOVED on
-## 12-Aug-2026.  None of the three could run, and none had a caller:
+# Radial.OrbitalBunge1993, Radial.compute_McLean1981 and Radial.OrbitalPrimitiveSlater were REMOVED on
+# 12-Aug-2026.  None of the three could run, and none had a caller:
 ##
-##   * the first two called Basics.store("orbital functions: NR, Bunge (1993)" / "... McLean (1981)", Z),
-##     and Basics.store is DEFINED NOWHERE IN JAC.  It was meant to hold the Roothaan-Hartree-Fock
-##     coefficient tables of Bunge et al., ADNDT 53 (1993) 113 and McLean & McLean, ADNDT 26 (1981) 197;
-##     that data has never been part of this repository, so the functions were never more than a sketch;
-##   * OrbitalBunge1993 and OrbitalPrimitiveSlater additionally read grid.rp -- an array that was empty on
-##     every grid JAC ever built and no longer exists at all -- and constructed Radial.Orbital with SEVEN
-##     arguments where it has nine fields.
+#   * the first two called Basics.store("orbital functions: NR, Bunge (1993)" / "... McLean (1981)", Z),
+#     and Basics.store is DEFINED NOWHERE IN JAC.  It was meant to hold the Roothaan-Hartree-Fock
+#     coefficient tables of Bunge et al., ADNDT 53 (1993) 113 and McLean & McLean, ADNDT 26 (1981) 197;
+#     that data has never been part of this repository, so the functions were never more than a sketch;
+#   * OrbitalBunge1993 and OrbitalPrimitiveSlater additionally read grid.rp -- an array that was empty on
+#     every grid JAC ever built and no longer exists at all -- and constructed Radial.Orbital with SEVEN
+#     arguments where it has nine fields.
 ##
-## DECIDED 13-Aug-2026 by the maintainer: the Bunge and McLean routes are RETIRED, not deferred, and the
-## compute themes RadialOrbitalBunge1993 and RadialOrbitalMcLean1981 have been removed with them.  Three
-## reasons, none of them the missing table itself: both sets are NON-RELATIVISTIC while JAC is a Dirac code,
-## and McLean's half covers Z = 55-92, exactly where that matters most; neither reaches beyond Z = 92 or past
-## neutral ground configurations, which is most of what JAC actually computes; and Anderson acceleration has
-## since removed much of the convergence cost that a better start orbital would have bought.  Should analytic
-## start orbitals be wanted, use ManyElectron.StartFromThomasFermi with the screened potential
-## Basics.ThomasFermiField (added 13-Aug-2026) -- it needs no external data and works at any Z, including the
-## superheavy region these tables cannot reach.
+# DECIDED 13-Aug-2026 by the maintainer: the Bunge and McLean routes are RETIRED, not deferred, and the
+# compute themes RadialOrbitalBunge1993 and RadialOrbitalMcLean1981 have been removed with them.  Three
+# reasons, none of them the missing table itself: both sets are NON-RELATIVISTIC while JAC is a Dirac code,
+# and McLean's half covers Z = 55-92, exactly where that matters most; neither reaches beyond Z = 92 or past
+# neutral ground configurations, which is most of what JAC actually computes; and Anderson acceleration has
+# since removed much of the convergence cost that a better start orbital would have bought.  Should analytic
+# start orbitals be wanted, use ManyElectron.StartFromThomasFermi with the screened potential
+# Basics.ThomasFermiField (added 13-Aug-2026) -- it needs no external data and works at any Z, including the
+# superheavy region these tables cannot reach.
 ##
-## The working route to hydrogenic start orbitals remains Bsplines.generateOrbitalsHydrogenic, which is what
-## AsfSettings(..., StartFromHydrogenic(), ...) already uses throughout JAC.
+# The working route to hydrogenic start orbitals remains Bsplines.generateOrbitalsHydrogenic, which is what
+# AsfSettings(..., StartFromHydrogenic(), ...) already uses throughout JAC.
 
 
 
@@ -798,9 +798,9 @@ end
         A Zbar::Float64 is returned.
 """
 function determineZbar(pot::Radial.Potential) 
-    ## The sampling loop read pot.Zr[mtp] rather than pot.Zr[i], so all nx samples were the SAME number
-    ## (12-Aug-2026).  The mean was therefore just Zr[mtp] and the printed spread was identically zero --
-    ## a quality indicator that could never fire, whatever the potential did near the outer boundary.
+    # The sampling loop read pot.Zr[mtp] rather than pot.Zr[i], so all nx samples were the SAME number
+    # (12-Aug-2026).  The mean was therefore just Zr[mtp] and the printed spread was identically zero --
+    # a quality indicator that could never fire, whatever the potential did near the outer boundary.
     nx = 5   # Number of grid points for determining the effective charge Zbar
     mtp = size( pot.Zr, 1);    meanZbar = zeros(nx);    devsZbar = zeros(nx);   ny = 0
     for  i = mtp-nx+1:mtp
@@ -934,8 +934,8 @@ function generateGrid(grid::Radial.Grid; boxSize::Union{Nothing,Float64}=nothing
                                          maximumPrincipalQN::Union{Nothing,Int64}=nothing,
                                          lValue::Int64=0, Zeff::Union{Nothing,Float64}=nothing)
 
-    ## "Only one of these may be selected" was documented but never enforced, and calling with NO scheme fell
-    ## through to an undefined newGrid.  Both are now errors that say so (13-Aug-2026).
+    # "Only one of these may be selected" was documented but never enforced, and calling with NO scheme fell
+    # through to an undefined newGrid.  Both are now errors that say so (13-Aug-2026).
     schemes = [("boxSize", !isnothing(boxSize)), ("boxSizeWithZeroWeights", !isnothing(boxSizeWithZeroWeights)),
                ("maximumFreeElectronEnergy", !isnothing(maximumFreeElectronEnergy)),
                ("maximumPrincipalQN", !isnothing(maximumPrincipalQN))]
@@ -948,7 +948,7 @@ function generateGrid(grid::Radial.Grid; boxSize::Union{Nothing,Float64}=nothing
               "They set different grid parameters from different physical requirements and cannot be " *
               "combined; give exactly one.")
     end
-    #
+
     if  !isnothing(boxSize)
         # A fixed box size [a.u.], with rnt rescaled so that the last break point lands exactly on it.
         newGrid = Radial.Grid(grid; rbox=boxSize);    rnt = newGrid.rnt * boxSize / newGrid.tL[end]
@@ -957,7 +957,7 @@ function generateGrid(grid::Radial.Grid; boxSize::Union{Nothing,Float64}=nothing
                 "\n   tL = $(newGrid.tL)   \n   tS = $(newGrid.tS)"  *
                 "\n>> Note that the last grid point r[end] is always slightly smaller as it refers " *
                 "to the last GL (zero of) integration along r.")
-        #
+
     elseif  !isnothing(boxSizeWithZeroWeights)
         # Zero the integration weights beyond the box.  This truncates INTEGRALS and does NOT confine the
         # orbitals; see the docstring.
@@ -976,7 +976,7 @@ function generateGrid(grid::Radial.Grid; boxSize::Union{Nothing,Float64}=nothing
                 "\n>> NOTE that this truncates the INTEGRALS only; the B-spline basis and hence the orbitals " *
                 "\n   extend beyond the box unchanged.  This is not a confined atom." *
                 "\n>> The last non-zero weight sits at R = $R a.u.")
-        #
+
     elseif  !isnothing(maximumFreeElectronEnergy)
         wavenb      = sqrt( 2maximumFreeElectronEnergy + maximumFreeElectronEnergy * Defaults.getDefaults("alpha")^2 )
         wavelgth    = 2pi / wavenb;     hp = wavelgth / 40
@@ -1019,7 +1019,7 @@ function generateGrid(grid::Radial.Grid; boxSize::Union{Nothing,Float64}=nothing
                     @sprintf("%.2f", 4.0*wavelgth) * " a.u. would give 4.  It does NOT matter for the default " *
                     "Coulomb-function normalization,\n>>   which was measured insensitive to the box.")
         end
-        #
+
     elseif  !isnothing(maximumPrincipalQN)
         n = maximumPrincipalQN
         n < 1                  &&  error("Radial.generateGrid(): maximumPrincipalQN = $n must be >= 1.")

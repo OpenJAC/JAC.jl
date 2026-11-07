@@ -386,7 +386,7 @@ function solve(multipole::EmMultipole, gauge::EmGauge, omega::Float64, targetSub
     #      it is a SILENT error class** -- hand in AL or EOL orbitals with a DFS potential, or frozen-core
     #      orbitals with a core-Hartree one, and every number below is quietly wrong with no symptom.  (I made
     #      exactly that mistake in a core-polarizability script the same day and nothing told me.)
-    #
+
     #      TWO NUMBERS, both cheap next to the SVD the pole guard already does:
     #        * the REPRESENTATION defect -- how much of the orbital the B-spline basis of this channel can
     #          hold at all.  Large means the grid cannot carry the orbital and nothing else matters.
@@ -487,26 +487,26 @@ function solve(multipole::EmMultipole, gauge::EmGauge, omega::Float64, targetSub
     #      `RandomPhase` -- its SCREENED counterpart.
     #      `omega` still sets the energy shift, so omega = 0 is the genuinely static case;  the gauge argument
     #      is then unused, since a frequency-independent operator has no gauge freedom.
-    #
+
     #      **HOW TO TURN THE RESULTING chi INTO A POLARIZABILITY, with the prefactor MEASURED rather than
     #      argued (14-Oct-2026).**  chi solves (H - E_a) chi = source, so contracting it back with the same
     #      operator gives sum_n |<a||P||n>|^2/(E_n - E_a), i.e. MINUS the Angel-Sandars sum.  For a
     #      ONE-ELECTRON level,
-    #
+
     #            alpha_0 = (2/3) * sum_kappa  InteractionStrength.eMultipole(1, a, chi_kappa, grid)
-    #
+
     #      summed over EVERY kappa the rank-1 operator reaches from a (p_1/2 AND p_3/2 for an s state).  The
     #      2/3 is not a fudge:  `eMultipole` divides by sqrt(2j+1) of its FIRST argument and is applied twice
     #      -- once building the source, once contracting back -- which gives 1/(2j_a+1) = 1/(2J+1) for a
     #      one-electron level and cancels the (2J+1) in the Angel-Sandars denominator, leaving 2/3.
-    #
+
     #      VALIDATED, H 1s:  alpha_0 = 4.49975 against the EXACT 4.500000, a relative 5.5e-05, from TWO
     #      solves.  **And it is BOX-INDEPENDENT to nine digits** -- 2.24984358 and 4.49978367 for the two
     #      channels at rbox = 40, 60, 80 and 120 a.u. (487 to 1255 splines).  That is the point of the whole
     #      thing: chi saturates the channel, so there is no perturber set to choose and no box to match, where
     #      the sum-over-states route needs np to n ~ 16-20 and Rule-12 care to reach the same number
     #      (3.49 at 2p..4p, 3.63 at 2p..8p, 4.4997 at 2p..16p).
-    #
+
     #      A MANY-ELECTRON level needs the level factor put back (Rule 18) and the occupation summed over, and
     #      that has NOT been done here -- only the one-electron case above is validated.
     driveKernel = staticDrive ?

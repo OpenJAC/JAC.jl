@@ -30,17 +30,17 @@ GBL_EOL_UNSCALED_OFFDIAGONAL = false
 
 # Re-orthonormalize the same-kappa orbitals after the damping step. DEFAULT TRUE since 10-Aug-2026;
 # the switch is kept only so the two behaviours can still be compared.
-#
+
 # Hamiltonian.projectHamiltonian makes each raw eigenvector orthogonal to the already-processed same-kappa
 # orbitals, but the damping that follows, mixed = 0.5*old + 0.5*raw, mixes it back with the PREVIOUS
 # iteration's vector, which is NOT orthogonal to them -- and nothing restored it. The CSF expansion assumes
 # an orthonormal orbital set, so the resulting energies were not legitimate variational numbers.
 # Measured on Li 1s^2 2s + 1s^2 3s + 1s^2 3d (three s-orbitals in kappa = -1), converged:
-#
+
 #                     <2s|3s>      <1s|2s>      E
 #     as it was      -1.128e-03   -5.558e-05   -7.4335291982
 #     re-orthonorm.  -1.373e-11   -5.358e-13   -7.4335284248
-#
+
 # The energy RISES by 7.7e-07 Ha, which is the honest direction: the non-orthogonal set was giving a
 # slightly-too-low number. The whole approved test suite is blind to this (44/44 either way), which is why
 # it went unnoticed -- TestFrames.testMethod_OrbitalOrthonormality now asserts it directly.
@@ -51,18 +51,18 @@ GBL_SCF_REORTHONORMALIZE = true
 # Anderson depth for the AVERAGE-LEVEL field, separate from the mean-field one above because the iterate is
 # different: there it is the screening potential, here the orbitals themselves.  0 = the plain damped
 # iteration exactly as before.
-#
+
 # ON since 17-Aug-2026, at the same depth 2 the mean-field driver uses.  It reaches the SAME solution --
 # Ar 3s^2 3p^6 agrees to 4.3e-9 once accuracyScf is tight enough to converge at all -- and is 1.4x to 1.9x
 # faster, the gain GROWING with the accuracy demanded (1.47x at 1e-6, 1.79x at 1e-9, 1.89x at 1e-12).
 # On Be 4-config it is also the more STABLE of the two: across accuracyScf = 1e-6, 1e-9, 1e-12 it drifts by
 # 1e-5 where the plain iteration swings 6.5e-5 NON-MONOTONICALLY, and it gets there in 211 s against 1093 s.
-#
+
 # It could not be switched on until 18aaf5f.  Anderson perturbs the orbital tails just enough to move the
 # old mtp cut, which made TestFrames.testMethod_OrbitalOrthonormality report 6.5e-08 where the plain
 # iteration gave 6.8e-10 -- an artefact of the truncated integral, not of the orbitals, which were
 # orthonormal to 1e-17 throughout.  With the tails kept, both give ~1e-16.
-#
+
 # STILL OPEN, and NOT fixed by any of this: plain AL does not converge for a multi-configuration basis with
 # near-degenerate CSFs (Be 4-config), and the default accuracyScf = 1e-6 hides it by stopping early.
 # Tightening the tolerance is therefore not a general cure -- right for Ar-like cases, worse for Be.
@@ -71,19 +71,19 @@ GBL_AL_ANDERSON_DEPTH = 2
 # Anderson depth for the mean-field (DFS/HS) SCF.  0 = the plain iteration exactly as before; a positive
 # value routes performSCF to SelfConsistent.solveMeanFieldBasisAnderson, which reaches the SAME self-consistent
 # solution in fewer iterations.  DEFAULT 0 so that nothing changes unless it is asked for.
-#
+
 # The plain iteration converges linearly, the residual shrinking by a constant factor r per step; measured
 # 12-Aug-2026, r = 0.44 (Ar 1s^2..3p^6), 0.57 (Ne 1s^2 2s^2 2p^6), 0.69 (Fe [Ar] 3d^6 4s^2).  Anderson
 # mixing builds the next screening potential from a least-squares combination of the last few iterates and
 # their residuals, cancelling the slowest-decaying error rather than waiting for it to decay:
-#
+
 #                        plain        depth 2      agreement of the converged orbital energies
 #     Ne  2s^2 2p^6      28 it        13 it        7.9e-07
 #     Ar  3s^2 3p^6      23 it        14 it        6.9e-09
 #     Fe  3d^6 4s^2      45 it        18 it        6.5e-07
 #     Ne+ 1s hole        17 it        11 it        1.2e-07
 #     Ar+ 1s hole        14 it        11 it        1.2e-07   (added 30-Aug-2026)
-#
+
 # THE 30-Aug ROW WAS TAKEN WITH maxIterationsScf = 200, AND THAT IS NOT A DETAIL. AsfSettings() defaults the
 # ceiling to 24, and the plain Ne iteration needs 28: a first attempt at this measurement reported "24 it" for
 # Ne, which is the CEILING and not a convergence count, beside a NOT-CONVERGED flag easy to read as a property
@@ -95,12 +95,12 @@ GBL_AL_ANDERSON_DEPTH = 2
 # Ar+ is the SMALLEST gain of the five (1.27x, against 2.15x Ne, 1.64x Ar, 2.50x Fe, 1.55x Ne+), consistent
 # with Anderson helping most where the plain iteration converges slowest -- a 1s-hole system already converges
 # quickly.
-#
+
 # Depth 2 is the measured optimum; 3 is nearly equal, and LARGER IS WORSE (Ne: 24 it at depth 5, 36 at 12),
 # the usual ill-conditioning of a long Anderson history.  Note that depth 0 in the Anderson driver itself is a
 # JACOBI sweep and does NOT converge in 60 iterations -- the Gauss-Seidel ordering of the original driver is
 # what makes the plain iteration viable at all.
-#
+
 # STANDARD SINCE 12-Aug-2026 (was 0 = the plain iteration when this was first added).  Setting it to 0
 # restores the old path exactly, which is how the two were compared.  Making it the default is a deliberate
 # editorial act: both iterations reach the same self-consistent solution, but only to within accuracyScf,

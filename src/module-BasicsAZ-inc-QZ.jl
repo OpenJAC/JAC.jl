@@ -226,20 +226,20 @@ function Basics.readMixFileRelci(filename::String, basis::Basis)
     sa = readline(f);   NoElectrons = Base.parse(Int64, strip(sa[1:6]) );    NoCsf = Base.parse(Int64, strip(sa[7:12]) ) 
                         NoSubshells = Base.parse(Int64, strip(sa[13:18]) ) 
     sa = readline(f);   NoLevels    = Base.parse(Int64, strip(sa[1:6]) )
-    #
+
     sa = readline(f)
     sa = readline(f);   list2J = AngularJ64[AngularJ64(0)  for  i = 1:NoLevels];    listp = Basics.Parity[Basics.plus  for  i = 1:NoLevels]
     for  i = 1:NoLevels
         jj = Base.parse(Int64, strip(sa[(i-1)*6+1:(i-1)*6+5]) );   list2J[i] = AngularJ64(jj//2)
         pp = string( sa[(i-1)*6+6] );                              listp[i]  = Basics.Parity( pp )
     end
-    #
+
     sa   = readline(f);   listEnergy = Float64[0.  for  i = 1:NoLevels]
     enav = Base.parse(Float64, strip(sa[1:26]) )
     for  i = 1:NoLevels
         en = Base.parse(Float64, strip(sa[26i+1:26i+26]) );   listEnergy[i] = en
     end
-    #
+
     eigenvectors = zeros(NoCsf,NoLevels)
     for  j = 1:NoCsf
         sa   = readline(f)
@@ -247,7 +247,7 @@ function Basics.readMixFileRelci(filename::String, basis::Basis)
         cm = Base.parse(Float64, strip(sa[16*(i-1)+1:16(i-1)+16]) );   eigenvectors[j,i] = cm
         end
     end
-    #
+
     for  j = 1:NoLevels
         mc = Float64[0.  for  i = 1:NoCsf]
         for  i = 1:NoCsf    mc[i] = eigenvectors[i,j]    end
@@ -438,7 +438,7 @@ function Basics.recommendedGrid(occupations::Dict{Shell,Int64}, Z::Float64;
     for  (sh, occ)  in occupations
         if  occ <= 0    continue    end
         n = sh.n;   l = sh.l
-        ## the charge felt at the orbital's own maximum, but never less than the charge felt at infinity
+        # the charge felt at the orbital's own maximum, but never less than the charge felt at infinity
         Zeff = max( Z - NoElectrons + 1., Z - Basics.slaterScreening(sh, occupations), 1.0 )
         wa   = (n*n/Zeff) * (1.0 + sqrt( max(0., 1.0 - l*(l+1)/(n*n)) ))  +  tailFactor * n / Zeff
         if  wa > rMax   rMax = wa;   outer = sh;   ZeffOuter = Zeff    end
@@ -454,57 +454,57 @@ function Basics.recommendedGrid(occupations::Dict{Shell,Int64}, Z::Float64;
     # however large the box, so the B-spline basis does not grow with it -- and it is the SIZE OF THAT BASIS,
     # neither the box nor the sampling of the wavelength, that decides whether an outgoing electron is
     # represented.
-    #
+
     # MEASURED 01-Sep-2026 on H 1s photoionization at omega/I = 2.  The two gauges are EQUAL for exact hydrogenic
     # wavefunctions, so every departure from 1.00000 below is error and nothing else:
-    #
+
     #     rbox     hp       points per oscillation   nsL     Cou/Bab
     #     18.09    0.060     104                      95     1.067     <- what this function returns by default
     #     18.09    0.030     209                     139     1.002
     #     30.00    0.060     104                     125     1.00001
-    #
+
     # NOTE WHAT THAT RULES OUT, because two plausible criteria are both wrong.  104 points per oscillation FAILS
     # at rbox = 18.09 and PASSES at rbox = 30, so `Continuum.gridConsistency`'s rule -- 15 points across the
     # shortest de Broglie wavelength -- is not the relevant one and satisfying it establishes nothing here.  Nor
     # is the box alone at fault: with hp = 5e-3 even rbox = 12 gives 1.002.
-    #
+
     # AND THE FAILURE IS SILENT.  `Continuum.gridConsistency` checks the STEP against the wavelength;
     # `Bsplines.checkGridRepresentation` and `Bsplines.checkOrbitalBox` check BOUND orbitals.  A grid that passes
     # all three can still put the photoionization gauges 6.7 % apart and the Babushkin cross section 5.9 % low.
     # This is the `example-Df.jl` lesson inverted: there the step was too coarse for a 77 Ha electron and
     # gridConsistency REFUSED the run; here nothing refuses and the numbers are merely wrong.
-    #
+
     # WHAT NOT TO DO ABOUT IT, tried and rejected the same day: `Radial.generateGrid(grid;
     # maximumFreeElectronEnergy = ...)` is the obvious remedy and makes this case WORSE.  RE-MEASURED 06-Nov-2026,
     # after that routine was rebuilt to target 40 points per wavelength and to HOLD the box rather than let it grow:
     # for eps = 0.5 Ha it now returns hp = 0.157 -- still 2.6 times COARSER than the 0.060 that already fails -- and,
     # because the box is held while the step grows, nsL FALLS from 95 to 69.  Raising the target did not make this
     # the right remedy here; it is calibrated against the WAVELENGTH, which is the criterion this measurement refutes.
-    #
+
     # AND A SECOND MEASUREMENT, 17-Sep-2026, BECAUSE THE ONE ABOVE IS NEUTRAL HYDROGEN AND ITS DIAGNOSTIC DOES NOT
     # CARRY OVER.  RR into 1s 4s of H-like Bi at 1 eV, with the box held FIXED at 142 a.u. and only hp refined:
-    #
+
     #     hp       NoPts    nsL     sigma_C [b]     B/C
     #     0.472      665    101      3.8338e-10    0.994
     #     0.200     1071    159      5.0133e-09    0.983
     #     0.100     1785    261      9.7472e-03    1.000
     #     0.050     3199    463      1.1324e-02    1.005
     #     0.025     6027    867      1.1324e-02    1.005
-    #
+
     # SEVEN ORDERS OF MAGNITUDE, AND THE TWO GAUGES AGREE TO BETTER THAN 2 % AT EVERY SINGLE ROW.  The gauge ratio
     # is what exposed the neutral case above, where it ran 1.067 -> 1.002; here it is BLIND.  A reader who takes
     # the hydrogen table to mean "compare the gauges and you will be warned" gets no warning whatever while the
     # cross section is wrong by a factor of 10^7.  HALVING hp UNTIL THE ANSWER STOPS MOVING IS THE ONLY CHECK.
-    #
+
     # Two controls make that unambiguous rather than suggestive.  The BOUND levels of 1s 4s are stable to NINE
     # figures across these grids, so the bound side is innocent; and the convergence tracks `nsL` exactly as the
     # note above predicts, so this measurement CONFIRMS that explanation rather than competing with it -- it is the
     # size of the basis that decides the matter, not the mesh against the wavelength.
-    #
+
     # THE TWO REGIMES DIFFER IN SEVERITY AND IN WHAT GIVES THEM AWAY, which is why both are kept: 6.7 % with a
     # gauge ratio that announces it, against seven orders with a gauge ratio that does not.  6.7 % is an accuracy
     # question; seven orders is a wrong answer.
-    #
+
     # SO: A CALLER DOING CONTINUUM WORK MUST BUILD THE GRID BY HAND AND CHECK CONVERGENCE, by halving hp until the
     # answer stops moving.  No rule here is validated well enough to do it for them, and the SECOND measurement
     # strengthens that rather than weakening it: the controlling parameter is not the same in the two regimes, so
@@ -528,13 +528,13 @@ function Basics.recommendedGrid(occupations::Dict{Shell,Int64}, Z::Float64;
     # keeps the number of outer points roughly FIXED, so the spline basis does not grow with the box and each
     # spline is asked to cover more space.  That is the opposite of what asking for a bigger box looks like it
     # does, and it is silent.
-    #
+
     # MEASURED on the rank-2 shielding factor, which is a sum over the whole B-spline pseudo-spectrum and so is
     # the most exposed quantity yet found: Th(4+) [Rn] on the default grid gives gamma_inf = -185.0, and enlarging
     # the box to 30, 61 and 91 a.u. with hp left to scale gives -135.6, +30.2 and +287.1 -- the SIGN changes.  The
     # same enlargement with hp HELD FIXED, so that nsL grows from 95 to 250, reproduces -184.96.  The box was
     # never the variable; the spline density nsL/rbox was.
-    #
+
     # AND IT WARNS ONLY WHERE THE ACCIDENT CAN HAPPEN: rbox GIVEN AND hp LEFT ALONE.  A density threshold on its
     # own is NOT usable here, and the measurement that shows why was nearly shipped as a false positive -- Ca(+)
     # [Ar] 4s/4p on its OWN default grid sits at 2.85 splines per a.u., because a 4p electron seeing Zeff ~ 2
@@ -543,13 +543,13 @@ function Basics.recommendedGrid(occupations::Dict{Shell,Int64}, Z::Float64;
     # box is, because the caller asked for a better basis and got a thinner one.  Only the second is warned about,
     # and the threshold is then the measured floor of 4 splines per a.u. rather than something gentler: Th(4+) at
     # rbox = 30 with hp left to scale reaches 3.18 per a.u. and returns -135.6 against -184.96, so 3 would miss it.
-    #
+
     # WHAT THE DEFAULT IS WORTH, measured 05-Oct-2026 by multiplying the divisor by 8 and watching cost and value:
-    #
+
     #     quantity                                 divisor 300 -> 2400     relative change     cost
     #     Th(4+) [Rn] level energy                 -26508.790380 Ha        3.4e-08             6.4x
     #     Ca(+) 4p -> 4s  A(E1) Coulomb              3.36914e-09 1/s       1.4e-04             9.3x
-    #
+
     # An order of magnitude in time for one part in 10^4.  THAT IS WHY THE DIVISOR IS NOT RAISED: a bound energy is
     # variational and a bound rate samples the orbitals where they are large, while a sum over the whole B-spline
     # pseudo-spectrum -- a shielding factor, a polarizability, a continuum normalization -- weights the high-lying
@@ -739,12 +739,12 @@ function Basics.slaterScreening(sh::Shell, occupations::Dict{Shell,Int64})
     n = sh.n;   l = sh.l;   screening = 0.
     for  (osh, occ)  in occupations
         if  occ <= 0    continue    end
-        ## the electron under consideration does not screen itself
+        # the electron under consideration does not screen itself
         no = (osh == sh) ? occ - 1 : occ
         if  no <= 0     continue    end
         if      l <= 1
             if      osh.n == n   &&  osh.l <= 1     screening = screening + (n == 1 ? 0.30 : 0.35) * no
-            elseif  osh.n == n                      ## d and f of the same n lie to the RIGHT and do not screen
+            elseif  osh.n == n                      # d and f of the same n lie to the RIGHT and do not screen
             elseif  osh.n == n - 1                  screening = screening + 0.85 * no
             elseif  osh.n <= n - 2                  screening = screening + 1.00 * no
             end
@@ -949,19 +949,19 @@ function Basics.tabulateKappaSymmetryEnergiesDirac(kappa::Int64, evalues::Array{
 end
 
 
-## RETIRED 15-Aug-2026: `Basics.tools(dict::Dict)`, together with the whole `module-Tools.jl` it was the
-## entry point to.  The intention, recoverable from the stubs: hand it the results dictionary of a
-## computation and get a MENU of small interactive helpers -- `module-Tools.jl` carried a commented-out
-## `using Interact`, i.e. the Julia widget package for Jupyter/Pluto, so this was to be a notebook toolbox.
-## The one concrete task ever sketched was `taskGridCalculatorResults(rnt, h, hp, rmax)`, a calculator for
-## radial-grid parameters -- and THAT idea now exists properly as Radial.generateGrid(grid;
-## maximumPrincipalQN=..), which derives the box from the orbital's turning point (Rule 12).  Interact was
-## never added as a dependency, the menu was never written, and the only method printed a placeholder.
+# RETIRED 15-Aug-2026: `Basics.tools(dict::Dict)`, together with the whole `module-Tools.jl` it was the
+# entry point to.  The intention, recoverable from the stubs: hand it the results dictionary of a
+# computation and get a MENU of small interactive helpers -- `module-Tools.jl` carried a commented-out
+# `using Interact`, i.e. the Julia widget package for Jupyter/Pluto, so this was to be a notebook toolbox.
+# The one concrete task ever sketched was `taskGridCalculatorResults(rnt, h, hp, rmax)`, a calculator for
+# radial-grid parameters -- and THAT idea now exists properly as Radial.generateGrid(grid;
+# maximumPrincipalQN=..), which derives the box from the orbital's turning point (Rule 12).  Interact was
+# never added as a dependency, the menu was never written, and the only method printed a placeholder.
 
 
-## RETIRED 14-Aug-2026: `yesno(question::String, sa::String)`, an interactive yes/no prompt.  It had no
-## caller anywhere in JAC, and it could not have run if it had: its body read `readline(STDIN)`, and STDIN
-## was renamed to stdin in Julia 1.0, so the first call would have raised UndefVarError.  It also carried a
-## docstring header reading `Basics.yesno` although the function was written plainly and therefore landed in
-## BasicsAZ -- which is how it was found, by the docstring-pointer check of 2c1cd5d.
+# RETIRED 14-Aug-2026: `yesno(question::String, sa::String)`, an interactive yes/no prompt.  It had no
+# caller anywhere in JAC, and it could not have run if it had: its body read `readline(STDIN)`, and STDIN
+# was renamed to stdin in Julia 1.0, so the first call would have raised UndefVarError.  It also carried a
+# docstring header reading `Basics.yesno` although the function was written plainly and therefore landed in
+# BasicsAZ -- which is how it was found, by the docstring-pointer check of 2c1cd5d.
 

@@ -9,9 +9,9 @@ using   Distributed, FastGaussQuadrature, GSL, SpecialFunctions, Printf,
         ..AngularMomentum, ..Basics, ..Bsplines, ..Continuum, ..Defaults, ..InteractionStrength, ..ManyElectron,
         ..Nuclear, ..Radial, ..SpinAngular, ..TableStrings, ..RadialIntegrals
 
-## Relative change of sum |amplitude|^2 contributed by the last partial wave, below which the kappa summation
-## counts as converged. Used BOTH to terminate that summation in computeAmplitudesProperties() and to flag the
-## lines that never reached it in displayResults() -- the two must not be allowed to drift apart.
+# Relative change of sum |amplitude|^2 contributed by the last partial wave, below which the kappa summation
+# counts as converged. Used BOTH to terminate that summation in computeAmplitudesProperties() and to flag the
+# lines that never reached it in displayResults() -- the two must not be allowed to drift apart.
 const convergenceCriterion = 1.0e-5
 
 
@@ -253,7 +253,7 @@ function amplitude(kind::AbstractEeInteraction, channel::ImpactExcitation.Channe
                                 "for the transition [$(cInitialLevel.index)- ...] " * 
                                 "and for partial waves $(string(fPartial)[2:end]),  $(string(iPartial)[2:end])... ", color=:light_green) end
     matrix = zeros(Float64, nf, ni)
-    #
+
     if  cInitialLevel.basis.subshells == cFinalLevel.basis.subshells
         iLevel = cInitialLevel;   fLevel = cFinalLevel
     else
@@ -261,8 +261,8 @@ function amplitude(kind::AbstractEeInteraction, channel::ImpactExcitation.Channe
         iLevel    = Level(cInitialLevel, subshells)
         fLevel    = Level(cFinalLevel,   subshells)
     end
-    #
-    if      typeof(kind) in [ CoulombInteraction, BreitInteraction, CoulombBreit]        ## pure V^Coulomb interaction
+
+    if      typeof(kind) in [ CoulombInteraction, BreitInteraction, CoulombBreit]        # pure V^Coulomb interaction
     #--------------------------------------------------------------------------
         for  r = 1:nf
             for  s = 1:ni
@@ -271,7 +271,7 @@ function amplitude(kind::AbstractEeInteraction, channel::ImpactExcitation.Channe
                 subshellList = fLevel.basis.subshells
                 op2  = SpinAngular.TwoParticleOperator(0, plus)
                 wa   = SpinAngular.computeCoefficients(op2, fLevel.basis.csfs[r], iLevel.basis.csfs[s], subshellList)
-                #
+
                 me = 0.
 
                 for  coeff in wa
@@ -295,8 +295,8 @@ function amplitude(kind::AbstractEeInteraction, channel::ImpactExcitation.Channe
         amplitude = transpose(fLevel.mc) * matrix * iLevel.mc 
         amplitude = im^( -1.0 * Basics.subshell_l(Subshell(102, channel.finalKappa)) )   * exp(  im*channel.finalPhase )   * 
                     im^Basics.subshell_l(Subshell(101, channel.initialKappa)) * exp(  im*channel.initialPhase ) * amplitude
-        #
-        #
+
+
         elseif  kind == "H-E"
     #--------------------
         amplitude = 0.;    error("stop a")
@@ -364,20 +364,20 @@ function  computeAmplitudesProperties(line::ImpactExcitation.Line, nm::Nuclear.M
 
     # Define a common subshell list for both multiplets
     subshellList = Basics.generate(OrderedSubshellList(), line.finalLevel.basis, line.initialLevel.basis)
-    ## The standard subshell list is display-only and identical for every line (verified over 50 level pairs),
-    ## so it is set once in the drivers rather than here -- this function runs inside a @threads loop, and a
-    ## write to a global from there is a race.  See Defaults.setStandardSubshellList.
-    ## Both symmetry-reduced levels are properties of the line alone; see the note in the innermost loop.
+    # The standard subshell list is display-only and identical for every line (verified over 50 level pairs),
+    # so it is set once in the drivers rather than here -- this function runs inside a @threads loop, and a
+    # write to a global from there is a race.  See Defaults.setStandardSubshellList.
+    # Both symmetry-reduced levels are properties of the line alone; see the note in the innermost loop.
     redILevel = Basics.generateLevelWithSymmetryReducedBasis(line.initialLevel, subshellList)
     redFLevel = Basics.generateLevelWithSymmetryReducedBasis(line.finalLevel,   subshellList)
 
     # First determine a common set of continuum orbitals for the incoming and outgoing electron
     ciOrbitals = Dict{Subshell, Orbital}();     ciPhases = Dict{Subshell, Float64}()
     cfOrbitals = Dict{Subshell, Orbital}();     cfPhases = Dict{Subshell, Float64}()
-    #
+
     symi = LevelSymmetry(line.initialLevel.J, line.initialLevel.parity);    
     symf = LevelSymmetry(line.finalLevel.J, line.finalLevel.parity) 
-    #
+
     kappa = 1
     while kappa <= settings.maxKappa
         for  inKappa = -kappa:kappa
@@ -412,11 +412,11 @@ function  computeAmplitudesProperties(line::ImpactExcitation.Line, nm::Nuclear.M
                     #end
                     
                     #for channel in line.channels
-                        ## The two symmetry-reduced levels depend on the line but on neither partial wave nor
-                        ## total symmetry, so they are formed ONCE above rather than in this innermost loop,
-                        ## which runs O(maxKappa^3) times.  The four calls below rebind newiLevel/newfLevel to
-                        ## fresh Levels (generateLevelWithExtraElectron/-Subshell copy their argument), so
-                        ## redILevel and redFLevel are never modified.
+                        # The two symmetry-reduced levels depend on the line but on neither partial wave nor
+                        # total symmetry, so they are formed ONCE above rather than in this innermost loop,
+                        # which runs O(maxKappa^3) times.  The four calls below rebind newiLevel/newfLevel to
+                        # fresh Levels (generateLevelWithExtraElectron/-Subshell copy their argument), so
+                        # redILevel and redFLevel are never modified.
                         newiLevel  = redILevel
                         newfLevel  = redFLevel
                         iSubshell  = Subshell(101, channel.initialKappa)
@@ -429,7 +429,7 @@ function  computeAmplitudesProperties(line::ImpactExcitation.Line, nm::Nuclear.M
                         newfLevel = Basics.generateLevelWithExtraElectron(cfOrbital, channel.symmetry, newfLevel)
                         newChannel = ImpactExcitation.Channel(channel.initialKappa, channel.finalKappa, channel.symmetry, 
                                                                                                             iPhase, fPhase, 0.)
-                        #
+
                         amplitude  = ImpactExcitation.amplitude(settings.operator, newChannel, newfLevel, newiLevel, grid, 
                                                                                                                 printout=printout)
 
@@ -489,21 +489,21 @@ function  computeLines(finalMultiplet::Multiplet, initialMultiplet::Multiplet, n
     printstyled("ImpactExcitation.computePathways(): The computation of electron-impact excitation cross sections starts now ... \n", color=:light_green)
     printstyled("--------------------------------------------------------------------------------------------------------------- \n", color=:light_green)
     println("")
-    #
+
     lines = ImpactExcitation.determineLines(finalMultiplet, initialMultiplet, settings)
     # Display all selected lines before the computations start
     if  settings.printBefore    ImpactExcitation.displayLines(lines)    end
-    ## Determine the maximum (continuum) electron energy and check the grid for consistency with it. This module used to
-    ## skip this check -- alone among the continuum-based process modules -- and to normalize at grid.NoPoints-5 instead
-    ## of the nrContinuum returned here. Both were wrong: an under-resolved continuum orbital does not fail loudly, it
-    ## returns cross sections that drift by tens of percent and then diverge by 30+ orders of magnitude once the grid can
-    ## no longer represent the oscillation. Continuum.gridConsistency() refuses such a grid up front and says why.
-    ## gridConsistency() tests the FAST end only -- whether grid.hp can still sample the shortest oscillation.
-    ## The slow end fails the opposite way and was unguarded until 28-Aug-2026: near threshold the wavelength grows
-    ## without bound, and an orbital that cannot complete one oscillation inside rbox has no asymptotic region for
-    ## its normalization to be read from. example-Dl.jl branch c) meets exactly this -- 0.008 eV out, lambda ~ 256
-    ## a.u. against rbox = 30. It WARNS rather than refusing, because how wrong the near-threshold cross section
-    ## then is has not been measured, and refusing on an unmeasured criterion would stop runs that may be fine.
+    # Determine the maximum (continuum) electron energy and check the grid for consistency with it. This module used to
+    # skip this check -- alone among the continuum-based process modules -- and to normalize at grid.NoPoints-5 instead
+    # of the nrContinuum returned here. Both were wrong: an under-resolved continuum orbital does not fail loudly, it
+    # returns cross sections that drift by tens of percent and then diverge by 30+ orders of magnitude once the grid can
+    # no longer represent the oscillation. Continuum.gridConsistency() refuses such a grid up front and says why.
+    # gridConsistency() tests the FAST end only -- whether grid.hp can still sample the shortest oscillation.
+    # The slow end fails the opposite way and was unguarded until 28-Aug-2026: near threshold the wavelength grows
+    # without bound, and an orbital that cannot complete one oscillation inside rbox has no asymptotic region for
+    # its normalization to be read from. example-Dl.jl branch c) meets exactly this -- 0.008 eV out, lambda ~ 256
+    # a.u. against rbox = 30. It WARNS rather than refusing, because how wrong the near-threshold cross section
+    # then is has not been measured, and refusing on an unmeasured criterion would stop runs that may be fine.
     maxEnergy = 0.;   minEnergy = Inf
     for  line in lines
         maxEnergy = max(maxEnergy, line.initialElectronEnergy);   minEnergy = min(minEnergy, line.finalElectronEnergy)
@@ -512,16 +512,16 @@ function  computeLines(finalMultiplet::Multiplet, initialMultiplet::Multiplet, n
     ImpactExcitation.checkLowEnergyGrid(minEnergy, grid)
     # Calculate all amplitudes and requested properties
     if  Distributed.nprocs() > 1
-        ## NOT given the two keywords below: pmap would have to SERIALIZE both objects to a worker process for
-        ## every line, and rebuilding the basis there costs only ~0.03 s. Omitting them is the documented
-        ## fallback, so this branch simply behaves as before. Untested against a measurement -- with one
-        ## process the threaded branch is what runs.
+        # NOT given the two keywords below: pmap would have to SERIALIZE both objects to a worker process for
+        # every line, and rebuilding the basis there costs only ~0.03 s. Omitting them is the documented
+        # fallback, so this branch simply behaves as before. Untested against a measurement -- with one
+        # process the threaded branch is what runs.
         newLines = Distributed.pmap(line -> ImpactExcitation.computeAmplitudesProperties(line, nm, grid, nrContinuum, settings), lines)
     else
         newLines = Vector{ImpactExcitation.Line}(undef, length(lines))
-        ## Constants of the whole computation, built once and SHARED across the threads below; both are
-        ## read-only (nothing writes into primitives.bsplinesL/bsplinesS), so sharing introduces no race.
-        ## Display-only and the same for every line; set ONCE here rather than from inside the threaded loop.
+        # Constants of the whole computation, built once and SHARED across the threads below; both are
+        # read-only (nothing writes into primitives.bsplinesL/bsplinesS), so sharing introduces no race.
+        # Display-only and the same for every line; set ONCE here rather than from inside the threaded loop.
         Defaults.setStandardSubshellList(Basics.generate(OrderedSubshellList(), finalMultiplet.levels[1].basis,
                                                          initialMultiplet.levels[1].basis); printout=false)
         nuclearPot = Nuclear.nuclearPotential(nm, grid)
@@ -538,7 +538,7 @@ function  computeLines(finalMultiplet::Multiplet, initialMultiplet::Multiplet, n
         rates = ImpactExcitation.computeRateCoefficients(newLines, settings)
         ImpactExcitation.displayResults(rates)
     end
-    #
+
     if    ( output  &&  settings.calcRateCoefficient) return( newLines, rates );
     elseif output   return( newLines );
     else            return( nothing );
@@ -554,7 +554,7 @@ end
 function determineChannels(finalLevel::Level, initialLevel::Level, settings::ImpactExcitation.Settings)
     channels = ImpactExcitation.Channel[];   
     symi = LevelSymmetry(initialLevel.J, initialLevel.parity);    symf = LevelSymmetry(finalLevel.J, finalLevel.parity) 
-    #
+
     for  inKappa = -settings.maxKappa:settings.maxKappa
         if  inKappa == 0    continue    end
         symtList = AngularMomentum.allowedTotalSymmetries(symi, inKappa)
@@ -587,28 +587,28 @@ function  computeLinesCascade(finalMultiplet::Multiplet, initialMultiplet::Multi
                               output::Bool=true, printout::Bool=true)
     lines = ImpactExcitation.determineLines(finalMultiplet, initialMultiplet, settings)
     if  length(lines) == 0    return( ImpactExcitation.Line[] )    end
-    ## The grid must be able to carry the fastest continuum orbital that occurs; see the note in computeLines().
+    # The grid must be able to carry the fastest continuum orbital that occurs; see the note in computeLines().
     maxEnergy   = 0.;   minEnergy = Inf
     for  line in lines
         maxEnergy = max(maxEnergy, line.initialElectronEnergy);   minEnergy = min(minEnergy, line.finalElectronEnergy)
     end
     nrContinuum = Continuum.gridConsistency(maxEnergy, grid)
     ImpactExcitation.checkLowEnergyGrid(minEnergy, grid)
-    #
-    ## The per-line work is independent -- each line builds its own continuum orbital and its own amplitudes --
-    ## so it is spread over the available Julia threads.  This mirrors ImpactExcitation.computeLines() above,
-    ## which already threads the very same computeAmplitudesProperties(); the cascade variant was serial and
-    ## thereby left the expensive part of every cascade on a single thread.  Start Julia with `julia -t N` to
-    ## use it; with the default of one thread the loop below behaves exactly as the serial one did.
+
+    # The per-line work is independent -- each line builds its own continuum orbital and its own amplitudes --
+    # so it is spread over the available Julia threads.  This mirrors ImpactExcitation.computeLines() above,
+    # which already threads the very same computeAmplitudesProperties(); the cascade variant was serial and
+    # thereby left the expensive part of every cascade on a single thread.  Start Julia with `julia -t N` to
+    # use it; with the default of one thread the loop below behaves exactly as the serial one did.
     ##
-    ## NB the results are written BY INDEX into a pre-allocated vector rather than push!-ed: push! is not
-    ## thread-safe, and indexing also preserves the order of the lines, which the rate-coefficient machinery
-    ## relies on (ImpactExcitation.groupLines reshapes the list into an energies x transitions block).
-    ## Lines without a single channel are dropped afterwards rather than skipped inside the loop.
+    # NB the results are written BY INDEX into a pre-allocated vector rather than push!-ed: push! is not
+    # thread-safe, and indexing also preserves the order of the lines, which the rate-coefficient machinery
+    # relies on (ImpactExcitation.groupLines reshapes the list into an energies x transitions block).
+    # Lines without a single channel are dropped afterwards rather than skipped inside the loop.
     tmpLines = Vector{Union{Nothing, ImpactExcitation.Line}}(nothing, length(lines))
-    doPrint  = printout  &&  Threads.nthreads() == 1     ## interleaved per-line printout would be unreadable
-    ## Constants of the whole computation, built once and SHARED across the threads below; see computeLines.
-    ## Display-only and the same for every line; set ONCE here rather than from inside the threaded loop.
+    doPrint  = printout  &&  Threads.nthreads() == 1     # interleaved per-line printout would be unreadable
+    # Constants of the whole computation, built once and SHARED across the threads below; see computeLines.
+    # Display-only and the same for every line; set ONCE here rather than from inside the threaded loop.
     Defaults.setStandardSubshellList(Basics.generate(OrderedSubshellList(), finalMultiplet.levels[1].basis,
                                                      initialMultiplet.levels[1].basis); printout=false)
     nuclearPot = Nuclear.nuclearPotential(nm, grid)
@@ -621,9 +621,9 @@ function  computeLinesCascade(finalMultiplet::Multiplet, initialMultiplet::Multi
     newLines = ImpactExcitation.Line[ l  for l in tmpLines  if l !== nothing ]
     # Print the results; ImpactExcitation.displayResults() writes to stdout only
     if  printout   ImpactExcitation.displayResults(newLines)    end
-    ## No rate coefficients here: a cascade computation returns LINES.  Effective collision strengths and plasma
-    ## rate coefficients are formed from those lines by a cascade simulation (Cascade.EieRateCoefficients).
-    #
+    # No rate coefficients here: a cascade computation returns LINES.  Effective collision strengths and plasma
+    # rate coefficients are formed from those lines by a cascade simulation (Cascade.EieRateCoefficients).
+
     if    output    return( newLines )
     else            return( nothing )
     end
@@ -786,15 +786,15 @@ end
         Returns a Float64.
 """
 function interpolateCS(x::Float64, xa::Vector{Float64}, ya::Vector{Float64}, isE1Allowed::Bool)
-    ## Guard the LOWER bound as well.  Only the upper one was handled, but the Gauss-Laguerre nodes of the
-    ## thermal average are xt = t*kT with t starting near 0.137, so they reach far below the sampled energies
-    ## whenever the energy grid does not begin at threshold -- and GSL then aborts with a bare
-    ## "interpolation error at interp.c:150".  That never showed up as long as calcRateCoefficient = true
-    ## auto-generated its own grid starting AT threshold (see ImpactExcitation.determineLines), but a cascade
-    ## supplies its own energies and need not start there.  Below the sampled range the collision strength is
-    ## simply not known, so a constant extrapolation is used -- the same conservative choice already made above
-    ## the range for non-E1 transitions.  NB this makes rate coefficients at kT well below the lowest sampled
-    ## energy unreliable; sample from near threshold if the low-temperature end matters.
+    # Guard the LOWER bound as well.  Only the upper one was handled, but the Gauss-Laguerre nodes of the
+    # thermal average are xt = t*kT with t starting near 0.137, so they reach far below the sampled energies
+    # whenever the energy grid does not begin at threshold -- and GSL then aborts with a bare
+    # "interpolation error at interp.c:150".  That never showed up as long as calcRateCoefficient = true
+    # auto-generated its own grid starting AT threshold (see ImpactExcitation.determineLines), but a cascade
+    # supplies its own energies and need not start there.  Below the sampled range the collision strength is
+    # simply not known, so a constant extrapolation is used -- the same conservative choice already made above
+    # the range for non-E1 transitions.  NB this makes rate coefficients at kT well below the lowest sampled
+    # energy unreliable; sample from near threshold if the low-temperature end matters.
     if      x < minimum(xa)     return( ya[1] )
     elseif  x <= maximum(xa)
         n = length(xa)
@@ -917,7 +917,7 @@ function  displayLines(lines::Array{ImpactExcitation.Line,1})
     sa = sa * TableStrings.flushleft(57, "List of partial waves and total symmetries"; na=4)  
     sb = sb * TableStrings.flushleft(57, "partial-in [total J^P] partial-out        "; na=4)
     println(sa);    println(sb);    println("  ", TableStrings.hLine(nx)) 
-    #
+
     NoLines = 0   
     for  line in lines
         NoLines = NoLines + 1
@@ -950,7 +950,7 @@ function  displayLines(lines::Array{ImpactExcitation.Line,1})
         end
     end
     println("  ", TableStrings.hLine(nx))
-    #
+
     return( nothing )
 end
 
@@ -984,7 +984,7 @@ function  displayResults(lines::Array{ImpactExcitation.Line,1})
     sa = sa * TableStrings.center(15, "Convergence"; na=3)      
     sb = sb * TableStrings.center(15, " ";                  na=3)
     println(sa);    println(sb);    println("  ", TableStrings.hLine(nx)) 
-    #
+
     for  line in lines
         sa  = "  ";    isym = LevelSymmetry( line.initialLevel.J, line.initialLevel.parity)
                         fsym = LevelSymmetry( line.finalLevel.J,   line.finalLevel.parity)
@@ -1001,10 +1001,10 @@ function  displayResults(lines::Array{ImpactExcitation.Line,1})
         println(sa)
     end
     println("  ", TableStrings.hLine(nx))
-    #
-    ## Say so explicitly if the partial-wave sum was still growing when it ran into settings.maxKappa. Unlike a
-    ## too-coarse grid -- which Continuum.gridConsistency() now refuses outright -- this failure is silent: the
-    ## collision strength simply comes out too SMALL, while remaining smooth and entirely plausible-looking.
+
+    # Say so explicitly if the partial-wave sum was still growing when it ran into settings.maxKappa. Unlike a
+    # too-coarse grid -- which Continuum.gridConsistency() now refuses outright -- this failure is silent: the
+    # collision strength simply comes out too SMALL, while remaining smooth and entirely plausible-looking.
     nNotConverged = count(line -> line.convergence > convergenceCriterion, lines)
     if  nNotConverged > 0
         println("")
@@ -1021,7 +1021,7 @@ function  displayResults(lines::Array{ImpactExcitation.Line,1})
         printstyled("    >>> Increase settings.maxKappa and re-run.\n", color=:light_red)
         println("")
     end
-    #
+
     return( nothing )
 end
 

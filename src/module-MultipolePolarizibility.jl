@@ -627,10 +627,10 @@ function checkPerturberSet(multipole::EmMultipole, level::Level, gMultiplet::Mul
                     color=:light_red)
     end
 
-    ## For a rank-L polarizability the matrix elements weight r^L, so the radial box matters far more than it does
-    ## for E1 -- and overriding the grid guard, which is standard and right for an E1 pseudo-continuum (see
-    ## examples/example-Cj.jl branch b), is ruinous above it. Rather than invent a detector, JAC's own calibrated
-    ## check is re-run here on the perturber orbitals.
+    # For a rank-L polarizability the matrix elements weight r^L, so the radial box matters far more than it does
+    # for E1 -- and overriding the grid guard, which is standard and right for an E1 pseudo-continuum (see
+    # examples/example-Cj.jl branch b), is ruinous above it. Rather than invent a detector, JAC's own calibrated
+    # check is re-run here on the perturber orbitals.
     if  multipole.L >= 2
         orbitals = Dict{Subshell,Orbital}()
         for  nuLevel in gMultiplet.levels
@@ -697,17 +697,17 @@ function computeMultipolePolarizabilities(multipole::EmMultipole, level::Level, 
         dStatic      = MultipoleMoment.emmStaticAmplitude(multipole.L, newNuLevel, newLevel, grid)
         if  abs2(dStatic) == 0.0   continue    end
 
-        ## The coefficient below multiplies |<J'||O||J>|^2 / (E_J' - E_J), i.e. the denominator with the SIGN OPPOSITE
-        ## to deltaE, which is kept as E_J - E_J' because that is what Contribution has always stored and printed.
-        ## THE STATIC BRANCH IS WRITTEN EXACTLY AS IT WAS, not folded into the general one, so that a static result is
-        ## BIT-identical and not merely equal to rounding: c*|d|^2*(1/dE) and -c*|d|^2/dE differ in the last bit, and
-        ## test/approved is not to move for a change that adds a frequency.
+        # The coefficient below multiplies |<J'||O||J>|^2 / (E_J' - E_J), i.e. the denominator with the SIGN OPPOSITE
+        # to deltaE, which is kept as E_J - E_J' because that is what Contribution has always stored and printed.
+        # THE STATIC BRANCH IS WRITTEN EXACTLY AS IT WAS, not folded into the general one, so that a static result is
+        # BIT-identical and not merely equal to rounding: c*|d|^2*(1/dE) and -c*|d|^2/dE differ in the last bit, and
+        # test/approved is not to move for a change that adds a frequency.
         contribAlphas = Tuple{Int64,EmProperty}[]
         for  (i, K) in enumerate(Ks)
             coeff = MultipolePolarizibility.rankCoefficient(multipole.L, K, level.J, nuLevel.J; helicity=helicity)
             if      isodd(K)
-                ## AN ODD RANK TAKES THE ANTISYMMETRIC DENOMINATOR, omega/(dE^2-omega^2), and so is a clean zero at
-                ## omega = 0; it is reachable only at helicity = +-1, where rankCoefficient does not vanish.
+                # AN ODD RANK TAKES THE ANTISYMMETRIC DENOMINATOR, omega/(dE^2-omega^2), and so is a clean zero at
+                # omega = 0; it is reachable only at helicity = +-1, where rankCoefficient does not vanish.
                 wa =   coeff * abs2(dStatic) *
                        MultipolePolarizibility.frequencyFactorOdd(-deltaE, omega, imaginaryOmega)
             elseif  omega == 0.0
@@ -720,8 +720,8 @@ function computeMultipolePolarizabilities(multipole::EmMultipole, level::Level, 
             push!( contribAlphas, (K, EmProperty(wa, wa)) )
         end
 
-        ## alpha0/alpha2 are retained on Contribution so that every existing caller and printout is unaffected; they
-        ## are the K = 0 and K = 2 members of contribAlphas and are not computed a second time.
+        # alpha0/alpha2 are retained on Contribution so that every existing caller and printout is unaffected; they
+        # are the K = 0 and K = 2 members of contribAlphas and are not computed a second time.
         c0 = EmProperty(0.);   c2 = EmProperty(0.)
         for  (K, cAlpha) in contribAlphas
             if      K == 0   c0 = cAlpha
@@ -734,9 +734,9 @@ function computeMultipolePolarizabilities(multipole::EmMultipole, level::Level, 
 
     alphas = Tuple{Int64,EmProperty}[]
     for  (i, K) in enumerate(Ks)   push!( alphas, (K, EmProperty(alphaK[i], alphaK[i])) )    end
-    ## THE PERTURBER SET DOES NOT DEPEND ON THE FREQUENCY, so it is checked at omega = 0 only. A caller sweeping
-    ## thirty frequencies would otherwise get thirty copies of the same warning, and a guard that repeats is a guard
-    ## that gets scrolled past.
+    # THE PERTURBER SET DOES NOT DEPEND ON THE FREQUENCY, so it is checked at omega = 0 only. A caller sweeping
+    # thirty frequencies would otherwise get thirty copies of the same warning, and a guard that repeats is a guard
+    # that gets scrolled past.
     scalar = isempty(alphas) ? 0.0 : alphas[1][2].Babushkin
     if  omega == 0.0
         MultipolePolarizibility.checkPerturberSet(multipole, level, gMultiplet, grid, contributions, scalar)
@@ -791,11 +791,11 @@ function  computeAmplitudesProperties(outcome::MultipolePolarizibility.Outcome, 
     alpha0 = EmProperty(0.);                                  alpha2        = EmProperty(0.)
     alphaCore = Tuple{Float64,Float64}[]
 
-    ## THE CORE PART IS INDEPENDENT OF gMultiplet, which is the whole point of it, so it is computed BEFORE the
-    ## early return below and survives a computation that has no perturber list at all.
-    ## AND AN EMPTY alphaCore MEANS EXACTLY ONE THING: this level has NO closed subshell.  The check is made here,
-    ## before the loop, so that such a level gets no entry at all rather than an entry reading alpha_core = 0 --
-    ## which would say "the core does not polarize" where the truth is "there is no core".
+    # THE CORE PART IS INDEPENDENT OF gMultiplet, which is the whole point of it, so it is computed BEFORE the
+    # early return below and survives a computation that has no perturber list at all.
+    # AND AN EMPTY alphaCore MEANS EXACTLY ONE THING: this level has NO closed subshell.  The check is made here,
+    # before the loop, so that such a level gets no entry at all rather than an entry reading alpha_core = 0 --
+    # which would say "the core does not polarize" where the truth is "there is no core".
     if  settings.calcCore  &&  !isnothing(primitives)  &&
             !isempty( MultipolePolarizibility.closedSubshells(outcome.level) )
         for  omega  in  unique( vcat(0.0, settings.omegas) )
@@ -814,10 +814,10 @@ function  computeAmplitudesProperties(outcome::MultipolePolarizibility.Outcome, 
                                                 outcome.contributions, outcome.alphas, alphaCore)
     end
 
-    ## omega = 0. IS ALWAYS COMPUTED, whether or not the caller listed it, because alpha0/alpha2 of the Outcome are
-    ## defined as the STATIC scalar and tensor polarizabilities and several callers read them. It is also computed
-    ## FIRST, so that with an empty settings.omegas -- the default -- the loop below is term for term what it was
-    ## before a frequency existed here.
+    # omega = 0. IS ALWAYS COMPUTED, whether or not the caller listed it, because alpha0/alpha2 of the Outcome are
+    # defined as the STATIC scalar and tensor polarizabilities and several callers read them. It is also computed
+    # FIRST, so that with an empty settings.omegas -- the default -- the loop below is term for term what it was
+    # before a frequency existed here.
     frequencies = unique( vcat(0.0, settings.omegas) )
 
     for  multipole in settings.multipoles,  omega in frequencies
@@ -827,8 +827,8 @@ function  computeAmplitudesProperties(outcome::MultipolePolarizibility.Outcome, 
         for  (K, alphaK) in mpAlphas             push!( alphas, (multipole, K, omega, alphaK) )    end
         for  contribution in mpContributions     push!( contributions, contribution )               end
 
-        ## alpha0/alpha2 remain the STATIC E1 rank-0 and rank-2 members, so that every existing caller, printout and
-        ## approved reference sees exactly what it saw before.
+        # alpha0/alpha2 remain the STATIC E1 rank-0 and rank-2 members, so that every existing caller, printout and
+        # approved reference sees exactly what it saw before.
         if  multipole == E1  &&  omega == 0.0
             for  (K, alphaK) in mpAlphas
                 if      K == 0   alpha0 = alphaK
@@ -858,7 +858,7 @@ function closedSubshells(level::Level)
     occ = Dict{Subshell,Float64}()
     isempty(level.basis.csfs)  &&  return( occ )
     csf  = level.basis.csfs[1]
-    ## `CsfR.subshells` is filled ONLY when useStandardSubshells == false;  otherwise the list belongs to the basis.
+    # `CsfR.subshells` is filled ONLY when useStandardSubshells == false;  otherwise the list belongs to the basis.
     subs = csf.useStandardSubshells ? level.basis.subshells : csf.subshells
     for  (i, sh)  in  enumerate(subs)
         i > length(csf.occupation)   &&   break
@@ -964,7 +964,7 @@ function computeCorePolarizability(level::Level, nm::Nuclear.Model, grid::Radial
     alpha = 0.0
     for  aSub  in  shells
         (!haskey(orbs, aSub)  ||  orbs[aSub].energy >= 0.0)  &&  continue
-        fOcc = occ[aSub] / (Basics.subshell_2j(aSub) + 1.0)        ## exactly 1 for a closed subshell, kept explicit
+        fOcc = occ[aSub] / (Basics.subshell_2j(aSub) + 1.0)        # exactly 1 for a closed subshell, kept explicit
         for  tSub  in  RandomPhase.reachableChannels(1, aSub)
             extra = MultipolePolarizibility.radialDrive(aSub, tSub, orbs, primitives, grid)
             cl2   = fOcc * AngularMomentum.CL_reduced_me(aSub, 1, tSub)^2
@@ -997,15 +997,15 @@ function computeOutcomes(multiplet::Multiplet, nm::Nuclear.Model, grid::Radial.G
     println("")
     printstyled("MultipolePolarizibility.computeOutcomes(): The computation of multipole polarizibilities starts now ... \n", color=:light_green)
     printstyled("------------------------------------------------------------------------------------------------------- \n", color=:light_green)
-    #
+
     outcomes = MultipolePolarizibility.determineOutcomes(multiplet, settings)
     # Display all selected levels before the computations start
     if  settings.printBefore    MultipolePolarizibility.displayOutcomes(outcomes)    end
-    #
-    ## The B-spline primitives are needed ONLY by the core part, and building them is not free, so they are built
-    ## once here and only when asked for.
+
+    # The B-spline primitives are needed ONLY by the core part, and building them is not free, so they are built
+    # once here and only when asked for.
     primitives = settings.calcCore ? Bsplines.generatePrimitives(grid) : nothing
-    #
+
     # Calculate all amplitudes and requested properties
     printSummary, iostream = Defaults.getDefaults("summary flag/stream")
     newOutcomes = MultipolePolarizibility.Outcome[]
@@ -1019,13 +1019,13 @@ function computeOutcomes(multiplet::Multiplet, nm::Nuclear.Model, grid::Radial.G
     # Print all results to screen
     MultipolePolarizibility.displayResults(stdout, newOutcomes)
     if  printSummary    MultipolePolarizibility.displayResults(iostream, newOutcomes)   end
-    ## A SEPARATE TABLE ON PURPOSE: the core polarizability comes from a different route with a different accuracy,
-    ## and adding a column to displayResults would change output that approved test references already hold.
+    # A SEPARATE TABLE ON PURPOSE: the core polarizability comes from a different route with a different accuracy,
+    # and adding a column to displayResults would change output that approved test references already hold.
     if  settings.calcCore
         MultipolePolarizibility.displayCorePolarizabilities(stdout, newOutcomes)
         if  printSummary    MultipolePolarizibility.displayCorePolarizabilities(iostream, newOutcomes)   end
     end
-    #
+
     if    output    return( newOutcomes )
     else            return( nothing )
     end
@@ -1068,7 +1068,7 @@ function  displayOutcomes(outcomes::Array{MultipolePolarizibility.Outcome,1})
     sa = sa * TableStrings.center(14, "Energy"; na=4);
     sb = sb * TableStrings.center(14, TableStrings.inUnits("energy"); na=4)
     println(sa);    println(sb);    println("  ", TableStrings.hLine(nx))
-    #
+
     for  outcome in outcomes
         sa  = "  ";    sym = LevelSymmetry( outcome.level.J, outcome.level.parity)
         sa = sa * TableStrings.center(10, TableStrings.level(outcome.level.index); na=2)
@@ -1077,7 +1077,7 @@ function  displayOutcomes(outcomes::Array{MultipolePolarizibility.Outcome,1})
         println( sa )
     end
     println("  ", TableStrings.hLine(nx))
-    #
+
     return( nothing )
 end
 
@@ -1105,7 +1105,7 @@ function  displayCorePolarizabilities(stream::IO, outcomes::Array{MultipolePolar
     sa = sa * TableStrings.center(18, "alpha_core"; na=3);              sb = sb * TableStrings.center(18, "[a.u.]"; na=3)
     sa = sa * TableStrings.center(14, "/ alpha_core(0)"; na=2);         sb = sb * TableStrings.hBlank(16)
     println(stream, sa);    println(stream, sb);    println(stream, "  ", TableStrings.hLine(nx))
-    #
+
     for  outcome  in  outcomes
         isempty(outcome.alphaCore)  &&  continue
         aStatic = outcome.alphaCore[1][2]
@@ -1149,7 +1149,7 @@ function  displayResults(stream::IO, outcomes::Array{MultipolePolarizibility.Out
     sa = sa * TableStrings.center(15, "alpha_2 [Bab]" ; na=3);                    sb = sb * TableStrings.center(15, "[a.u.]" ; na=3)
     sa = sa * TableStrings.center(15, "alpha_0 [Bab]" ; na=3);                    sb = sb * TableStrings.center(15, "[MHz/(kV/cm)^2]"; na=3)
     println(stream, sa);    println(stream, sb);    println(stream, "  ", TableStrings.hLine(nx))
-    #
+
     for  outcome in outcomes
         sa  = "  ";    sym = LevelSymmetry( outcome.level.J, outcome.level.parity)
         sa = sa * TableStrings.center(10, TableStrings.level(outcome.level.index); na=2)
@@ -1163,14 +1163,14 @@ function  displayResults(stream::IO, outcomes::Array{MultipolePolarizibility.Out
         println(stream, sa )
     end
     println(stream, "  ", TableStrings.hLine(nx))
-    #
+
     # THE DOMINANT ENERGY DENOMINATOR, PRINTED BECAUSE IT IS THE ONE NUMBER THAT DIAGNOSES THE WHOLE FAMILY OF
     # FAILURES HERE (item 70, 14-Oct-2026).  alpha_0 ~ |<a||P||b>|^2 / (W_b - W_a), so it is INVERSELY
     # proportional to this gap, and a mean field that misplaces the lowest perturber misplaces alpha_0 by the
     # same factor -- while every internal check in this module still passes, because the formula is right and
     # only its input is wrong.  A reader who can compare ONE number against a measured level energy can catch
     # that in seconds;  a reader given only alpha_0 cannot catch it at all.
-    #
+
     # MEASURED, Li [He]2s against Puchalski et al.'s 164.0740 a.u. with ONE perturber set throughout:
     #     DFSField  183.7863 (+12 %, gap 0.056168 Ha)    HSField  227.9872 (+39 %)    ALField  167.6745 (+2.2 %,
     #     gap 0.067688 Ha against the experimental 0.067700).  DFS puts the Li 2s at -0.079 Ha where the true
@@ -1205,7 +1205,7 @@ function  displayResults(stream::IO, outcomes::Array{MultipolePolarizibility.Out
     println(stream, "  >>> and `AsfSettings()` DEFAULTS to DFSField.  Prefer ALField or EOLField for a")
     println(stream, "  >>> polarizability;  see examples/example-Cj.jl branch (C).")
     println(stream, "  ", TableStrings.hLine(nx), "\n\n")
-    #
+
     # THE GENERAL-RANK TABLE IS PRINTED ONLY WHEN THERE IS SOMETHING IN IT BEYOND (E1,0) AND (E1,2), i.e. only when
     # a multipole other than E1 or a rank other than 0 and 2 was actually asked for. The table above then stays the
     # whole of the output for every caller that wants a Stark shift, and no stored reference moves.
@@ -1224,9 +1224,9 @@ function  displayResults(stream::IO, outcomes::Array{MultipolePolarizibility.Out
         println(stream, "  alpha^(Mp,K>0) is the anisotropy carried by the stretched M = J substate. The frequencies " *
                          "are REAL, and omega = 0 is")
         println(stream, "  the static case:")
-        ## THE HELICITY IS NOT ON Settings HERE -- displayResults does not receive it -- so it is INFERRED from the
-        ## presence of an odd rank, which can only have come from a circular field. With no odd rank the output is
-        ## byte for byte what it was before 20-Oct-2026.
+        # THE HELICITY IS NOT ON Settings HERE -- displayResults does not receive it -- so it is INFERRED from the
+        # presence of an odd rank, which can only have come from a circular field. With no odd rank the output is
+        # byte for byte what it was before 20-Oct-2026.
         if  any( isodd(K)  for outcome in outcomes  for (mp, K, omega, alphaK) in outcome.alphas )
             println(stream, " ")
             println(stream, "  AN ODD RANK IS PRESENT, so these were computed for a CIRCULARLY polarized field " *
@@ -1279,7 +1279,7 @@ function  displayResults(stream::IO, outcomes::Array{MultipolePolarizibility.Out
         println(stream, "  >>> that one energy.  MultipolePolarizibility.checkFrequency warns about both.")
         println(stream, "  ", TableStrings.hLine(nx), "\n\n")
     end
-    #
+
     return( nothing )
 end
 
@@ -1421,7 +1421,7 @@ function  displayContributions(stream::IO, outcome::MultipolePolarizibility.Outc
     sa = sa * TableStrings.center(15, "d-alpha_2 [Coul]"; na=3);                   sb = sb * TableStrings.center(15, "[a.u.]" ; na=3)
     sa = sa * TableStrings.center(15, "d-alpha_2 [Bab]" ; na=3);                   sb = sb * TableStrings.center(15, "[a.u.]" ; na=3)
     println(stream, sa);    println(stream, sb);    println(stream, "  ", TableStrings.hLine(nx))
-    #
+
     ordered = sort(outcome.contributions, by = c -> -abs(c.contribAlpha0.Babushkin))
     for  c in ordered
         sa  = "  ";    nuSym = LevelSymmetry( c.nuLevel.J, c.nuLevel.parity)
@@ -1436,7 +1436,7 @@ function  displayContributions(stream::IO, outcome::MultipolePolarizibility.Outc
         println(stream, sa )
     end
     println(stream, "  ", TableStrings.hLine(nx), "\n\n")
-    #
+
     return( nothing )
 end
 

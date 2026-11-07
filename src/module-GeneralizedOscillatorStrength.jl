@@ -201,11 +201,11 @@ function amplitude(L::Int64, q::Float64, finalLevel::Level, initialLevel::Level,
         subshells = Basics.merge(initialLevel.basis.subshells, finalLevel.basis.subshells)
         iLevel    = Level(initialLevel, subshells);     fLevel = Level(finalLevel, subshells)
     end
-    #
+
     nf = length(fLevel.basis.csfs);     ni = length(iLevel.basis.csfs)
     if  display   printstyled("Compute the GOS matrix of dimension $nf x $ni for L = $L, q = $q  ... ", color=:light_green)   end
     matrix = zeros(Float64, nf, ni)
-    #
+
     for  r = 1:nf
         for  s = 1:ni
             if  fLevel.mc[r] == 0.  ||  iLevel.mc[s] == 0.    continue    end
@@ -213,7 +213,7 @@ function amplitude(L::Int64, q::Float64, finalLevel::Level, initialLevel::Level,
             subshellList = iLevel.basis.subshells
             opa = SpinAngular.OneParticleOperator(L, Basics.multipoleParity(EmMultipole(L, true)))
             wa  = SpinAngular.computeCoefficients(opa, fLevel.basis.csfs[r], iLevel.basis.csfs[s], subshellList)
-            #
+
             for  coeff in wa
                 orba = fLevel.basis.orbitals[coeff.a];      orbb = iLevel.basis.orbitals[coeff.b]
                 ja   = Basics.subshell_2j(orba.subshell)
@@ -236,7 +236,7 @@ function amplitude(L::Int64, q::Float64, finalLevel::Level, initialLevel::Level,
     # sqrt(2 J_f + 1) = sqrt(2) for the J_f = 1/2 final level of this test.
     wNorm = sqrt( Basics.twice(fLevel.J) + 1.0 )
     amplitude = ComplexF64( wNorm * transpose(fLevel.mc) * matrix * iLevel.mc )
-    #
+
     if  display
         sa = @sprintf("%.5e", amplitude.re) * "  " * @sprintf("%.5e", amplitude.im)
         println("    < level=$(finalLevel.index) [J=$(finalLevel.J)$(string(finalLevel.parity))] || j_$L($q r) C^($L) ||" *
@@ -259,7 +259,7 @@ function computeAmplitudesProperties(line::GeneralizedOscillatorStrength.Line, g
     Ls          = GeneralizedOscillatorStrength.determineRanks(line.finalLevel, line.initialLevel)
     newChannels = GeneralizedOscillatorStrength.Channel[]
     gosValues   = Float64[]
-    #
+
     for  q  in  line.qValues
         qChannels = GeneralizedOscillatorStrength.Channel[]
         for  L  in  Ls
@@ -269,7 +269,7 @@ function computeAmplitudesProperties(line::GeneralizedOscillatorStrength.Line, g
         append!( newChannels, qChannels )
         push!( gosValues, GeneralizedOscillatorStrength.computeGos(q, line.deltaEnergy, line.initialLevel, qChannels) )
     end
-    #
+
     # The optical limit is evaluated at a momentum transfer small enough that j_L(qr) is indistinguishable from its leading term
     # (qr)^L/(2L+1)!! over the whole orbital range, so that only L = 1 survives and f_n(K) has reached its K --> 0 plateau.
     opticalLimit = 0.
@@ -412,7 +412,7 @@ function displayLines(stream::IO, lines::Array{GeneralizedOscillatorStrength.Lin
     sa = sa * TableStrings.flushleft(20, "Multipole ranks L"; na=2);              sb = sb * TableStrings.hBlank(22)
     sa = sa * TableStrings.flushleft(20, "No. of q-values"; na=2);                sb = sb * TableStrings.hBlank(22)
     println(stream, sa);    println(stream, sb);    println(stream, "  ", TableStrings.hLine(nx))
-    #
+
     for  line in lines
         sa   = "";    isym = LevelSymmetry( line.initialLevel.J, line.initialLevel.parity)
                       fsym = LevelSymmetry( line.finalLevel.J,   line.finalLevel.parity)
@@ -444,7 +444,7 @@ function displayResults(stream::IO, lines::Array{GeneralizedOscillatorStrength.L
     println(stream, " ")
     println(stream, "  Generalized oscillator strengths f_n(K)  [f_n(K --> 0) is the optical oscillator strength]:")
     println(stream, " ")
-    #
+
     for  line  in  lines
         isym = LevelSymmetry( line.initialLevel.J, line.initialLevel.parity)
         fsym = LevelSymmetry( line.finalLevel.J,   line.finalLevel.parity)
@@ -459,7 +459,7 @@ function displayResults(stream::IO, lines::Array{GeneralizedOscillatorStrength.L
              TableStrings.center(16, "f_n(K)"; na=2)
         for  L in Ls   sb = sb * TableStrings.center(16, "f_n(K), L=$L"; na=2)   end
         println(stream, sb);    println(stream, "  ", TableStrings.hLine(nx))
-        #
+
         for  (i, q)  in  enumerate(line.qValues)
             sc = "     " * @sprintf("%16.6e", q) * "  " * @sprintf("%16.6e", q*q) * "  " *
                  @sprintf("%16.6e", line.gosValues[i]) * "  "

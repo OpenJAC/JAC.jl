@@ -595,7 +595,7 @@ function Basics.computePotential(scField::Basics.CHField, grid::Radial.Grid, lev
     # Compute the charge density of the core orbitals for the given level
     for  sh in basis.coreSubshells
         orb  = basis.orbitals[sh]
-        occ  = Basics.computeMeanSubshellOccupation(sh, [level])    ## (Basics.subshell_2j(sh) + 1.0)  for closed-shells
+        occ  = Basics.computeMeanSubshellOccupation(sh, [level])    # (Basics.subshell_2j(sh) + 1.0)  for closed-shells
         nrho = length(orb.P)
         for    i = 1:nrho   rhoc[i] = rhoc[i] + occ * (orb.P[i]^2 + orb.Q[i]^2)    end
     end
@@ -779,13 +779,13 @@ function Basics.computePotential(scField::Basics.ThomasFermiField, grid::Radial.
     noElectrons > Z + 1  &&  error("Basics.computePotential(::ThomasFermiField, ...): noElectrons = $noElectrons " *
                                    "exceeds Z + 1 = $(Z+1); the Thomas-Fermi model does not describe such an ion.")
     npoints = grid.NoPoints;    wb = zeros( npoints )
-    bTF     = 0.8853 * Z^(-1/3)                 ## Thomas-Fermi length [a.u.]
-    zFloor  = Z - noElectrons + 1.0             ## Latter tail: the charge seen from outside the electron cloud
+    bTF     = 0.8853 * Z^(-1/3)                 # Thomas-Fermi length [a.u.]
+    zFloor  = Z - noElectrons + 1.0             # Latter tail: the charge seen from outside the electron cloud
     for  i = 2:npoints
         x    = grid.r[i] / bTF
         phi  = 0.35 * exp(-0.3x) + 0.55 * exp(-1.2x) + 0.10 * exp(-6.0x)
         zEff = max( Z * phi, zFloor )
-        wb[i] = zEff - Z                        ## the SCREENING part only; <= 0, as for the other fields
+        wb[i] = zEff - Z                        # the SCREENING part only; <= 0, as for the other fields
     end
     wb[1] = 0.
     wc = Radial.Potential("Thomas-Fermi screening", wb, grid)

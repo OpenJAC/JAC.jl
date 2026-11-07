@@ -1,5 +1,5 @@
 # Functions and methods for scheme::Plasma.SuperConfigurationMixtureOpacityScheme computations.
-#
+
 # EXTENDED 18-Oct-2026 to cover a species' own STAGE axis, not just the species axis: every (species,stage)
 # pair gets its own Group (via SuperConfigurations.buildGroup, for the coupled Saha-Boltzmann balance) AND
 # is run through Plasma.perform(::SuperConfigurationOpacityScheme, ...) UNCHANGED (for its own Stage-2/3

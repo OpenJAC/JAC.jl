@@ -1,6 +1,6 @@
 
-## Functions in this file cover: atomic properties.
-## Alphabetical order within this file.
+# Functions in this file cover: atomic properties.
+# Alphabetical order within this file.
 
 
 """
@@ -111,7 +111,7 @@ function testModule_DispersionCoefficient(; short::Bool=true)
     # Four invariants, of which only ONE uses a published number.  A dispersion coefficient is a re-summation of the
     # multipole response, so the module's own content is the combinatorics and the omega integral, and both can be
     # checked exactly.
-    #
+
     #   (1) THE CASIMIR-POLDER COMBINATORICS, which needs no atomic input at all.  Summed over ORDERED (l1,l2)
     #       pairs the single binomial must reproduce the prefactors the literature writes out by hand.
     #   (2) THE CLOSED-FORM OVERLAP INTEGRAL against a quadrature of its own integrand.  This is what justifies
@@ -122,11 +122,11 @@ function testModule_DispersionCoefficient(; short::Bool=true)
     #       C_3 = (1/8) sum_a A_a = 1/4 exactly -- which is also what an electrostatic image dipole gives.  This
     #       one check exercises the amplitudes, the angular factors and the normalization in one number.
     #   (4) C_6 of H-H against the published Dirac value, the single external anchor.
-    #
+
     # AND TWO BEHAVIOURS, both of which are the module refusing rather than returning: the ground-level guard must
     # RAISE for an excited partner, and a C_n needing a multipole the partner does not carry must be reported
     # INCOMPLETE rather than silently computed too small.
-    #
+
     # Cost: the hydrogen part is one 64 a.u. box with np n = 2..16, measured at 0.1 s once JAC is compiled.  The
     # BOX IS DELIBERATELY SMALL and points the opposite way to Rule 12's usual advice -- a sum over states needs
     # its upper members to stand in for the CONTINUUM, and a box matched to the highest orbital leaves them genuine
@@ -134,7 +134,7 @@ function testModule_DispersionCoefficient(; short::Bool=true)
     # 0.702 (n <= 6), 0.735 (8), 0.887 (10), 0.993 (12), 0.99995 (16), so n = 16 is what the 1e-4 below needs.
     # No approved reference file is used, so nothing here can be made to pass by re-approving data.
     success = true;    printTest, iostream = Defaults.getDefaults("test flag/stream")
-    #
+
     # (1) the combinatorics alone
     for  (l1, l2, exact, name)  in  ( (1, 1, 3/pi, "3/pi"),  (1, 2, 15/(2pi), "15/2pi"), (2, 1, 15/(2pi), "15/2pi"),
                                       (1, 3, 14/pi, "14/pi"), (3, 1, 14/pi, "14/pi"),    (2, 2, 35/pi, "35/pi") )
@@ -145,7 +145,7 @@ function testModule_DispersionCoefficient(; short::Bool=true)
                                           "$prefactor where the literature writes $name = $exact")   end
         end
     end
-    #
+
     # (2) the closed-form overlap integral against a trapezoidal quadrature of the same integrand.  The integrand
     #     falls as w^-4, so the truncated tail, not the step, sets the error: measured -2.6e-11 at wmax = 1000 and
     #     -4.0e-10 at wmax = 400, both with 40000 intervals, so wmax = 1000 is chosen and 1e-9 is the bound.
@@ -167,7 +167,7 @@ function testModule_DispersionCoefficient(; short::Bool=true)
                                       "of the same integrand gives $quad; the pi/(2(a+b)) identity that removes " *
                                       "the omega quadrature from src/ does not hold")   end
     end
-    #
+
     # (3) and (4): hydrogen 1s, reached through Atomic.Computation exactly as a user would reach it
     nmDi   = Nuclear.Model(1.0, PointNucleus())
     gridDi = Radial.Grid(Radial.Grid(true); rbox = 64.0)
@@ -236,7 +236,7 @@ function testModule_DispersionCoefficient(; short::Bool=true)
                                           "partner carries E1 only")   end
         end
     end
-    #
+
     # the ground-level guard must RAISE.  A negative excitation energy is all it takes, so this needs no structure:
     # the contour argument behind the imaginary-frequency integral fails the moment one dE changes sign.
     excited = DispersionCoefficient.Partner("an excited partner", Level(),
@@ -320,19 +320,19 @@ function testModule_Hfs(; short::Bool=true)
                             nuclearModel=Nuclear.Model(26., FermiNucleus(), 58., 3.81, AngularJ64(5//2), 1.0, 1.0, 0.),
                             configs=[Configuration("[Ne] 3s^2 3p^5"), Configuration("[Ne] 3s 3p^6")],
                             propertySettings = [ Hfs.Settings(true, true, true, true, true, false, LevelSelection() )] )
-                            ## calcHfMultiplet = TRUE since 16-Aug-2026.  It had been false because that path
-                            ## raised "... still to be done for a single nuclear spin/isomer"; the error stood
-                            ## in front of a computation that works, and three display sites behind it still
-                            ## used the field names of a retired type.  All four are repaired, so the test now
-                            ## covers the F-resolved multiplet as well.
+                            # calcHfMultiplet = TRUE since 16-Aug-2026.  It had been false because that path
+                            # raised "... still to be done for a single nuclear spin/isomer"; the error stood
+                            # in front of a computation that works, and three display sites behind it still
+                            # used the field names of a retired type.  All four are repaired, so the test now
+                            # covers the F-resolved multiplet as well.
 
     wb = perform(wa)
     ###
     Defaults.setDefaults("print summary: close", "")
     println("aaa  ")
     # Make the comparison with approved data
-    ## Anchor on what this test is FOR.  Until 16-Aug-2026 it compared "Level  J Parity  Hartrees", the
-    ## level-energy table, so it would have verified no hyperfine quantity at all even once re-enabled.
+    # Anchor on what this test is FOR.  Until 16-Aug-2026 it compared "Level  J Parity  Hartrees", the
+    # level-energy table, so it would have verified no hyperfine quantity at all even once re-enabled.
     success = testCompareFiles( joinpath(@__DIR__, "..", "test", "approved", "test-Hfs-b-approved.sum"),
                                 joinpath(@__DIR__, "..", "test", "test-Hfs-b-new.sum"), "HFS parameters:", 9)
     success = success  &&
@@ -406,61 +406,61 @@ function testModule_MultipolePolarizibility(; short::Bool=true)
     Defaults.setDefaults("print summary: open", "test-MultipolePolarizibility-new.sum")
     printstyled("\n\nTest the module  MultipolePolarizibility  ... \n", color=:cyan)
     ### Make the tests
-    ## RE-ENABLED 09-Aug-2026, and deliberately SHORT. This test had been disabled since 31-Jul because a parallel
-    ## session was editing the module; that reason expired, but the old test then failed for a different one -- it
-    ## passed six positional arguments to a Settings that has had five fields since the Angel-Sandars rewrite.
+    # RE-ENABLED 09-Aug-2026, and deliberately SHORT. This test had been disabled since 31-Jul because a parallel
+    # session was editing the module; that reason expired, but the old test then failed for a different one -- it
+    # passed six positional arguments to a Settings that has had five fields since the Angel-Sandars rewrite.
     ##
-    ## WHAT IT CHECKS: the static E1 polarizability of hydrogen 1s, against two facts that need no reference data.
-    ##   (1) THE TENSOR POLARIZABILITY MUST VANISH for J = 1/2. alpha2 is a rank-2 quantity and a level with
-    ##       J < 1 cannot carry one. An exact zero, in both gauges.
-    ##   (2) THE SCALAR POLARIZABILITY IS BOUNDED. For the hydrogen ground state every term of the sum over
-    ##       perturbers is positive, so a sum over a FINITE, BOUND-ONLY set of np states is a strict lower bound
-    ##       on the exact 4.5 a.u. Hence 0 < alpha0 < 4.5, which catches both a sign error and a runaway.
+    # WHAT IT CHECKS: the static E1 polarizability of hydrogen 1s, against two facts that need no reference data.
+    #   (1) THE TENSOR POLARIZABILITY MUST VANISH for J = 1/2. alpha2 is a rank-2 quantity and a level with
+    #       J < 1 cannot carry one. An exact zero, in both gauges.
+    #   (2) THE SCALAR POLARIZABILITY IS BOUNDED. For the hydrogen ground state every term of the sum over
+    #       perturbers is positive, so a sum over a FINITE, BOUND-ONLY set of np states is a strict lower bound
+    #       on the exact 4.5 a.u. Hence 0 < alpha0 < 4.5, which catches both a sign error and a runaway.
     ##
-    ## THE "B-SPLINE PSEUDO-CONTINUUM BUG" THAT BLOCKED THIS MODULE WAS NEVER A BUG -- it was this test's own
-    ## radial box (10-Aug-2026). With rbox = 20 a.u. the np perturbers came out at -0.12500, -0.05160 and
-    ## +0.00817 a.u.; the 4p pair is POSITIVE, which is exactly the "pseudo-continuum orbitals get near-zero
-    ## energies" symptom that was recorded as a Bsplines defect. Those Rydberg perturbers simply need a wider
-    ## box: at rbox = 80 they are -0.12500, -0.05556, -0.03125, i.e. the exact hydrogenic values, and the
-    ## result is converged (rbox = 150 and 300 reproduce it digit for digit). hp was widened 1.0e-2 -> 4.0e-2
-    ## at the same time: the linear part of a log-lin grid costs rbox/hp points, so rbox = 80 at hp = 1.0e-2
-    ## needs 8344 points and 6.6 s, while hp = 4.0e-2 gives the SAME perturber energies with 2338 points in
-    ## 0.5 s -- i.e. the wider box costs nothing once hp is matched to it. The new grid check in
-    ## Bsplines.checkGridRepresentation flags precisely this and recommends 77.4 a.u.; it was that check,
-    ## on its first run over the suite, which found it.
+    # THE "B-SPLINE PSEUDO-CONTINUUM BUG" THAT BLOCKED THIS MODULE WAS NEVER A BUG -- it was this test's own
+    # radial box (10-Aug-2026). With rbox = 20 a.u. the np perturbers came out at -0.12500, -0.05160 and
+    # +0.00817 a.u.; the 4p pair is POSITIVE, which is exactly the "pseudo-continuum orbitals get near-zero
+    # energies" symptom that was recorded as a Bsplines defect. Those Rydberg perturbers simply need a wider
+    # box: at rbox = 80 they are -0.12500, -0.05556, -0.03125, i.e. the exact hydrogenic values, and the
+    # result is converged (rbox = 150 and 300 reproduce it digit for digit). hp was widened 1.0e-2 -> 4.0e-2
+    # at the same time: the linear part of a log-lin grid costs rbox/hp points, so rbox = 80 at hp = 1.0e-2
+    # needs 8344 points and 6.6 s, while hp = 4.0e-2 gives the SAME perturber energies with 2338 points in
+    # 0.5 s -- i.e. the wider box costs nothing once hp is matched to it. The new grid check in
+    # Bsplines.checkGridRepresentation flags precisely this and recommends 77.4 a.u.; it was that check,
+    # on its first run over the suite, which found it.
     ##
-    ## THE SIX-ORDER GAUGE GAP THIS COMMENT USED TO DESCRIBE IS GONE, and the paragraph is replaced rather than
-    ## kept, because it describes code that no longer exists. It recorded alpha_0(Coulomb) ~ 1.5e-6 against
-    ## 1.164 (Babushkin) and diagnosed it correctly: the Coulomb column was evaluating the frequency-DEPENDENT
-    ## MabEmission at omega = 0. The module now uses MultipoleMoment.emmStaticAmplitude -- Johnson's r^k C_k,
-    ## with no omega and no gauge -- so the two columns are identical BY CONSTRUCTION, and both give 3.491829.
+    # THE SIX-ORDER GAUGE GAP THIS COMMENT USED TO DESCRIBE IS GONE, and the paragraph is replaced rather than
+    # kept, because it describes code that no longer exists. It recorded alpha_0(Coulomb) ~ 1.5e-6 against
+    # 1.164 (Babushkin) and diagnosed it correctly: the Coulomb column was evaluating the frequency-DEPENDENT
+    # MabEmission at omega = 0. The module now uses MultipoleMoment.emmStaticAmplitude -- Johnson's r^k C_k,
+    # with no omega and no gauge -- so the two columns are identical BY CONSTRUCTION, and both give 3.491829.
     ##
-    ## **AND THE NUMBERS BELOW ARE NOW ASSERTED AGAINST EXACT HYDROGEN, which is what makes this a real test.**
-    ## For H 1s the sum-over-states alpha = sum_i f_i/omega_i^2 is known in closed form, term by term:
-    ##     2p   f = 0.41620,  omega = 0.375      ->  2.9596        (and the 1/2 : 3/2 pair splits 1 : 2)
-    ##     3p   f = 0.07910,  omega = 0.44444    ->  0.4005
-    ##     4p   f = 0.02900,  omega = 0.46875    ->  0.1320
-    ##                                bound sum  ->  3.4921
-    ## so a bound-only 2p+3p+4p sum has ONE right answer and the test demands it to 0.2 %. That is what the old
-    ## "0 < alpha0 < 4.5" bound could not do: it would have passed the stale 1.164 just as happily.
+    # **AND THE NUMBERS BELOW ARE NOW ASSERTED AGAINST EXACT HYDROGEN, which is what makes this a real test.**
+    # For H 1s the sum-over-states alpha = sum_i f_i/omega_i^2 is known in closed form, term by term:
+    #     2p   f = 0.41620,  omega = 0.375      ->  2.9596        (and the 1/2 : 3/2 pair splits 1 : 2)
+    #     3p   f = 0.07910,  omega = 0.44444    ->  0.4005
+    #     4p   f = 0.02900,  omega = 0.46875    ->  0.1320
+    #                                bound sum  ->  3.4921
+    # so a bound-only 2p+3p+4p sum has ONE right answer and the test demands it to 0.2 %. That is what the old
+    # "0 < alpha0 < 4.5" bound could not do: it would have passed the stale 1.164 just as happily.
     ni    = Nuclear.Model(1.0, PointNucleus())
     grid  = Radial.Grid(Radial.Grid(false), rnt=4.0e-6, h=5.0e-2, hp=4.0e-2, rbox=80.0)
     scf   = Basics.NuclearField();   asf = AsfSettings(AsfSettings(); scField=scf)
     gMp   = generate(Representation("np perturbers", ni, grid,
                        [Configuration("2p"), Configuration("3p"), Configuration("4p")],
                        MeanFieldMultiplet(MeanFieldSettings(scf))), output=true)[ResultKeys.MeanFieldMultiplet]
-    ## `calcCore = true` is asked for here DELIBERATELY although hydrogen has no closed subshell: it exercises the
-    ## perform-route wiring of the core part and its open-subshell guard, and it CANNOT move the approved file,
-    ## because an outcome with no closed subshell carries no alphaCore and the core table then prints nothing at all.
+    # `calcCore = true` is asked for here DELIBERATELY although hydrogen has no closed subshell: it exercises the
+    # perform-route wiring of the core part and its open-subshell guard, and it CANNOT move the approved file,
+    # because an outcome with no closed subshell carries no alphaCore and the core table then prints nothing at all.
     set   = MultipolePolarizibility.Settings(MultipolePolarizibility.Settings();
                 multipoles=[E1], gMultiplet=gMp, omegas=[0.], printBefore=false, levelSelection=LevelSelection(),
                 calcCore=true)
-    ## `asfSettings`, NOT `initialAsfSettings` (corrected 09-Aug-2026): Atomic.Computation carries BOTH, and the
-    ## first pairs with `configs` while the second pairs with `initialConfigs`. Passing the wrong one is silent --
-    ## the scField is simply ignored and the default DFS field runs instead, which for hydrogen gives a
-    ## self-interacting 1s orbital at -0.194 a.u. against the exact -0.500. The perturbers here are built through
-    ## a Representation, which DID honour the field, so the reference level and the perturbers sat in different
-    ## potentials: exactly the mismatch the two-photon work found to be worth a factor 6.
+    # `asfSettings`, NOT `initialAsfSettings` (corrected 09-Aug-2026): Atomic.Computation carries BOTH, and the
+    # first pairs with `configs` while the second pairs with `initialConfigs`. Passing the wrong one is silent --
+    # the scField is simply ignored and the default DFS field runs instead, which for hydrogen gives a
+    # self-interacting 1s orbital at -0.194 a.u. against the exact -0.500. The perturbers here are built through
+    # a Representation, which DID honour the field, so the reference level and the perturbers sat in different
+    # potentials: exactly the mismatch the two-photon work found to be worth a factor 6.
     wa    = Atomic.Computation(Atomic.Computation(), name="H 1s static polarizibility", grid=grid, nuclearModel=ni,
                 configs=[Configuration("1s")], asfSettings=asf, propertySettings=[set])
     outcomes = perform(wa; output=true)[MultipolePolarizibility.Settings]
@@ -468,32 +468,32 @@ function testModule_MultipolePolarizibility(; short::Bool=true)
     success = true
     if  length(outcomes) == 0    success = false;   println("** no polarizibility outcome was computed")   end
     for  outcome in outcomes
-        if  Basics.twice(outcome.level.J) < 2      ## J < 1 : no tensor polarizability can exist
+        if  Basics.twice(outcome.level.J) < 2      # J < 1 : no tensor polarizability can exist
             if  outcome.alpha2.Coulomb != 0.  ||  outcome.alpha2.Babushkin != 0.
                 success = false
                 println("** alpha2 is non-zero for J = $(outcome.level.J), where a rank-2 polarizability " *
                         "cannot exist: $(outcome.alpha2)")
             end
         end
-        ## the bound-only perturber sum must sit strictly between zero and the exact hydrogen value ...
+        # the bound-only perturber sum must sit strictly between zero and the exact hydrogen value ...
         if  !(0. < outcome.alpha0.Babushkin < 4.5)
             success = false
             println("** alpha0 (Babushkin) = $(outcome.alpha0.Babushkin) is outside (0, 4.5); a sum over a " *
                     "bound-only perturber set must be a strict lower bound on the exact 4.5 a.u.")
         end
-        ## ... and it must be the RIGHT lower bound:  the closed-form 2p+3p+4p value of hydrogen, 3.4921.
+        # ... and it must be the RIGHT lower bound:  the closed-form 2p+3p+4p value of hydrogen, 3.4921.
         if  abs(outcome.alpha0.Babushkin/3.4921 - 1.0) > 2.0e-3
             success = false
             println("** alpha0 = $(outcome.alpha0.Babushkin) against the closed-form bound-only sum 3.4921 for " *
                     "H 1s with 2p, 3p and 4p perturbers -- a relative difference of " *
                     "$(abs(outcome.alpha0.Babushkin/3.4921 - 1.0))")
         end
-        ## THE GENERAL alphas TABLE MUST MEET THE STATIC PAIR BIT FOR BIT AT omega = 0 -- added 19-Oct-2026,
-        ## item 69.  `outcome.alpha0` and the (Mp, K, omega, alpha) table are filled by DIFFERENT code paths: the
-        ## first by the original scalar/tensor route, the second by the general-rank, general-frequency one.  The
-        ## module special-cases omega = 0 precisely so that adding the dynamic capability moves no approved
-        ## reference, so a difference of one ulp here means the two paths have parted -- hence `!=` and not a
-        ## tolerance.  This costs nothing: the computation above already runs with omegas = [0.].
+        # THE GENERAL alphas TABLE MUST MEET THE STATIC PAIR BIT FOR BIT AT omega = 0 -- added 19-Oct-2026,
+        # item 69.  `outcome.alpha0` and the (Mp, K, omega, alpha) table are filled by DIFFERENT code paths: the
+        # first by the original scalar/tensor route, the second by the general-rank, general-frequency one.  The
+        # module special-cases omega = 0 precisely so that adding the dynamic capability moves no approved
+        # reference, so a difference of one ulp here means the two paths have parted -- hence `!=` and not a
+        # tolerance.  This costs nothing: the computation above already runs with omegas = [0.].
         iDy = findfirst(t -> t[1] == E1  &&  t[2] == 0  &&  t[3] == 0.0, outcome.alphas)
         if      isnothing(iDy)
             success = false
@@ -504,16 +504,16 @@ function testModule_MultipolePolarizibility(; short::Bool=true)
             println("** the omega = 0 entry of the general alphas table is $(outcome.alphas[iDy][4].Babushkin) " *
                     "while alpha0 is $(outcome.alpha0.Babushkin); the two paths must meet bit for bit at omega = 0")
         end
-        ## THE OPEN-SUBSHELL GUARD OF THE CORE PART -- added 21-Oct-2026, item 92.  Hydrogen's 1s holds ONE electron,
-        ## so it is not a closed subshell and its response belongs to the sum over states above, not to the
-        ## complete-basis core route.  An alphaCore entry here would mean the core route had claimed a shell that is
-        ## the perturber sum's business, which would DOUBLE COUNT it.
+        # THE OPEN-SUBSHELL GUARD OF THE CORE PART -- added 21-Oct-2026, item 92.  Hydrogen's 1s holds ONE electron,
+        # so it is not a closed subshell and its response belongs to the sum over states above, not to the
+        # complete-basis core route.  An alphaCore entry here would mean the core route had claimed a shell that is
+        # the perturber sum's business, which would DOUBLE COUNT it.
         if  !isempty(outcome.alphaCore)
             success = false
             println("** alphaCore is non-empty for hydrogen 1s, which is an OPEN subshell: " *
                     "$(outcome.alphaCore).  The core route must decline a shell the perturber sum owns.")
         end
-        ## A STATIC POLARIZABILITY HAS NO GAUGE FREEDOM, so the two columns must be identical, not merely close.
+        # A STATIC POLARIZABILITY HAS NO GAUGE FREEDOM, so the two columns must be identical, not merely close.
         if  outcome.alpha0.Coulomb != outcome.alpha0.Babushkin
             success = false
             println("** the two gauge columns of a STATIC polarizability differ: $(outcome.alpha0.Coulomb) " *
@@ -521,9 +521,9 @@ function testModule_MultipolePolarizibility(; short::Bool=true)
                     "operator and must be equal bit for bit.")
         end
     end
-    ## AND PERTURBER BY PERTURBER, which is where a wrong angular factor shows itself while a total can still
-    ## look plausible.  Each np pair has a closed-form value, and the two spin-orbit partners must split 1 : 2
-    ## by their statistical weights -- a ratio no fitting can produce by accident.
+    # AND PERTURBER BY PERTURBER, which is where a wrong angular factor shows itself while a total can still
+    # look plausible.  Each np pair has a closed-form value, and the two spin-orbit partners must split 1 : 2
+    # by their statistical weights -- a ratio no fitting can produce by accident.
     for  outcome in outcomes
         pairs = Dict{Int64, Vector{Float64}}()
         for  c  in  outcome.contributions
@@ -549,23 +549,23 @@ function testModule_MultipolePolarizibility(; short::Bool=true)
         end
     end
     Defaults.setDefaults("print summary: close", "")
-    ## THE RANK-2 BRANCH, ASSERTED AGAINST AN EXACT NUMBER -- added 14-Oct-2026, item 68.  Everything above
-    ## checks that alpha_2 VANISHES (J = 1/2, and J < 1 generally), and a vanishing test cannot detect a wrong
-    ## rank-2 prefactor, a wrong 6-j or a sign.  This can, and it needs no reference data.
+    # THE RANK-2 BRANCH, ASSERTED AGAINST AN EXACT NUMBER -- added 14-Oct-2026, item 68.  Everything above
+    # checks that alpha_2 VANISHES (J = 1/2, and J < 1 generally), and a vanishing test cannot detect a wrong
+    # rank-2 prefactor, a wrong 6-j or a sign.  This can, and it needs no reference data.
     ##
-    ## WITH EXACTLY ONE INTERMEDIATE LEVEL the two Angel-Sandars formulae share the same radial factor,
-    ##     alpha_0 = -2/(3(2J+1)) * R ,
-    ##     alpha_2 = -2 sqrt(10/3) G(J) (-1)^(2J) (-1)^(J-J') {J J' 1; 1 2 J} * R ,
-    ## so every radial integral AND every energy denominator cancels in the ratio, leaving a pure angular
-    ## number -- which turns out to be a simple rational:
-    ##     J = 3/2, J' = 1/2  ->  -1          J = 3/2, J' = 3/2  ->  +4/5
-    ##     J = 3/2, J' = 5/2  ->  -1/5        J = 5/2, J' = 5/2  ->  +8/7
-    ## Measured 14-Oct-2026 at -1.00000000 (2.2e-16 off), +0.80000000 (bit-exact) and -0.20000000 (2.8e-17).
+    # WITH EXACTLY ONE INTERMEDIATE LEVEL the two Angel-Sandars formulae share the same radial factor,
+    #     alpha_0 = -2/(3(2J+1)) * R ,
+    #     alpha_2 = -2 sqrt(10/3) G(J) (-1)^(2J) (-1)^(J-J') {J J' 1; 1 2 J} * R ,
+    # so every radial integral AND every energy denominator cancels in the ratio, leaving a pure angular
+    # number -- which turns out to be a simple rational:
+    #     J = 3/2, J' = 1/2  ->  -1          J = 3/2, J' = 3/2  ->  +4/5
+    #     J = 3/2, J' = 5/2  ->  -1/5        J = 5/2, J' = 5/2  ->  +8/7
+    # Measured 14-Oct-2026 at -1.00000000 (2.2e-16 off), +0.80000000 (bit-exact) and -0.20000000 (2.8e-17).
     ##
-    ## TWO CONSEQUENCES WORTH KNOWING.  Because the radial factor cancels, THE GRID IS IRRELEVANT here -- the
-    ## coarse, cheap basis below gives the exact ratio, so this costs the suite almost nothing.  And together
-    ## with the hydrogen checks above the pair is complete: those validate the RADIAL part of alpha_0 against
-    ## the exact 4.5, this validates the ANGULAR part of alpha_2, and alpha_2 shares the radial factor.
+    # TWO CONSEQUENCES WORTH KNOWING.  Because the radial factor cancels, THE GRID IS IRRELEVANT here -- the
+    # coarse, cheap basis below gives the exact ratio, so this costs the suite almost nothing.  And together
+    # with the hydrogen checks above the pair is complete: those validate the RADIAL part of alpha_0 against
+    # the exact 4.5, this validates the ANGULAR part of alpha_2, and alpha_2 shares the radial factor.
     gridA2 = Radial.Grid(Radial.Grid(false), rnt = 4.0e-06, h = 5.0e-2, hp = 1.2, rbox = 60.0)
     nmA2   = Nuclear.Model(4., PointNucleus())
     asfA2  = AsfSettings(AsfSettings(); scField = Basics.NuclearField(), gridStopper = false)
@@ -573,7 +573,7 @@ function testModule_MultipolePolarizibility(; short::Bool=true)
         wp  = Atomic.Computation(Atomic.Computation(), name="alpha_2 perturber", grid=gridA2, nuclearModel=nmA2,
                                   configs=[Configuration(confA2)], asfSettings=asfA2)
         gMp = perform(wp; output=true)[ResultKeys.Multiplet]
-        ## exactly ONE intermediate level, which is what the identity requires
+        # exactly ONE intermediate level, which is what the identity requires
         oneLevel = [ lev  for lev in gMp.levels  if Basics.twice(lev.J) == twoJp ]
         if  length(oneLevel) != 1
             success = false
@@ -585,7 +585,7 @@ function testModule_MultipolePolarizibility(; short::Bool=true)
         wA2   = Atomic.Computation(Atomic.Computation(), name="alpha_2 ratio", grid=gridA2, nuclearModel=nmA2,
                                     configs=[Configuration("2p")], propertySettings=[polA2], asfSettings=asfA2)
         for  oc  in  perform(wA2; output=true)[MultipolePolarizibility.Settings]
-            Basics.twice(oc.level.J) == 3  ||  continue        ## the 2p_3/2 level is the one carrying alpha_2
+            Basics.twice(oc.level.J) == 3  ||  continue        # the 2p_3/2 level is the one carrying alpha_2
             ratioA2 = oc.alpha2.Babushkin / oc.alpha0.Babushkin
             if  abs(ratioA2 - exactRatio) > 1.0e-10
                 success = false
@@ -596,21 +596,21 @@ function testModule_MultipolePolarizibility(; short::Bool=true)
         end
     end
 
-    ## THE DYNAMIC BRANCH, ASSERTED AGAINST AN EXACT IDENTITY -- added 19-Oct-2026, item 69.  Everything above
-    ## runs at omega = 0, so until now NOTHING in the suite touched the frequency dependence: `Settings.omegas`,
-    ## `MultipolePolarizibility.frequencyFactor` and the entire imaginary axis were held only by a `tools/` probe,
-    ## which the suite never runs.
+    # THE DYNAMIC BRANCH, ASSERTED AGAINST AN EXACT IDENTITY -- added 19-Oct-2026, item 69.  Everything above
+    # runs at omega = 0, so until now NOTHING in the suite touched the frequency dependence: `Settings.omegas`,
+    # `MultipolePolarizibility.frequencyFactor` and the entire imaginary axis were held only by a `tools/` probe,
+    # which the suite never runs.
     ##
-    ## WITH EXACTLY ONE INTERMEDIATE LEVEL the frequency dependence is a pure RATIO in which the radial integral,
-    ## the angular factor and the oscillator strength all cancel, leaving the denominator alone:
-    ##     alpha(omega)   / alpha(0) = dE^2 / (dE^2 - omega^2)     on the real axis,
-    ##     alpha(i omega) / alpha(0) = dE^2 / (dE^2 + omega^2)     on the imaginary axis.
-    ## So this tests `frequencyFactor` and nothing else -- which is the whole point, since the frequency enters the
-    ## module ONLY through that one function.  As with the rank-2 ratio above the grid is therefore irrelevant, and
-    ## the perturber here is the SAME 3s level, so the test costs one extra multiplet and nothing more.
+    # WITH EXACTLY ONE INTERMEDIATE LEVEL the frequency dependence is a pure RATIO in which the radial integral,
+    # the angular factor and the oscillator strength all cancel, leaving the denominator alone:
+    #     alpha(omega)   / alpha(0) = dE^2 / (dE^2 - omega^2)     on the real axis,
+    #     alpha(i omega) / alpha(0) = dE^2 / (dE^2 + omega^2)     on the imaginary axis.
+    # So this tests `frequencyFactor` and nothing else -- which is the whole point, since the frequency enters the
+    # module ONLY through that one function.  As with the rank-2 ratio above the grid is therefore irrelevant, and
+    # the perturber here is the SAME 3s level, so the test costs one extra multiplet and nothing more.
     ##
-    ## THE TWO AXES MUST ALSO MEET AT omega = 0, exactly:  dE/(dE^2 +- 0) is 1/dE either way, and that is the
-    ## identity the omega = 0 fast path rests on.
+    # THE TWO AXES MUST ALSO MEET AT omega = 0, exactly:  dE/(dE^2 +- 0) is 1/dE either way, and that is the
+    # identity the omega = 0 fast path rests on.
     gridDy = Radial.Grid(Radial.Grid(false), rnt = 4.0e-06, h = 5.0e-2, hp = 1.2, rbox = 60.0)
     nmDy   = Nuclear.Model(4., PointNucleus())
     asfDy  = AsfSettings(AsfSettings(); scField = Basics.NuclearField(), gridStopper = false)
@@ -620,7 +620,7 @@ function testModule_MultipolePolarizibility(; short::Bool=true)
     wrDy   = Atomic.Computation(Atomic.Computation(); name="reference level", grid=gridDy, nuclearModel=nmDy,
                                  configs=[Configuration("2p")], asfSettings=asfDy)
     mpDy   = perform(wrDy; output=true)[ResultKeys.Multiplet]
-    ## the 2p_1/2 level, which carries K = 0 alone, and the single 3s perturber above it
+    # the 2p_1/2 level, which carries K = 0 alone, and the single 3s perturber above it
     iHalf  = findfirst(lev -> Basics.twice(lev.J) == 1, mpDy.levels)
     jHalf  = findfirst(lev -> Basics.twice(lev.J) == 1, gmDy.levels)
     if  isnothing(iHalf)  ||  isnothing(jHalf)
@@ -640,13 +640,13 @@ function testModule_MultipolePolarizibility(; short::Bool=true)
             success = false
             println("** the single-perturber setup is degenerate: dE = $dEDy and alpha(0) = $a0Dy")
         else
-            ## the two axes meet at omega = 0, bit for bit
+            # the two axes meet at omega = 0, bit for bit
             if  alphaDy(0.0, true) != a0Dy
                 success = false
                 println("** the imaginary axis at omega = 0 gives $(alphaDy(0.0, true)) against $a0Dy on the real " *
                         "axis; dE/(dE^2 + 0) and dE/(dE^2 - 0) are the same number and must stay so")
             end
-            ## and away from it, the exact single-pole ratio.  0.3 and 0.6 a.u. both sit below dE ~ 1.1 a.u.
+            # and away from it, the exact single-pole ratio.  0.3 and 0.6 a.u. both sit below dE ~ 1.1 a.u.
             for  (omDy, imDy)  in  ((0.3, false), (0.6, false), (0.3, true), (0.6, true))
                 exactDy = imDy ? dEDy^2/(dEDy^2 + omDy^2) : dEDy^2/(dEDy^2 - omDy^2)
                 ratioDy = alphaDy(omDy, imDy) / a0Dy
@@ -660,9 +660,9 @@ function testModule_MultipolePolarizibility(; short::Bool=true)
             end
         end
     end
-    ## THE RANK RULES, spot-checked against values derived by hand rather than from the code.  K <= 2L, K <= 2J and
-    ## K even act together, and the J = 1/2 row is a physical statement and not a restatement of the formula: a
-    ## spin-1/2 level cannot be aligned by ANY multipole, however high.
+    # THE RANK RULES, spot-checked against values derived by hand rather than from the code.  K <= 2L, K <= 2J and
+    # K even act together, and the J = 1/2 row is a physical statement and not a restatement of the formula: a
+    # spin-1/2 level cannot be aligned by ANY multipole, however high.
     for  (mpRk, twoJRk, exactRk)  in  ( (E1, 1, [0]),  (E2, 1, [0]),  (E3, 1, [0]),
                                         (E1, 5, [0,2]), (E2, 5, [0,2,4]), (E3, 5, [0,2,4]) )
         ranksRk = MultipolePolarizibility.allowedRanks(mpRk, AngularJ64(twoJRk//2))
@@ -673,19 +673,19 @@ function testModule_MultipolePolarizibility(; short::Bool=true)
         end
     end
 
-    ## THE CORE POLARIZABILITY AGAINST AN EXACT CLOSED FORM -- added 21-Oct-2026, item 92, and it needs no
-    ## reference data of any kind.  A 1s^2 subshell in the BARE NUCLEAR field is two INDEPENDENT hydrogenic
-    ## electrons, so its dipole polarizability is exactly 2 * 9/(2 Z^4);  at Z = 2 that is 0.5625 a.u.  The test
-    ## therefore asserts the whole assembly at once -- the occupation factor N_a/(2j_a+1), the angular factor
-    ## CL(a,1,t)^2 summed over both p channels, the 1/3 + 1/3 split of the two solves, the radial-drive correction
-    ## and the Pauli projection -- against a number that owes nothing to JAC.  It is computed DIRECTLY rather than
-    ## through perform, so that it writes nothing to the summary file the comparison below reads.
+    # THE CORE POLARIZABILITY AGAINST AN EXACT CLOSED FORM -- added 21-Oct-2026, item 92, and it needs no
+    # reference data of any kind.  A 1s^2 subshell in the BARE NUCLEAR field is two INDEPENDENT hydrogenic
+    # electrons, so its dipole polarizability is exactly 2 * 9/(2 Z^4);  at Z = 2 that is 0.5625 a.u.  The test
+    # therefore asserts the whole assembly at once -- the occupation factor N_a/(2j_a+1), the angular factor
+    # CL(a,1,t)^2 summed over both p channels, the 1/3 + 1/3 split of the two solves, the radial-drive correction
+    # and the Pauli projection -- against a number that owes nothing to JAC.  It is computed DIRECTLY rather than
+    # through perform, so that it writes nothing to the summary file the comparison below reads.
     ##
-    ## AND THE SECOND ASSERTION IS THE FREQUENCY, which the first one cannot see at all: the two energy
-    ## denominators dE -+ omega give alpha(omega) = alpha(0) + S3 omega^2 + O(omega^4), so the enhancement at 2w
-    ## must be FOUR TIMES the enhancement at w.  A ratio of enhancements has every radial factor cancelled out of
-    ## it, so it needs no converged grid -- and it would fail outright if the two solves were made at the same
-    ## sign, which is the one mistake this prefactor invites.
+    # AND THE SECOND ASSERTION IS THE FREQUENCY, which the first one cannot see at all: the two energy
+    # denominators dE -+ omega give alpha(omega) = alpha(0) + S3 omega^2 + O(omega^4), so the enhancement at 2w
+    # must be FOUR TIMES the enhancement at w.  A ratio of enhancements has every radial factor cancelled out of
+    # it, so it needs no converged grid -- and it would fail outright if the two solves were made at the same
+    # sign, which is the one mistake this prefactor invites.
     niC   = Nuclear.Model(2.0, PointNucleus())
     gridC = Radial.Grid(Radial.Grid(false), rnt=4.0e-6, h=5.0e-2, hp=5.0e-1, rbox=40.0)
     asfC  = AsfSettings(AsfSettings(); scField=Basics.NuclearField(), gridStopper=false)
@@ -719,12 +719,12 @@ function testModule_MultipolePolarizibility(; short::Bool=true)
                 "one at 0.05, where the two energy denominators dE -+ omega demand 4")
     end
 
-    ## AND the approved reference, restored 03-Sep-2026. The two exact invariants above cannot be fooled but they
-    ## are also very loose -- anything in (0, 4.5) passes -- so they would not notice alpha_0 drifting from 1.164
-    ## to 3.9, nor a column vanishing from the table. The file comparison catches exactly that, at rtol = 1e-6.
-    ## The reference had been orphaned since 09-Aug-2026, when this test was rewritten around the invariants and
-    ## the comparison was dropped without the file being removed: it sat in test/approved/ describing output that
-    ## nothing checked. A reference that no test reads is not a safety net, it is a thing that goes quietly stale.
+    # AND the approved reference, restored 03-Sep-2026. The two exact invariants above cannot be fooled but they
+    # are also very loose -- anything in (0, 4.5) passes -- so they would not notice alpha_0 drifting from 1.164
+    # to 3.9, nor a column vanishing from the table. The file comparison catches exactly that, at rtol = 1e-6.
+    # The reference had been orphaned since 09-Aug-2026, when this test was rewritten around the invariants and
+    # the comparison was dropped without the file being removed: it sat in test/approved/ describing output that
+    # nothing checked. A reference that no test reads is not a safety net, it is a thing that goes quietly stale.
     scomp   = testCompareFiles( joinpath(@__DIR__, "..", "test", "approved", "test-MultipolePolarizibility-approved.sum"),
                                 joinpath(@__DIR__, "..", "test", "test-MultipolePolarizibility-new.sum"),
                                 "Static electric-dipole scalar/tensor polarizibilities", 6)
@@ -808,7 +808,7 @@ function testModule_ReducedDensityMatrix(; short::Bool=true)
     # zero or more than 2j+1 electrons -- so none of them can pass on a stale reference, and none of them is
     # sensitive to how well the orbitals themselves are converged.  That insensitivity is the point: it tests
     # the RDM machinery rather than the SCF underneath it.
-    #
+
     # The last check is the one with a history.  Until 28-Aug-2026 computeProperties published
     # compute1pRDMDirect, a special-case shortcut whose `samecoupling` test compares the RUNNING coupling
     # subshellX[i]; whenever a spectator subshell lies BETWEEN the two substituted ones its X necessarily
@@ -903,7 +903,7 @@ function testModule_StarkShift(; short::Bool=true)
     # exact properties that hold whatever the polarizabilities come out as, so they test the module's own algebra and
     # not the accuracy of the polarizability sum behind it: the tensor term is TRACELESS in M, the shift depends on M
     # only through M^2, and the whole shift scales as E^2.
-    #
+
     # Hydrogen 2p is used because it gives BOTH cases in one computation: 2p_1/2 has J = 1/2, where J(2J-1) = 0 forces
     # alpha_2 to be exactly zero, and 2p_3/2 has J = 3/2, where the tensor term is live.  Without a level of the second
     # kind the first two checks would be satisfied by a module that simply never computed a tensor shift, so the size
@@ -932,7 +932,7 @@ function testModule_StarkShift(; short::Bool=true)
     for  outcome  in  outcomes
         Jd     = Basics.twice(outcome.Jlevel.J) / 2.0
         alpha0 = outcome.alpha0.Babushkin
-        #
+
         # (1) Sum over M.  The tensor factor [3M^2 - J(J+1)] sums to zero over the 2J+1 sublevels, so whatever alpha_2
         #     is, the centre of gravity of the multiplet is the pure scalar shift.
         total = sum( sub.energy.Babushkin for sub in outcome.Jsublevels )
@@ -942,7 +942,7 @@ function testModule_StarkShift(; short::Bool=true)
             if printTest   info(iostream, "for J = $Jd the sublevel shifts sum to $total, but the traceless tensor " *
                                           "term requires (2J+1)(-alpha_0 E^2/2) = $want")   end
         end
-        #
+
         # (2) The shift depends on M only through M^2, so the M and -M sublevels must be exactly degenerate.
         for  subA  in  outcome.Jsublevels,  subB  in  outcome.Jsublevels
             if  Basics.twice(subA.M) == -Basics.twice(subB.M)  &&
@@ -952,7 +952,7 @@ function testModule_StarkShift(; short::Bool=true)
                                               "$(subA.energy.Babushkin) against $(subB.energy.Babushkin)")   end
             end
         end
-        #
+
         # (3) J < 1 leaves J(2J-1) = 0, where the module returns alpha_2 = 0 rather than dividing by it; the level then
         #     shifts as a whole and does not split at all.
         spread = maximum(sub.energy.Babushkin for sub in outcome.Jsublevels) -
@@ -965,14 +965,14 @@ function testModule_StarkShift(; short::Bool=true)
             sawTensor = true
         end
     end
-    #
+
     # A tensor shift must actually have occurred somewhere, or checks (1) and (2) were satisfied by arithmetic on zeros.
     if  !sawTensor
         success = false
         if printTest   info(iostream, "no level showed a nonzero tensor splitting, so the traceless and M -> -M " *
                                       "checks above are vacuous")   end
     end
-    #
+
     # (4) The shift is quadratic in the field: doubling E must multiply every sublevel shift by exactly four.  This is
     #     the one check that has content even where alpha_2 vanishes.
     for  (outcome, doubled)  in  zip(outcomes, starkOutcomes(2*EField))
@@ -993,7 +993,7 @@ function testModule_StarkShift(; short::Bool=true)
     #     error in this quantity -- adopted in one convention and quoted in the other, it is invisible in every
     #     other check here, since halving every shift leaves the traceless sum, the M -> -M degeneracy and the
     #     exact E^2 scaling all intact.
-    #
+
     #     omega = 1.0e-6 a.u. is far below the 2p -> ns/nd excitation energies, so alpha(omega) differs from
     #     alpha(0) by order (omega/dE)^2 ~ 1e-12 and the ratio is the convention factor alone.  The bound is 1e-9.
     for  (outcome, acOutcome)  in  zip(outcomes, starkOutcomes(EField, 1.0e-6))
@@ -1011,17 +1011,17 @@ function testModule_StarkShift(; short::Bool=true)
 
     # (6) THE BLACK-BODY SHIFT, AND THE TWO THINGS THAT DECIDE IT -- added 20-Oct-2026.  They fail differently,
     #     so they are asserted differently.
-    #
+
     #     (a) <E^2> IS A COMPLETE EXTERNAL ANCHOR, because no atomic quantity enters it at all -- only the
     #         fine-structure constant does.  (4 pi^3/15) alpha_fs^3 T^4 at 300 K is E_rms = 831.9 V/m, the number
     #         every clock paper quotes.  The 0.1 V/m bound is LOOSE ON PURPOSE: what is being checked is the
     #         SCALE, and a wrong scale is wrong by a factor -- a missing factor of two moves E_rms by 1.41, and
     #         4 pi in place of 4 pi^3/15 by 2.2.
-    #
+
     #     (b) eta -> 0 AS T -> 0.  The Planck average must collapse onto the closed-form leading term
     #         -(2/15)(alpha_fs pi)^3 T^4 alpha_0 once the spectrum is too cold to resolve any excitation energy,
     #         and that is what fixes the quadrature's normalisation.
-    #
+
     #     AND THE LIMIT ALONE IS NOT ENOUGH, WHICH IS WHY THE T^2 SCALING IS ASSERTED BESIDE IT.  Both reasons
     #     were measured rather than supposed.  The first implementation normalised the Planck weight by the
     #     analytic pi^4/15 while taking its numerator by Simpson; those differ by the quadrature error, +2.57e-07
@@ -1047,7 +1047,7 @@ function testModule_StarkShift(; short::Bool=true)
         if printTest   info(iostream, "(1/2)(4 pi^3/15) alpha_fs^3 T^4 and (2/15)(alpha_fs pi)^3 T^4 are the " *
                                       "same expression, but their ratio came out $ratioBb")   end
     end
-    #
+
     gmBb = redirect_stdout(devnull) do
         perform( Atomic.Computation(Atomic.Computation(); name = "H perturbers", grid = grid, nuclearModel = nm,
                                     configs = perturbers); output = true )[ResultKeys.Multiplet]
@@ -1069,8 +1069,8 @@ function testModule_StarkShift(; short::Bool=true)
         if printTest   info(iostream, "the H 2p level came out with alpha_0 = $alpha0Bb, so the black-body " *
                                       "checks below cannot be set up")   end
     else
-        ## the limit: at 1 K the whole Planck spectrum lies ~4 orders below the smallest gap, so the shift must be
-        ## the closed-form leading term and eta must be a clean zero -- 3.8e-08 as measured, bounded at 1e-06
+        # the limit: at 1 K the whole Planck spectrum lies ~4 orders below the smallest gap, so the shift must be
+        # the closed-form leading term and eta must be a clean zero -- 3.8e-08 as measured, bounded at 1e-06
         sh1, eta1 = shiftBb(1.0)
         T1Bb      = Defaults.convertUnits("temperature: from Kelvin to (Hartree) units", 1.0)
         leadBb    = -2.0/15.0 * (alphaFs*pi)^3 * T1Bb^4 * alpha0Bb
@@ -1086,7 +1086,7 @@ function testModule_StarkShift(; short::Bool=true)
                                           "positive -- the real-axis factor dE/(dE^2 - omega^2) exceeds 1/dE -- " *
                                           "and below 1e-6, since the spectrum resolves no excitation energy")   end
         end
-        ## and the scaling, which is what a floor or a wrong frequency factor cannot survive
+        # and the scaling, which is what a floor or a wrong frequency factor cannot survive
         _, eta3  = shiftBb(3.0)
         _, eta10 = shiftBb(10.0)
         if  eta3 <= 0.0  ||  eta10 <= 0.0
@@ -1275,7 +1275,7 @@ function testModule_WeakInteractionEnhancement(; short::Bool=true)
 
     # (4) AN EMPTY INTERMEDIATE SET GIVES EXACTLY ZERO. The PNC amplitude is a sum over opposite-parity intermediate
     #     levels; with none supplied there is nothing to sum, and anything other than zero would be invented.
-    #
+
     # WHAT THE NEGATIVE CONTROLS SHOWED, 31-Aug-2026, and it is worth knowing before anyone strengthens this test:
     # THE TWO PARITY GUARDS IN THIS MODULE ARE REDUNDANT AND CANNOT BE CAUGHT BY ANY TEST. Flipping
     # computePncE1Amplitude's early return from != to ==, and deleting edmAmplitude's guard outright, both leave

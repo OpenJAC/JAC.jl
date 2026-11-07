@@ -307,11 +307,11 @@ function  computeTransformationMatrices(leftBasis::Basis, rightBasis::Basis, gri
         if      nl == 0  &&  nr == 0
             continue
         elseif  nl == 0
-            ## right-only kappa -- nothing on the left to biorthogonalize against; pass the right side
-            ## through as its own identity and leave the (empty) left side as a 0 x 0 matrix
+            # right-only kappa -- nothing on the left to biorthogonalize against; pass the right side
+            # through as its own identity and leave the (empty) left side as a 0 x 0 matrix
             Cleft, Cright = zeros(0,0), Matrix{Float64}(LinearAlgebra.I, nr, nr)
         elseif  nr == 0
-            ## the mirror case: a kappa only P carries
+            # the mirror case: a kappa only P carries
             Cleft, Cright = Matrix{Float64}(LinearAlgebra.I, nl, nl), zeros(0,0)
         else
             S  = zeros(nl, nr)
@@ -327,7 +327,7 @@ function  computeTransformationMatrices(leftBasis::Basis, rightBasis::Basis, gri
             if      nl <= nr
                 Cleft, Cright = BiOrthogonal.appendixB(S)
             else
-                ## the mirror case: transpose, solve with the two sides exchanged, and hand back swapped
+                # the mirror case: transpose, solve with the two sides exchanged, and hand back swapped
                 Crm, Clm      = BiOrthogonal.appendixB( Matrix(S') )
                 Cleft, Cright = Clm, Crm
             end
@@ -358,12 +358,12 @@ function  generateBiorthogonalShellMatrices(leftBasis::Basis, rightBasis::Basis,
 
     padTo(v::Array{Float64,1}, len::Int64) = length(v) >= len ? v[1:len] : vcat(v, zeros(len - length(v)))
 
-    ## THE TWO SIDES ARE LOOPED SEPARATELY, each with its OWN dimension.  A single n taken from the
-    ## left list was correct only while the two sides were required to have equally many orbitals per
-    ## kappa; with Appendix B in place they need not, and sharing n would silently skip right-hand
-    ## orbitals (n_right > n_left) or index past the end of the left list (n_left > n_right).  A side
-    ## with nl == 0 or nr == 0 for this kappa (the one-sided case) simply has nothing to build, and is
-    ## skipped -- its own dictionary never claimed that kappa's subshells in the first place.
+    # THE TWO SIDES ARE LOOPED SEPARATELY, each with its OWN dimension.  A single n taken from the
+    # left list was correct only while the two sides were required to have equally many orbitals per
+    # kappa; with Appendix B in place they need not, and sharing n would silently skip right-hand
+    # orbitals (n_right > n_left) or index past the end of the left list (n_left > n_right).  A side
+    # with nl == 0 or nr == 0 for this kappa (the one-sided case) simply has nothing to build, and is
+    # skipped -- its own dictionary never claimed that kappa's subshells in the first place.
     for  (_, (lList, rList, Cleft, Cright))  in  transformation
         nl    = length(lList);   nr = length(rList)
 
@@ -471,9 +471,9 @@ function  generateCounterRotatingCiMatrices(basis::Basis, transformation::Dict, 
 
     for  (_, (lList, rList, Cleft, Cright))  in  transformation
         shellList = side == :left ? lList : (side == :right ? rList : error("side must be :left or :right"))
-        isempty(shellList)   &&   continue    ## a kappa this side carries no orbitals for (04-Nov-2026); its
-                                               ## transform is the 0 x 0 matrix of an empty block, contributing
-                                               ## nothing to Gmap -- there is no C to take a logarithm of
+        isempty(shellList)   &&   continue    # a kappa this side carries no orbitals for (04-Nov-2026); its
+                                               # transform is the 0 x 0 matrix of an empty block, contributing
+                                               # nothing to Gmap -- there is no C to take a logarithm of
         C         = side == :left ? Cleft : Cright
         # A REAL LOGARITHM EXISTS ONLY WHERE NO EIGENVALUE IS NEGATIVE, and `BiOrthogonal.alignOrbitalSigns` is
         # what normally ensures it.  Should one survive -- an overlap matrix far enough from the identity that a

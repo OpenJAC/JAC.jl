@@ -285,7 +285,7 @@ function estimateBindingEnergies(Z::Float64, coreConf::Configuration, nRange::Un
     if  nRange.start  <=  nMaxCore   error("Unsupported n-values:  nMin = $(nRange.start)  <=  nMaxCore = $nMaxCore")    end
     if  l > nRange.start - 1         error("Unsupported l-value:   l = $l  >  nMin = $(nRange.start) - 1")               end
 
-    ## Compute Slater Z_eff for each (n, l) shell; kappa = -(l+1) selects the high-j subshell
+    # Compute Slater Z_eff for each (n, l) shell; kappa = -(l+1) selects the high-j subshell
     sn = "";    sZ = "";    se = "";    su = "";
     for  n = nRange
         effZ = estimateSlaterZeff(Z, coreConf, Subshell(n, -(l+1)))
@@ -352,9 +352,9 @@ end
         N−1 electrons only (not include the target electron itself); a Zeff::Float64 is returned.
 """
 function estimateSlaterZeff(Z::Float64, conf::Configuration, sh::Subshell)
-    ##  Slater groups in ascending order (used by nested helpers below):
-    ##  [1s]  [2sp] [3sp] [3d]  [4sp] [4d]  [4f]  [5sp] [5d]  [5f]  [6sp] [6d]  [7sp]
-    ##    1     2     3     4     5     6     7     8     9    10    11    12    13
+    #  Slater groups in ascending order (used by nested helpers below):
+    #  [1s]  [2sp] [3sp] [3d]  [4sp] [4d]  [4f]  [5sp] [5d]  [5f]  [6sp] [6d]  [7sp]
+    #    1     2     3     4     5     6     7     8     9    10    11    12    13
     function groupIndex(n::Int64, l::Int64)
         if      l <= 1    return( n <= 7 ? [1, 2, 3, 5, 8, 11, 13][n] : 13 + 2*(n - 7) )
         elseif  l == 2    return( n <= 6 ? [4, 6, 9, 12][n - 2] : 12 + 3*(n - 6) )
@@ -365,10 +365,10 @@ function estimateSlaterZeff(Z::Float64, conf::Configuration, sh::Subshell)
     function screen(n_t::Int64, l_t::Int64, n_o::Int64, l_o::Int64)
         gi_t = groupIndex(n_t, l_t)
         gi_o = groupIndex(n_o, l_o)
-        if      gi_o >  gi_t                     return( 0.0 )              ## outer group: no shielding
-        elseif  gi_o == gi_t                     return( n_t == 1 ? 0.30 : 0.35 )   ## same group
-        elseif  l_t <= 1  &&  n_o == n_t - 1    return( 0.85 )             ## sp target, one shell below
-        else                                     return( 1.00 )             ## sp target inner / d or f target
+        if      gi_o >  gi_t                     return( 0.0 )              # outer group: no shielding
+        elseif  gi_o == gi_t                     return( n_t == 1 ? 0.30 : 0.35 )   # same group
+        elseif  l_t <= 1  &&  n_o == n_t - 1    return( 0.85 )             # sp target, one shell below
+        else                                     return( 1.00 )             # sp target inner / d or f target
         end
     end
     n_t   = sh.n

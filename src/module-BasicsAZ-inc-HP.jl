@@ -60,7 +60,7 @@ end
 function Basics.isSymmetric(matrix::Array{Float64,2})
     symmetric = true;    na = 0
     if  size(matrix,1) !=  size(matrix,2)  error("not quadratic")   end
-    #
+
     for j = 1:size(matrix,2)
         for i = j+1:size(matrix,1)
             if abs( matrix[i,j] - matrix[j,i]) > 1.0e-10   
@@ -81,11 +81,11 @@ end
 """
 function Basics.isZero(matrix::Array{Float64,2})
     isz = true;    na = 0;   wa = 0.
-    #
+
     for j = 1:size(matrix,2)
         for i = 1:size(matrix,1)
             wa = wa + abs( matrix[i,j])^2
-            #
+
             if abs( matrix[i,j]) > 1.0e-10   
                 na = na + 1;   isz = false;   println("*** $i  $j  $(matrix[i,j]) ")
                 if  na >= 10   return( isz )    end
@@ -229,7 +229,7 @@ function Basics.merge(bases::Array{Basis,1})
         error("Not yet fully implemented, see source code ")
         # Transform all CSF from basisA and basisB to newSubshells ... and apply CsfRExcludeDouble()
         # return new basis
-        #
+
     else    error("stop a")
     end
 end
@@ -370,6 +370,7 @@ function Basics.plot(::RadialOrbitalsLarge, orbitals::Array{Radial.Orbital,1}, g
     error("call instead:  using Plots; pyplot()    ... to access this method simply by plot(...)")
 end
 
+
 """
 `Basics.plot(::RadialOrbitalsSmall, orbitals::Array{Radial.Orbital,1}, grid::Radial.Grid; N = 0)`
     ... plots the SMALL components of the given orbitals. It RAISES rather than plotting: the method is a
@@ -379,6 +380,7 @@ end
 function Basics.plot(::RadialOrbitalsSmall, orbitals::Array{Radial.Orbital,1}, grid::Radial.Grid; N = 0)
     error("call instead:  using Plots; pyplot()    ... to access this method simply by plot(...)")
 end
+
 
 """
 `Basics.plot(::RadialOrbitalsBoth, orbitals::Array{Radial.Orbital,1}, grid::Radial.Grid; N = 0)`

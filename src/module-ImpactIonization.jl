@@ -156,6 +156,7 @@ struct  CrossSection
     differentialCS      ::Array{Float64,1}
 end 
 
+
 """
 `struct  ImpactIonization.MultipleCrossSection`
     ... defines a type for total EIMI cross sections at a single impact energy.
@@ -200,15 +201,15 @@ end
 """    
 function  computeCrossSections(basis::Basis, grid::Radial.Grid, nm::Nuclear.Model, settings::ImpactIonization.Settings; output::Bool=true)
     printSummary, iostream = Defaults.getDefaults("summary flag/stream")
-    #
+
     println("")
     printstyled("ImpactIonization.computeCrossSections(): Use model $(settings.model) ... \n", color=:light_green)
     printstyled("---------------------------------------------------------------------------------------- \n", color=:light_green)
     println("")
-    #
+
     newCrossSections = ImpactIonization.CrossSection[]
     crossSections    = ImpactIonization.determineCrossSections(basis, settings)
-    # 
+
     for  cs in crossSections
         newCs = ImpactIonization.computeCrossSections(settings.model, cs, basis, nm, grid, settings) 
         push!( newCrossSections, newCs)
@@ -216,7 +217,7 @@ function  computeCrossSections(basis::Basis, grid::Radial.Grid, nm::Nuclear.Mode
     # Print all results to screen
     ImpactIonization.displayCrossSections(stdout, newCrossSections, settings)
     if  printSummary   ImpactIonization.displayCrossSections(iostream, newCrossSections, settings)     end
-    #
+
     if    output    return( newCrossSections )
     else            return( nothing )
     end
@@ -875,7 +876,7 @@ function  displayCrossSections(stream::IO, crossSections::Array{ImpactIonization
                      TableStrings.center(26, TableStrings.inUnits("energy"); na=0) *
                      TableStrings.center(26, TableStrings.inUnits("cross section"); na=0)
         println(stream, sa);   println(stream, sb);   println(stream, "  ", TableStrings.hLine(nx))
-        #
+
         prevSubshell = Subshell(0, 0)
         for  cs  in crossSections
             if  cs.subshell != prevSubshell
@@ -889,7 +890,7 @@ function  displayCrossSections(stream::IO, crossSections::Array{ImpactIonization
         end
         println(stream, "  ", TableStrings.hLine(nx))
     end
-    #
+
     # Display the total EII cross sections with proper column headers
     if  settings.calcTotalCs
         nx = 70
@@ -913,7 +914,7 @@ function  displayCrossSections(stream::IO, crossSections::Array{ImpactIonization
         end
         println(stream, "  ", TableStrings.hLine(nx))
     end
-    #
+
     return( nothing )
 end
 

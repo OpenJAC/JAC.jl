@@ -1,48 +1,48 @@
 
 # One-photon annihilation of the projectile POSITRON with a BOUND electron:   e^+ + |i(N)>  -->  |f(N-1)> + photon.
-#
+
 # WHY THE PROCESS EXISTS AT ALL. A free electron and a positron cannot annihilate into a single photon: in their centre-of-mass
 # frame the pair is at rest and the photon would have to carry zero momentum and 2 m c^2 of energy at once. A BOUND electron
 # lifts that, because the nucleus takes up the recoil, and the amplitude is therefore controlled by how much of the electron's
 # momentum distribution reaches p ~ m c -- which lives close to the nucleus. That is the whole physics of the process: it is a
 # K-shell, high-Z process, its cross section rises roughly as Z^5 for K-shell annihilation, and it vanishes in the free limit.
-#
+
 # THE TRICK THAT MAKES IT COMPUTABLE HERE. By charge conjugation, annihilating a bound electron against an incoming positron is
 # the same matrix element as the bound electron making a transition into a NEGATIVE-energy continuum state, the charge-conjugate
 # of the positron wave. The operator is then literally the photon-emission operator, so this file adds no new vertex: it builds
 # the charge-conjugate orbital and hands it to PhotoEmission.amplitude, exactly as InternalConversion hands its ejected-electron
 # orbital to a rank-L one-particle operator. Structurally this is AutoIonization's pipeline with a photon on the outgoing side.
-#
+
 # ENERGY CONSERVATION fixes the photon energy without any freedom. Writing rest masses explicitly, the N-electron atom plus a
 # positron of kinetic energy T_+ goes to an (N-1)-electron ion plus one photon, so
-#
+
 #         omega  =  2 m c^2  +  T_+  -  I ,          I = E_f - E_i  the binding energy of the annihilated electron.
-#
+
 # THE COST, and it is the reason this file carries a warning rather than a recommendation. omega ~ 2 m c^2 = 1.022 MeV gives a
 # photon momentum q a_0 = omega / 3729 eV ~ 274 in atomic units, so the retardation factor exp(i q.r) oscillates ~ q <r> times
 # across the orbital. For a K-shell electron <r> ~ a_0/Z, hence q <r> ~ 274/Z: about 3 for uranium, but about 137 for helium.
 # The multipole series is therefore SHORT only for heavy elements and hopeless for light ones -- the opposite of the intuition
 # carried over from optical transitions, and the reason a light-element test case is the wrong first target here.
-#
-#
+
+
 # TWO-PHOTON ANNIHILATION IS NOT HERE, AND DELIBERATELY SO, decided 21-Aug-2026 by the maintainer. Do not add it to this file
 # without asking him; it is a postponement, not an oversight.
-#
+
 # e^+ + |i(N)> --> |f(N-1)> + photon + photon is the dominant channel in nature -- it needs no nucleus, so it does not carry the
 # Z^5 suppression of the one-photon case -- but it is SECOND order: two vertices with a sum over intermediate states.
-#
+
 # CORRECTED 21-Aug-2026, having first been written down wrongly here. The second-order machinery is NOT missing from JAC. It is
 # MultiPhotonTransition, whose -inc-2p-emission, -inc-2p-absorption and -inc-2p-bichromatic files build exactly such amplitudes
 # over AtomicState.GreenChannel sums, and it is exercised and dated -- example-Dh.jl carries six dated branches and example-Du.jl
 # two. What IS true is narrower and worth keeping straight: Plasma.CollisionalRadiativeScheme does not call it, which is why
 # example-Je.jl's helium-like carbon gets a 513 s lifetime for 1s2s ^1S_0 from its M1 channel alone against a true ~2.7e-5 s.
 # That is a gap in the CR scheme, not in JAC.
-#
+
 # So the reason for deferring two-photon annihilation is the ADAPTATION rather than an absence: MultiPhotonTransition sums over
 # bound intermediate states between two bound levels, whereas the annihilation case needs the charge-conjugate positron continuum
 # on one side. That is real work and a real design decision -- whether it belongs beside the one-photon case here or as a further
 # -inc- file of MultiPhotonTransition -- and it is the maintainer's to take.
-#
+
 # What was retired to get here: src/module-PairAnnihilation1Photon.jl and src/module-PairAnnihilation2Photon.jl, two stubs that
 # had never been compiled -- they sat inside the "#= Further processes, not yet included =#" block of JenaAtomicCalculator.jl --
 # and that contained no physics at all (amplitude = 1.0, an undefined `phase`, the module used as a type). Commit 6ba9985.
@@ -292,7 +292,7 @@ function computeAnnihilationLines(finalMultiplet::Multiplet, initialMultiplet::M
                 color=:light_green)
     printstyled("--------------------------------------------------------------------------------------------------------- \n",
                 color=:light_green)
-    #
+
     lines = ParticleScattering.determineAnnihilationLines(finalMultiplet, initialMultiplet, settings)
     if  settings.printBefore    ParticleScattering.displayAnnihilationLines(stdout, lines)    end
     maxEnergy = 0.;   for  line in lines   maxEnergy = max(maxEnergy, line.positronEnergy)   end

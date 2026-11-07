@@ -184,20 +184,20 @@ function  computeProperties_2pAbsorptionMonochromatic(line::MultiPhotonTransitio
     # THE DENSITY-MATRIX CROSS SECTION for arbitrary Stokes parameters (added 07-Aug-2026). It had been listed
     # among the properties since the module was written but was never a field, never computed and never
     # displayed, so requesting it did nothing at all.
-    #
+
     # For a J = 0 -> J = 0 transition through two E1 photons the polarization dependence closes in a simple
     # form. Only the MIXED-helicity channel contributes: two photons of equal helicity would have to deliver
     # two units of angular momentum along the beam, which a 0 -> 0 transition cannot absorb. Writing the
     # photon density matrix in the helicity basis as rho = 1/2 [[1+P3, P1-iP2], [P1+iP2, 1-P3]] and taking the
     # two photons as independent draws from the same beam (rho (x) rho, which is the correct description of two
     # photons from ONE beam) gives
-    #
+
     #     sigma(P1,P2,P3)  =  sigma_unpolarized * (1 + P1^2 + P2^2 - P3^2)
-    #
+
     # and this reproduces all three special cases exactly: linear (1,0,0) -> 2*sigma_unpol = sigma_linear;
     # right-circular (0,0,1) -> 0; unpolarized (0,0,0) -> sigma_unpol. Those identities are checks in
     # themselves, fixed by angular algebra and independent of any normalisation or of the wave functions.
-    #
+
     # LIMITATION, stated rather than hidden: the closed form above is derived for J_i = J_f = 0, where only
     # K = 0 contributes. For a general transition several K contribute with different polarization weights and
     # this expression does NOT apply; it is therefore computed only when both levels have J = 0, and left at
@@ -282,7 +282,7 @@ function computeTotalAlpha0(line::MultiPhotonTransition.Line_2pAbsorptionMonochr
         end
     end
     
-    ta0 = ta0 * 2*pi^3 / Defaults.getDefaults("alpha")^2 / omega^3  ## / (Basics.twice(line.initialLevel.J) + 1)
+    ta0 = ta0 * 2*pi^3 / Defaults.getDefaults("alpha")^2 / omega^3  # / (Basics.twice(line.initialLevel.J) + 1)
     ta0 = ta0 / Defaults.getDefaults("alpha")
     
     return( ta0 )
@@ -387,7 +387,7 @@ end
 function computeTotalCsRightCircular(line::MultiPhotonTransition.Line_2pAbsorptionMonochromatic,
                                         gauge::EmGauge, settings::MultiPhotonTransition.Settings)
     tcs = 0.;   Klist = oplus(line.finalLevel.J, line.initialLevel.J);      omega = line.omega
-    lambda1 = 1;    lambda2 = 1     ## right-circular: both photons carry helicity +1
+    lambda1 = 1;    lambda2 = 1     # right-circular: both photons carry helicity +1
     symi = LevelSymmetry(line.initialLevel.J, line.initialLevel.parity);    symf = LevelSymmetry(line.finalLevel.J, line.finalLevel.parity)
 
     for  K in Klist
@@ -449,14 +449,14 @@ function computeTotalCsUnpolarized(line::MultiPhotonTransition.Line_2pAbsorption
         # ODD K IS FORBIDDEN FOR TWO PHOTONS FROM THE SAME BEAM (added 07-Aug-2026). They are identical bosons,
         # so the two-photon polarization state must be SYMMETRIC; exchanging the two multipoles in the 3-j
         # carries (-1)^(L1+L2+K), i.e. (-1)^K for E1E1, so odd K is antisymmetric and cannot contribute.
-        #
+
         # LINEAR light got this right by accident: its helicity sum is COHERENT, so the (+,-) and (-,+) terms
         # cancel for odd K on their own. The UNPOLARIZED sum is incoherent -- |+-> and |-+> are accumulated as
         # separate states, and neither is individually symmetric -- so odd K survived spuriously there.
         # MEASURED: for H 1s -> 2s (J = 1/2 -> 1/2, K = {0,1}) K = 1 supplied 92 % of the unpolarized cross
         # section, while the K = 0 part was already correct (0.107e-27 against 0.214e-27 for linear -- exactly
         # the factor 2 that Mg gives, and Mg is K = 0 only).
-        #
+
         # NOTE this restriction belongs to the MONOCHROMATIC single-beam scheme ONLY. With two distinguishable
         # beams the photons are not identical and every K contributes -- which is one more reason the
         # bichromatic case is worth completing.

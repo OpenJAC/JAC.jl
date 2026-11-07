@@ -100,11 +100,11 @@ function screeningPotential(orbital::Orbital, grid::Radial.Grid)
     nr = min(length(orbital.P), length(grid.r))
     D  = [ orbital.P[i]^2 + orbital.Q[i]^2  for i = 1:nr ]      # radial density of the muon
     Zr = zeros( length(grid.r) )
-    ## Zr(r) = INT_0^r D dr'  +  r INT_r^inf (D/r') dr'   -- the standard Hartree screening of one particle.
-    ## The integrals use the grid's OWN Gauss-Legendre weights, grid.wr, and not a hand-rolled trapezoidal rule:
-    ## on the exponential mesh a trapezoid left the large-r limit at 1.000374 instead of 1, i.e. it broke the one
-    ## exact statement this function has to satisfy.  A quadrature error is indistinguishable from a physics error
-    ## in the answer, and only the exact limit tells them apart.
+    # Zr(r) = INT_0^r D dr'  +  r INT_r^inf (D/r') dr'   -- the standard Hartree screening of one particle.
+    # The integrals use the grid's OWN Gauss-Legendre weights, grid.wr, and not a hand-rolled trapezoidal rule:
+    # on the exponential mesh a trapezoid left the large-r limit at 1.000374 instead of 1, i.e. it broke the one
+    # exact statement this function has to satisfy.  A quadrature error is indistinguishable from a physics error
+    # in the answer, and only the exact limit tells them apart.
     tail = zeros(nr)
     outer = 0.
     for  i = nr:-1:2

@@ -180,28 +180,28 @@ function  computeAmplitudesProperties(line::PhotoExcitation.Line, grid::Radial.G
         push!( newChannels, MultipoleAmplitude(mp, amp) )
     end
     # Calculate the absorption oscillator strength
-    ## The three-way gauge branch is gone: abs2 of an EmPropertyC is an EmProperty, and a magnetic amplitude
-    ## has equal components, so it enters BOTH sums by itself -- which is exactly what the Magnetic branch
-    ## used to say in two lines.
+    # The three-way gauge branch is gone: abs2 of an EmPropertyC is an EmProperty, and a magnetic amplitude
+    # has equal components, so it enters BOTH sums by itself -- which is exactly what the Magnetic branch
+    # used to say in two lines.
     osc = EmProperty(0., 0.);   omega = line.omega;   alpha = Defaults.getDefaults("alpha")
     for  ma  in  newChannels
         wa  = 8pi * alpha * line.omega / (Ji2 + 1) * (Jf2 + 1) / 2.
         osc = osc + wa * abs2(ma.amplitude)
     end
     oscCoulomb = osc.Coulomb;    oscBabushkin = osc.Babushkin
-    ## The absorption oscillator strength must carry the statistical weight 1/(2J_i+1) of the INITIAL level.
-    ## The factor wa above already supplies (2J_f+1)/(2(2J_i+1)); an earlier oscFactor of
-    ## (Ji2+1)/(Jf2+1)/2 * c^3/omega^2 cancelled both weights again and left f without any J-dependence,
-    ## so that f came out too large by (2J_i+1)/2.  This was found by checking f_ik of this module against
-    ## the Einstein A_ki of PhotoEmission for the same pair of multiplets, where
-    ##     A_ki = 2 alpha^3 omega^2 (g_i/g_k) f_ik
-    ## is an identity: the ratio came out as exactly 2/(2J_i+1) for every line and every J_i.
+    # The absorption oscillator strength must carry the statistical weight 1/(2J_i+1) of the INITIAL level.
+    # The factor wa above already supplies (2J_f+1)/(2(2J_i+1)); an earlier oscFactor of
+    # (Ji2+1)/(Jf2+1)/2 * c^3/omega^2 cancelled both weights again and left f without any J-dependence,
+    # so that f came out too large by (2J_i+1)/2.  This was found by checking f_ik of this module against
+    # the Einstein A_ki of PhotoEmission for the same pair of multiplets, where
+    #     A_ki = 2 alpha^3 omega^2 (g_i/g_k) f_ik
+    # is an identity: the ratio came out as exactly 2/(2J_i+1) for every line and every J_i.
     oscFactor    = Defaults.getDefaults("speed of light: c")^3 / (line.omega^2 * (Jf2 + 1))
     oscStrength  = EmProperty(oscFactor*oscCoulomb, oscFactor*oscBabushkin)
-    ## The INTEGRATED cross section  int sigma dE = 2 pi^2 alpha f_ik  (in atomic units of area * energy).
-    ## This -- and not a peak value -- is what can be given without a line profile; the former expression
-    ## 2 pi^3 alpha / (omega (2J_i+1)) * sum |A|^2 was a fixed multiple of f_ik with no omega dependence
-    ## at all, and hence no cross section in any measurable sense.
+    # The INTEGRATED cross section  int sigma dE = 2 pi^2 alpha f_ik  (in atomic units of area * energy).
+    # This -- and not a peak value -- is what can be given without a line profile; the former expression
+    # 2 pi^3 alpha / (omega (2J_i+1)) * sum |A|^2 was a fixed multiple of f_ik with no omega dependence
+    # at all, and hence no cross section in any measurable sense.
     csFactor     = 2 * pi^2 * alpha
     crossSection = EmProperty(csFactor*oscStrength.Coulomb, csFactor*oscStrength.Babushkin)
     staTensor    = TensorComp[]
@@ -253,11 +253,11 @@ function  computeLines(finalMultiplet::Multiplet, initialMultiplet::Multiplet, g
     PhotoExcitation.displayCrossSections(stdout, newLines, settings)
     printSummary, iostream = Defaults.getDefaults("summary flag/stream")
     if  printSummary    PhotoExcitation.displayCrossSections(iostream, newLines, settings)   end
-    #
-    ## Return newLines, not lines:  the latter are the lines as set up by determineLines(), i.e. before any
-    ## amplitude has been evaluated, and carry oscStrength = crossSection = EmProperty(0., 0.).  The printed
-    ## tables were always correct, but every caller -- Basics.perform() for an Atomic.Computation with a
-    ## PhotoExc() process among them -- silently received zeros.
+
+    # Return newLines, not lines:  the latter are the lines as set up by determineLines(), i.e. before any
+    # amplitude has been evaluated, and carry oscStrength = crossSection = EmProperty(0., 0.).  The printed
+    # tables were always correct, but every caller -- Basics.perform() for an Atomic.Computation with a
+    # PhotoExc() process among them -- silently received zeros.
     if    output    return( newLines )
     else            return( nothing )
     end
@@ -287,10 +287,10 @@ function  computeLinesCascade(finalMultiplet::Multiplet, initialMultiplet::Multi
         if  !Basics.selectLevel(line.initialLevel, initialLevelSelection)     continue    
         end
         newLine = PhotoExcitation.computeAmplitudesProperties(line, grid, settings, printout=printout) 
-        #
+
         # Don't add this line if it does not contribute to the decay
-        ## abs2 of an EmPropertyC is an EmProperty, so the sum is gauge-paired; either component answers the
-        ## question "did this line contribute at all".
+        # abs2 of an EmPropertyC is an EmProperty, so the sum is gauge-paired; either component answers the
+        # question "did this line contribute at all".
         wa = EmProperty(0., 0.)
         for  ma in newLine.channels   wa = wa + abs2(ma.amplitude)    end
         if   wa.Coulomb == 0.  &&  wa.Babushkin == 0.    continue    end
@@ -299,7 +299,7 @@ function  computeLinesCascade(finalMultiplet::Multiplet, initialMultiplet::Multi
     # Print all results to a summary file, if requested
     printSummary, iostream = Defaults.getDefaults("summary flag/stream")
     if  printSummary   PhotoExcitation.displayCrossSections(iostream, newLines, settings)    end
-    #
+
     if    output    return( newLines )
     else            return( nothing )
     end
@@ -420,9 +420,9 @@ end
 function determineChannels(finalLevel::Level, initialLevel::Level, settings::PhotoExcitation.Settings)
     channels = MultipoleAmplitude[];   
     symi = LevelSymmetry(initialLevel.J, initialLevel.parity);    symf = LevelSymmetry(finalLevel.J, finalLevel.parity) 
-    ## The gauge loop and its hasMagnetic flag are gone: one entry per multipole, carrying both gauges.  The
-    ## flag existed only to stop a magnetic multipole being emitted once per requested gauge, and there is no
-    ## gauge loop left for it to guard.
+    # The gauge loop and its hasMagnetic flag are gone: one entry per multipole, carrying both gauges.  The
+    # flag existed only to stop a magnetic multipole being emitted once per requested gauge, and there is no
+    # gauge loop left for it to guard.
     for  mp in settings.multipoles
         if   AngularMomentum.isAllowedMultipole(symi, mp, symf)
             push!(channels, MultipoleAmplitude(mp, EmPropertyC(Complex(0.), Complex(0.))))
@@ -487,17 +487,17 @@ function  displayLineData(stream::IO, lines::Array{PhotoExcitation.Line,1})
             end
         end
     end
-    #
+
     # Extract and display photon energies for which line data are available
     omegas = Float64[]
     for  line  in  lines    push!(omegas, line.omega)   end;    
     omegas = unique(omegas);    omegas = sort(omegas)
     sa  = "    ";   
     for   omega in omegas  sa = sa * @sprintf("%.6e", Defaults.convertUnits("energy: from atomic", omega)) * "   "      end
-    #
+
     println(stream, "\n  Photon energies $(TableStrings.inUnits("energy")) for which given photoexcitation line data are given:")
     println(stream, "\n" * sa)
-    #
+
     # Extract and display total cross sections, ordered by the initial levels and photon energies, for which line data are available
     println(stream, "\n  Initial level, photon energies and total cross sections for given photoexcitation line data: \n")
     sa = "  ";   sb = "  "
@@ -510,9 +510,9 @@ function  displayLineData(stream::IO, lines::Array{PhotoExcitation.Line,1})
     sa = sa * TableStrings.center(20, "Shell excitations"; na=3);               
     sb = sb * TableStrings.center(20, "from  ==>  to";  na=5)
     println(stream, sa);    println(stream, sb);    println(stream, "  ", TableStrings.hLine(75))
-    #
+
     if  length(lines) == 0    println("  >>> No photoexcitation data in lines here ... return ");    return(nothing)    end 
-    #
+
     wLine = lines[1]
     for  energy in energies
         for  omega in omegas
@@ -554,15 +554,15 @@ function  displayLines(stream::IO, lines::Array{PhotoExcitation.Line,1})
     sb = sb * TableStrings.center(14, TableStrings.inUnits("energy"); na=4)
     sa = sa * TableStrings.flushleft(30, "List of multipoles"; na=4);             sb = sb * TableStrings.hBlank(34)
     println(stream, sa);    println(stream, sb);    println(stream, "  ", TableStrings.hLine(nx)) 
-    #   
+
     for  line in lines
         sa  = "";    isym = LevelSymmetry( line.initialLevel.J, line.initialLevel.parity)
                         fsym = LevelSymmetry( line.finalLevel.J,   line.finalLevel.parity)
         sa = sa * TableStrings.center(18, TableStrings.levels_if(line.initialLevel.index, line.finalLevel.index); na=2)
         sa = sa * TableStrings.center(18, TableStrings.symmetries_if(isym, fsym); na=4)
         sa = sa * @sprintf("%.8e", Defaults.convertUnits("energy: from atomic", line.omega)) * "    "
-        ## One entry per (multipole, GAUGE): an electric multipole is one amplitude holding two gauges, a
-        ## magnetic one has no gauge freedom.  The gauge belongs to this table, not to the amplitude.
+        # One entry per (multipole, GAUGE): an electric multipole is one amplitude holding two gauges, a
+        # magnetic one has no gauge freedom.  The gauge belongs to this table, not to the amplitude.
         mpGaugeList = Tuple{Basics.EmMultipole,Basics.EmGauge}[]
         for  ma in line.channels
             if  string(ma.multipole)[1] == 'E'
@@ -575,7 +575,7 @@ function  displayLines(stream::IO, lines::Array{PhotoExcitation.Line,1})
         println(stream, sa )
     end
     println(stream, "  ", TableStrings.hLine(nx))
-    #
+
     return( nothing )
 end
 
@@ -586,7 +586,7 @@ end
         is returned otherwise.
 """
 function  displayCrossSections(stream::IO, lines::Array{PhotoExcitation.Line,1}, settings::PhotoExcitation.Settings)
-    #
+
     # Photoexcitation resonance strength as derived from oscillator strength
     nx = 122
     println(stream, " ")
@@ -608,7 +608,7 @@ function  displayCrossSections(stream::IO, lines::Array{PhotoExcitation.Line,1},
     sa = sa * TableStrings.center(24, "Cou -- S -- Bab"; na=3);                        
     sb = sb * TableStrings.center(24, "   [Mb eV]     "; na=3)
     println(stream, sa);    println(stream, sb);    println(stream, "  ", TableStrings.hLine(nx)) 
-    #   
+
     for  line in lines
         sa  = "";    isym = LevelSymmetry( line.initialLevel.J, line.initialLevel.parity)
                         fsym = LevelSymmetry( line.finalLevel.J,   line.finalLevel.parity)
@@ -628,8 +628,8 @@ function  displayCrossSections(stream::IO, lines::Array{PhotoExcitation.Line,1},
         println(stream, sa)
     end
     println(stream, "  ", TableStrings.hLine(nx))
-    #
-    #
+
+
     # Photoexcitation integrated cross sections from the oscillator strength
     nx = 111
     println(stream, " ")
@@ -652,7 +652,7 @@ function  displayCrossSections(stream::IO, lines::Array{PhotoExcitation.Line,1},
     sb = sb * TableStrings.center(36, TableStrings.inUnits("cross section")*" "*TableStrings.inUnits("energy")*"    "*
                                         TableStrings.inUnits("cross section")*" "*TableStrings.inUnits("energy"); na=1)
     println(stream, sa);    println(stream, sb);    println(stream, "  ", TableStrings.hLine(nx)) 
-    #   
+
     for  line in lines
         sa  = "";    isym = LevelSymmetry( line.initialLevel.J, line.initialLevel.parity)
                         fsym = LevelSymmetry( line.finalLevel.J,   line.finalLevel.parity)
@@ -665,15 +665,15 @@ function  displayCrossSections(stream::IO, lines::Array{PhotoExcitation.Line,1},
         end
         multipoles = unique(multipoles);   mpString = TableStrings.multipoleList(multipoles) * "          "
         sa = sa * TableStrings.flushleft(11, mpString[1:10];  na=5)
-        ## crossSection is an area * energy, so BOTH unit conversions have to be applied
+        # crossSection is an area * energy, so BOTH unit conversions have to be applied
         wcs = Defaults.convertUnits("energy: from atomic", 1.0)
         sa = sa * @sprintf("%.4e", Defaults.convertUnits("cross section: from atomic", line.crossSection.Coulomb)   * wcs) * "        "
         sa = sa * @sprintf("%.4e", Defaults.convertUnits("cross section: from atomic", line.crossSection.Babushkin) * wcs) * "    "
         println(stream, sa)
     end
     println(stream, "  ", TableStrings.hLine(nx))
-    #
-    #
+
+
     if  settings.calcForStokes
         stokes = settings.stokes
         println(stream, " ")
@@ -709,8 +709,8 @@ function  displayCrossSections(stream::IO, lines::Array{PhotoExcitation.Line,1},
         end
         println(stream, "  ", TableStrings.hLine(nx))
     end
-    #
-    #
+
+
     if  settings.calcTensors
         nx = 195
         stokes = settings.stokes
@@ -765,8 +765,8 @@ function  displayCrossSections(stream::IO, lines::Array{PhotoExcitation.Line,1},
         end
         println(stream, "  ", TableStrings.hLine(nx))
     end
-    #
-    #
+
+
     if  settings.calcTensors   &&   settings.calcPhotonDm
         stokes = settings.stokes
         println(stream, " ")
@@ -775,7 +775,7 @@ function  displayCrossSections(stream::IO, lines::Array{PhotoExcitation.Line,1},
         println(stream, " ")
         println(stream, "  Not yet implemented !!")
     end
-    #
+
     # HOW FAR THE TWO GAUGES AGREE, printed beside the results they qualify;  the same measure and thresholds
     # PhotoEmission applies, through Basics.gaugeConsistency.  The indicator is free here: the quantity is
     # already held in both gauges, so this only reads what has been computed.
@@ -803,11 +803,11 @@ function  estimateCrossSection(lines::Array{PhotoExcitation.Line,1}, omega::Floa
     function gaussianDistribution(omega::Float64, Er::Float64, gamma::Float64, gf::Basics.EmProperty)
         # Return zero if outside of interval
         if abs(Er - omega) > 10 * gamma    return(Basics.EmProperty(0.))   end
-        ## Bring the integrated strength 109.7617 f [Mb eV] back to atomic units.  BOTH conversions have to
-        ## MULTIPLY: the second one divided instead, which inflated every simulated resonance by exactly
-        ## 1/(1 eV in a.u.)^2 = 27.2114^2 = 740.46.  The corrected factor equals 2 pi^2 alpha = 0.1440440 to
-        ## five digits, which is the same constant that underlies the 109.761 Mb eV column of
-        ## PhotoExcitation.displayCrossSections.
+        # Bring the integrated strength 109.7617 f [Mb eV] back to atomic units.  BOTH conversions have to
+        # MULTIPLY: the second one divided instead, which inflated every simulated resonance by exactly
+        # 1/(1 eV in a.u.)^2 = 27.2114^2 = 740.46.  The corrected factor equals 2 pi^2 alpha = 0.1440440 to
+        # five digits, which is the same constant that underlies the 109.761 Mb eV column of
+        # PhotoExcitation.displayCrossSections.
         factor = 109.7617 * Defaults.convertUnits("cross section: from barn to atomic unit", 1.0e6) *
                             Defaults.convertUnits("energy: from eV to atomic", 1.0)
         wa = (Er - omega)^2  +  gamma^2/4

@@ -57,9 +57,9 @@ function Settings(set::CoulombExcitation.Settings;
     printBefore::Union{Nothing,Bool}=nothing,                       lineSelection::Union{Nothing,LineSelection}=nothing,
     zerosGL::Union{Nothing,Int64}=nothing)  
     
-    ## `ionEnergiesx`, not `ionEnergies` (fixed 08-Aug-2026): the if-branch assigned the PARAMETER instead of the
-    ## local that the constructor call below uses, so every copy-construction that did not pass ionEnergies
-    ## explicitly died in an UndefVarError -- i.e. the normal case. Found by the new structural test in TestFrames.
+    # `ionEnergiesx`, not `ionEnergies` (fixed 08-Aug-2026): the if-branch assigned the PARAMETER instead of the
+    # local that the constructor call below uses, so every copy-construction that did not pass ionEnergies
+    # explicitly died in an UndefVarError -- i.e. the normal case. Found by the new structural test in TestFrames.
     if  isnothing(ionEnergies)           ionEnergiesx         = set.ionEnergies             else  ionEnergiesx         = ionEnergies       end
     if  isnothing(calcAlignment)         calcAlignmentx       = set.calcAlignment           else  calcAlignmentx       = calcAlignment     end 
     if  isnothing(printBefore)           printBeforex         = set.printBefore             else  printBeforex         = printBefore       end 
@@ -201,7 +201,7 @@ function  computeKjYme(finalLevel::Level, L::AngularJ64, initialLevel::Level, q:
     Lint = Int64( AngularMomentum.oneJ(L) )
     nf   = length(fLevel.basis.csfs);    ni = length(iLevel.basis.csfs)
     matrix = zeros(ComplexF64, nf, ni)
-    #
+
     for  r = 1:nf
         if  fLevel.basis.csfs[r].J != fLevel.J  ||  fLevel.basis.csfs[r].parity != fLevel.parity    continue    end
         for  s = 1:ni
@@ -243,7 +243,7 @@ function  computeKjTme(finalLevel::Level, t::AngularJ64, L::AngularJ64, initialL
     Lint = Int64( AngularMomentum.oneJ(L) );    tint = Int64( AngularMomentum.oneJ(t) )
     nf   = length(fLevel.basis.csfs);    ni = length(iLevel.basis.csfs)
     matrix = zeros(ComplexF64, nf, ni)
-    #
+
     for  r = 1:nf
         if  fLevel.basis.csfs[r].J != fLevel.J  ||  fLevel.basis.csfs[r].parity != fLevel.parity    continue    end
         for  s = 1:ni
@@ -297,13 +297,13 @@ function  computeAmplitude(channel::CoulombExcitation.Channel, Mi::AngularM64, M
             if  abs(Mint) > Lint   continue   end
             wc = ComplexF64(0.)
             if  t == L   wc = wc + CoulombExcitation.computeKjYme(line.finalLevel, L, line.initialLevel, channel.q, grid)   end
-            ## RATIP's coulex_pure_matrix() multiplies every magnetic (F23-based) contribution by an explicit
-            ## cmplx(zero,-one) = -i prefactor (rabs_coulex.f90, all three of terms ii/iii/iv) that Eq. (8) of
-            ## Surzhykov et al. does not show explicitly -- this was missing here and was the confirmed root cause
-            ## of the sigma(Mi,Mf) != sigma(-Mi,-Mf) asymmetry found and diagnosed earlier: with this factor, the
-            ## L=t bracket becomes A + i*beta*CG(Mf)*B, and since CG(-Mf)=-CG(Mf), bracket(-Mf)=conj(bracket(Mf)),
-            ## so |bracket(-Mf)|=|bracket(Mf)| exactly. Confirmed both algebraically and empirically (exact
-            ## Mf<->-Mf symmetry now holds without any post-hoc symmetrization).
+            # RATIP's coulex_pure_matrix() multiplies every magnetic (F23-based) contribution by an explicit
+            # cmplx(zero,-one) = -i prefactor (rabs_coulex.f90, all three of terms ii/iii/iv) that Eq. (8) of
+            # Surzhykov et al. does not show explicitly -- this was missing here and was the confirmed root cause
+            # of the sigma(Mi,Mf) != sigma(-Mi,-Mf) asymmetry found and diagnosed earlier: with this factor, the
+            # L=t bracket becomes A + i*beta*CG(Mf)*B, and since CG(-Mf)=-CG(Mf), bracket(-Mf)=conj(bracket(Mf)),
+            # so |bracket(-Mf)|=|bracket(Mf)| exactly. Confirmed both algebraically and empirically (exact
+            # Mf<->-Mf symmetry now holds without any post-hoc symmetrization).
             wc = wc + im * beta * AngularMomentum.ClebschGordan(Lx, Mval, 1., 0., tx, Mval) *
                       CoulombExcitation.computeKjTme(line.finalLevel, t, L, line.initialLevel, channel.q, grid)
             wc = im^Lx * conj( AngularMomentum.sphericalYlm(Lint, Mint, acos(line.q0/channel.q), 0.) ) * wc
@@ -421,7 +421,7 @@ function  computeLines(finalMultiplet::Multiplet, initialMultiplet::Multiplet, g
     CoulombExcitation.displayCrossSections(stdout, newLines, settings)
     printSummary, iostream = Defaults.getDefaults("summary flag/stream")
     if  printSummary    CoulombExcitation.displayCrossSections(iostream, newLines, settings)   end
-    #
+
     if    output    return( newLines )
     else            return( nothing )
     end
@@ -517,7 +517,7 @@ function  displayCrossSections(stream::IO, lines::Array{CoulombExcitation.Line,1
     sa = sa * TableStrings.center(16, "Partial CS"; na=2);       
     sb = sb * TableStrings.center(16, TableStrings.inUnits("cross section"); na=4)
     println(stream, sa);    println(stream, sb);    println(stream, "  ", TableStrings.hLine(nx)) 
-    #   
+
     for  line in lines
         sa  = "";    isym = LevelSymmetry( line.initialLevel.J, line.initialLevel.parity)
                      fsym = LevelSymmetry( line.finalLevel.J,   line.finalLevel.parity)
@@ -534,7 +534,7 @@ function  displayCrossSections(stream::IO, lines::Array{CoulombExcitation.Line,1
         end
      end
     println(stream, "  ", TableStrings.hLine(nx))
-    #
+
     return( nothing )
 end
 
@@ -558,7 +558,7 @@ function  displayLines(stream::IO, lines::Array{CoulombExcitation.Line,1})
     sa = sa * TableStrings.flushleft(50, "List of (Mi, Mf, q1, w1) for mLines + channel_1"; na=4);       
     sb = sb * TableStrings.hBlank(34)
     println(stream, sa);    println(stream, sb);    println(stream, "  ", TableStrings.hLine(nx)) 
-    #   
+
     for  line in lines
         sa  = "";    isym = LevelSymmetry( line.initialLevel.J, line.initialLevel.parity)
                      fsym = LevelSymmetry( line.finalLevel.J,   line.finalLevel.parity)
@@ -574,7 +574,7 @@ function  displayLines(stream::IO, lines::Array{CoulombExcitation.Line,1})
         for  ia = 2:length(wa)   println(stream, TableStrings.hBlank(length(sa)) * wa[ia] )   end
     end
     println(stream, "  ", TableStrings.hLine(nx))
-    #
+
     return( nothing )
 end
 

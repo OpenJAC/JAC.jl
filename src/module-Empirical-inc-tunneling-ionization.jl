@@ -1,7 +1,7 @@
 
 #################################################################################################################################
 ### Tunneling ionization (TI) ###################################################################################################
-#
+
 #  The (quasiclassical) tunneling ionization rate of an atom or ion in a strong, quasi-static electric field, following
 #  Ammosov, Delone & Krainov (1986); the exact formula and its coefficients are quoted from the summary of
 #  J. Bauer & P. Mulser, Phys. Rev. A 59, 569 (1999) [arXiv:physics/9802042], Eq. (10). The rate depends on the

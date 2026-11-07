@@ -51,10 +51,10 @@ module CoulombIonization
 using  Printf, ..AngularMomentum, ..Basics, ..Continuum, ..CoulombExcitation, ..Defaults, ..ManyElectron, ..Nuclear,
        ..Radial, ..RadialIntegrals, ..TableStrings
 
-## The reduced matrix elements and the projectile velocity are TAKEN FROM CoulombExcitation rather than copied.
-## The theory is the same one -- Surzhykov et al., Phys. Rev. A 77, 042722 (2008), Eq. (8) -- and the corrections
-## made there, in particular the -i on every magnetic term that RATIP carries and the paper does not show, are
-## corrections to this module too.  A copy would have had to be corrected twice.
+# The reduced matrix elements and the projectile velocity are TAKEN FROM CoulombExcitation rather than copied.
+# The theory is the same one -- Surzhykov et al., Phys. Rev. A 77, 042722 (2008), Eq. (8) -- and the corrections
+# made there, in particular the -i on every magnetic term that RATIP carries and the paper does not show, are
+# corrections to this module too.  A copy would have had to be corrected twice.
 
 """
 `struct  CoulombIonization.Settings  <:  AbstractProcessSettings`  
@@ -259,8 +259,8 @@ function  computeAmplitude(q::Float64, q0::Float64, beta::Float64, Mix::Float64,
     if  abs(Mix) > Jix  ||  abs(Mtx) > Jtx    return( amplitude )    end
     for  t  in  AngularMomentum.j_values(Ji, Jt)
         tx   = AngularMomentum.oneJ(t)
-        ## the transferred M cannot exceed the rank t; the coefficient is zero there, but the Wigner package
-        ## RAISES on an invalid (j,m) pair rather than returning zero, so it must not be reached at all
+        # the transferred M cannot exceed the rank t; the coefficient is zero there, but the Wigner package
+        # RAISES on an invalid (j,m) pair rather than returning zero, so it must not be reached at all
         if  abs(Mtx - Mix) > tx    continue    end
         wa   = AngularMomentum.ClebschGordan(Jix, Mix, tx, Mtx-Mix, Jtx, Mtx) / sqrt(2*Jtx + 1.0)
         if  wa == 0.   continue   end
@@ -269,9 +269,9 @@ function  computeAmplitude(q::Float64, q0::Float64, beta::Float64, Mix::Float64,
             Lx = AngularMomentum.oneJ(L);   Lint = Int64(Lx);   Mint = Int64(Mval)
             if  abs(Mint) > Lint   continue   end
             wc = ComplexF64(0.)
-            ## THE REDUCED MATRIX ELEMENTS DO NOT DEPEND ON ANY MAGNETIC QUANTUM NUMBER, so they are cached on
-            ## (state, rank, L).  Without this they would be recomputed for every (M_i, M_f, m) combination --
-            ## a many-electron matrix element each time, and the dominant cost of the whole module.
+            # THE REDUCED MATRIX ELEMENTS DO NOT DEPEND ON ANY MAGNETIC QUANTUM NUMBER, so they are cached on
+            # (state, rank, L).  Without this they would be recomputed for every (M_i, M_f, m) combination --
+            # a many-electron matrix element each time, and the dominant cost of the whole module.
             if  t == L
                 kY = (:Y, key, Lint, Lint)
                 if  !haskey(cache, kY)   cache[kY] = CoulombExcitation.computeKjYme(cLevel, L, iLevel, q, grid)   end
@@ -305,10 +305,10 @@ function  generateContinuumLevels(line::CoulombIonization.Line, nm::Nuclear.Mode
                                   settings::CoulombIonization.Settings)
     contSettings = Continuum.Settings(isnothing(settings.continuumExchange) ? false : settings.continuumExchange, grid.NoPoints-50)
     nuclearPot   = Nuclear.nuclearPotential(nm, grid)
-    ## THE BASIS MUST BE REDUCED TO THE LEVEL'S OWN SYMMETRY FIRST.  A multiplet's basis carries the CSFs of every
-    ## symmetry of its configuration -- 1s2s holds both J=0 and J=1 -- and Basics.generateLevelWithExtraElectron
-    ## requires that every CSF share the level's own J and parity, raising "Improper symmetry of CSF." otherwise.
-    ## The He-like case hides this, since its final level has a single CSF; the first many-level case does not.
+    # THE BASIS MUST BE REDUCED TO THE LEVEL'S OWN SYMMETRY FIRST.  A multiplet's basis carries the CSFs of every
+    # symmetry of its configuration -- 1s2s holds both J=0 and J=1 -- and Basics.generateLevelWithExtraElectron
+    # requires that every CSF share the level's own J and parity, raising "Improper symmetry of CSF." otherwise.
+    # The He-like case hides this, since its final level has a single CSF; the first many-level case does not.
     subshells    = Basics.generate(OrderedSubshellList(), line.finalLevel.basis, line.initialLevel.basis)
     iLev         = Basics.generateLevelWithSymmetryReducedBasis(line.initialLevel, subshells)
     fLev         = Basics.generateLevelWithSymmetryReducedBasis(line.finalLevel,   subshells)
@@ -319,13 +319,13 @@ function  generateContinuumLevels(line::CoulombIonization.Line, nm::Nuclear.Mode
     end
     for  kappa  in  unique(kappas)
         cSubshell = Subshell(101, kappa)
-        ## Each kappa needs its OWN placeholder on the initial side, since the placeholder IS the subshell
-        ## (101, kappa); carrying one from a previous kappa would leave the two sides with different subshell
-        ## lists, which is exactly what the placeholder exists to prevent.
+        # Each kappa needs its OWN placeholder on the initial side, since the placeholder IS the subshell
+        # (101, kappa); carrying one from a previous kappa would leave the two sides with different subshell
+        # lists, which is exactly what the placeholder exists to prevent.
         newiLevel = Basics.generateLevelWithExtraSubshell(cSubshell, iLev)
         cOrbital, phase = Continuum.generateOrbitalForLevel(line.electronEnergy, cSubshell, fLev, nm, grid,
                                                             contSettings; nuclearPot=nuclearPot)
-        ## the coupled state has the ion's parity times (-1)^l of the ejected electron
+        # the coupled state has the ion's parity times (-1)^l of the ejected electron
         cParity = iseven( Basics.subshell_l(cSubshell) ) ? line.finalLevel.parity :
                                                            Basics.invertParity(line.finalLevel.parity)
         for  Jt  in  AngularMomentum.j_values(line.finalLevel.J, AngularMomentum.kappa_j(kappa))
@@ -361,7 +361,7 @@ function  computeAmplitudesProperties(line::CoulombIonization.Line, nm::Nuclear.
     Ji     = line.initialLevel.J;    Jf = line.finalLevel.J
     Jfx    = AngularMomentum.oneJ(Jf)
     kappas = unique( st[1] for st in states )
-    #
+
     newmLines = CoulombIonization.MagneticLine[]
     for  Mi  in  AngularMomentum.m_values(Ji)
         Mix = AngularMomentum.oneM(Mi)
@@ -372,15 +372,15 @@ function  computeAmplitudesProperties(line::CoulombIonization.Line, nm::Nuclear.
                 for  m  in  AngularMomentum.m_values(j)
                     mx  = AngularMomentum.oneM(m);    Mtx = Mfx + mx
                     for  iq = 1:nq
-                        ## COHERENT over the total symmetries J_t, incoherent over everything else: the (ion +
-                        ## electron) state is decoupled here so that the ION's magnetic quantum number M_f is
-                        ## resolved, which is what the alignment is about.
+                        # COHERENT over the total symmetries J_t, incoherent over everything else: the (ion +
+                        # electron) state is decoupled here so that the ION's magnetic quantum number M_f is
+                        # resolved, which is what the alignment is about.
                         coh = ComplexF64(0.)
                         for  (si, st)  in  enumerate(states)
                             if  st[1] != kappa   continue   end
                             Jtx = AngularMomentum.oneJ(st[3].J)
-                            ## M_t = M_f + m is only a magnetic quantum number of those total symmetries with
-                            ## J_t >= |M_t|; the others contribute nothing and must not be asked for
+                            # M_t = M_f + m is only a magnetic quantum number of those total symmetries with
+                            # J_t >= |M_t|; the others contribute nothing and must not be asked for
                             if  abs(Mtx) > Jtx    continue    end
                             cg  = AngularMomentum.ClebschGordan(Jfx, Mfx, jx, mx, Jtx, Mtx)
                             if  cg == 0.   continue   end
@@ -399,11 +399,11 @@ function  computeAmplitudesProperties(line::CoulombIonization.Line, nm::Nuclear.
             push!( newmLines, CoulombIonization.MagneticLine(Mi, Mf, partialCs, chs) )
         end
     end
-    #
+
     dCs = 0.;   for mLine in newmLines   dCs = dCs + mLine.partialCs   end
     alignmentA2 = 0.;   alignmentA4 = 0.
-    ## The SAME expressions as CoulombExcitation, Eqs. (9)-(10) of Surzhykov et al. (2008): the alignment belongs
-    ## to the residual ion, so it is formed from the cross section resolved by that ion's M_f.
+    # The SAME expressions as CoulombExcitation, Eqs. (9)-(10) of Surzhykov et al. (2008): the alignment belongs
+    # to the residual ion, so it is formed from the cross section resolved by that ion's M_f.
     if  settings.calcAlignment  &&  dCs > 0.
         MfList  = AngularMomentum.m_values(Jf)
         sigmaMf = Dict{AngularM64, Float64}( Mf => 0. for Mf in MfList )
@@ -438,9 +438,9 @@ function  determineLines(finalMultiplet::Multiplet, initialMultiplet::Multiplet,
                 beta = CoulombExcitation.betaProjectile(ionEnergy)
                 for  en  in  settings.electronEnergies
                     electronEnergy = Defaults.convertUnits("energy: to atomic", en)
-                    ## THE PROJECTILE MUST SUPPLY THE BINDING ENERGY AND THE ELECTRON'S KINETIC ENERGY, so the
-                    ## minimum momentum transfer grows with the electron energy -- unlike the excitation case,
-                    ## where it is fixed by the transition alone.
+                    # THE PROJECTILE MUST SUPPLY THE BINDING ENERGY AND THE ELECTRON'S KINETIC ENERGY, so the
+                    # minimum momentum transfer grows with the electron energy -- unlike the excitation case,
+                    # where it is fixed by the transition alone.
                     deltaE = fLevel.energy - iLevel.energy + electronEnergy
                     if  deltaE <= 0.   continue   end
                     q0 = deltaE / (beta * Defaults.getDefaults("speed of light: c"))
@@ -541,8 +541,8 @@ function  displayCrossSections(stream::IO, lines::Array{CoulombIonization.Line,1
     println(stream, sa)
     println(stream, "  ", "-"^nx)
     for  line in lines
-        ## the cross section is in atomic units per atomic unit of energy; report it in barn per eV, which is what
-        ## an ejected-electron spectrum is usually plotted in
+        # the cross section is in atomic units per atomic unit of energy; report it in barn per eV, which is what
+        # an ejected-electron spectrum is usually plotted in
         dcs = Defaults.convertUnits("cross section: from atomic to barn", line.dCs) /
               Defaults.convertUnits("energy: from atomic to eV", 1.0)
         sa  = "     " * TableStrings.levels_if(line.initialLevel.index, line.finalLevel.index) * "   " *

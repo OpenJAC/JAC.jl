@@ -430,7 +430,7 @@ function computeInteractionMatrix(levels::Array{Level,1}, lattice::Lattice, mode
         end
     end
     n = length(cfBasis)
-    #
+
     # Pre-compute the M_J-independent reduced matrix elements <levelP||C^(k)||levelQ>, once per (rank, levelP, levelQ)
     redme = Dict{Tuple{Int64,Int64,Int64},Float64}()
     for  k = 1:maxRank
@@ -440,9 +440,9 @@ function computeInteractionMatrix(levels::Array{Level,1}, lattice::Lattice, mode
             end
         end
     end
-    #
+
     scaleField = model isa PointChargeModel  ?  model.scaleField  :  1.0
-    #
+
     matrix = zeros(ComplexF64, n, n)
     for  bp = 1:n
         for  bq = 1:n
@@ -466,7 +466,7 @@ function computeInteractionMatrix(levels::Array{Level,1}, lattice::Lattice, mode
         end
     end
     matrix = (matrix + matrix') / 2
-    #
+
     return (matrix, cfBasis)
 end
 
@@ -529,7 +529,7 @@ function computeOutcomes(multiplet::Multiplet, lattice::Lattice, grid::Radial.Gr
         println("CrystalField.computeOutcomes(): crystal-field splitting requested for $(length(levels)) level(s), " *
                  "J-mixing = $(settings.includeJmixing).")
     end
-    #
+
     outcomes = Outcome[]
     if  settings.includeJmixing
         cfMultiplet = computeRepresentation(levels, lattice, settings.model, grid, settings.maxRank)
@@ -540,7 +540,7 @@ function computeOutcomes(multiplet::Multiplet, lattice::Lattice, grid::Radial.Gr
             push!(outcomes, Outcome(lev, cfMultiplet))
         end
     end
-    #
+
     return  outcomes
 end
 
@@ -607,11 +607,11 @@ function characteristicSplitting(cfMultiplet::CfMultiplet)
     energies = sort([ lev.energy  for lev in cfMultiplet.cfLevels ])
     n = length(energies)
     if  n < 2   return 0.0   end
-    #
+
     gaps = [ energies[i+1] - energies[i]  for i = 1:n-1 ]
     imax = argmax(gaps)
     lowerGroup = energies[1:imax];   upperGroup = energies[imax+1:end]
-    #
+
     return  sum(upperGroup)/length(upperGroup) - sum(lowerGroup)/length(lowerGroup)
 end
 
@@ -652,16 +652,16 @@ end
 function fitScaleField(levels::Array{Level,1}, lattice::Lattice, grid::Radial.Grid, targetSplitting::Float64, maxRank::Int64;
                         tolerance::Float64=1.0e-6, maxIterations::Int64=20)
     evaluate(s) = characteristicSplitting( computeRepresentation(levels, lattice, PointChargeModel(s), grid, maxRank) )
-    #
+
     cxsAtUnitScale = evaluate(1.0)
     if  cxsAtUnitScale == 0.
         error("CrystalField.fitScaleField: characteristic splitting vanishes at scaleField=1.0 " *
               "(no allowed multipole term for this lattice/level combination); cannot fit.")
     end
-    #
+
     s0 = targetSplitting / cxsAtUnitScale;   f0 = evaluate(s0) - targetSplitting
     s1 = s0 * 1.01;                          f1 = evaluate(s1) - targetSplitting
-    #
+
     for  _ = 1:maxIterations
         if  abs(f1) < tolerance * abs(targetSplitting)   break    end
         slope = (f1 - f0) / (s1 - s0)
@@ -669,7 +669,7 @@ function fitScaleField(levels::Array{Level,1}, lattice::Lattice, grid::Radial.Gr
         s0, f0 = s1, f1
         s1 = sNew;   f1 = evaluate(s1) - targetSplitting
     end
-    #
+
     return  s1
 end
 

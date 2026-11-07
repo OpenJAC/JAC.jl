@@ -294,7 +294,7 @@ function displayLsjLevels(conf::Configuration, lsjLevels::Array{LsjLevel,1})
     sa = sa * TableStrings.center(10, "NIST energy"   ; na=3)
     sb = sb * TableStrings.center(10, "eV"            ; na=2)
     println(sa);    println(sb);    println("  ", TableStrings.hLine(nx))
-    #
+
     for  (i, level) in enumerate(lsjLevels)
         sym = LevelSymmetry( level.J, level.parity)
         sm  = round(Int64, Basics.twice(level.S)+1)
@@ -535,24 +535,24 @@ function generateFeatureVectors(conf::Configuration, am::AtomicFeatures.AtomicMo
         append!(xVector,  AtomicFeatures.extractIntermediateQN(2, level) )
 
         # Add <r^k> of the given subshells
-        ## append!(xVector,  AtomicFeatures.extractRkExpectation(am.subshells, -2, orbitals) )
-        ## append!(xVector,  AtomicFeatures.extractRkExpectation(am.subshells, -1, orbitals) )
+        # append!(xVector,  AtomicFeatures.extractRkExpectation(am.subshells, -2, orbitals) )
+        # append!(xVector,  AtomicFeatures.extractRkExpectation(am.subshells, -1, orbitals) )
         append!(xVector,  AtomicFeatures.extractRkExpectation(am.subshells,  1, orbitals, am.grid) )
-        ## append!(xVector,  AtomicFeatures.extractRkExpectation(am.subshells,  2, orbitals) )
+        # append!(xVector,  AtomicFeatures.extractRkExpectation(am.subshells,  2, orbitals) )
 
         # Add F^k (a,b) = R^k(a,b,a,b) of the given subshells
-        ## append!(xVector,  AtomicFeatures.extractFkIntegrals(am.subshells, -2, orbitals) )
-        ## append!(xVector,  AtomicFeatures.extractFkIntegrals(am.subshells, -1, orbitals) )
+        # append!(xVector,  AtomicFeatures.extractFkIntegrals(am.subshells, -2, orbitals) )
+        # append!(xVector,  AtomicFeatures.extractFkIntegrals(am.subshells, -1, orbitals) )
         append!(xVector,  AtomicFeatures.extractFkIntegrals(am.subshells,  0, orbitals, am.grid) )
-        ## append!(xVector,  AtomicFeatures.extractFkIntegrals(am.subshells,  1, orbitals) )
+        # append!(xVector,  AtomicFeatures.extractFkIntegrals(am.subshells,  1, orbitals) )
         append!(xVector,  AtomicFeatures.extractFkIntegrals(am.subshells,  2, orbitals, am.grid) )
         append!(xVector,  AtomicFeatures.extractFkIntegrals(am.subshells,  4, orbitals, am.grid) )
 
         # Add G^k (a,b) = R^k(a,b,b,a) of the given subshells
-        ## append!(xVector,  AtomicFeatures.extractGkIntegrals(am.subshells, -2, orbitals) )
-        ## append!(xVector,  AtomicFeatures.extractGkIntegrals(am.subshells, -1, orbitals) )
+        # append!(xVector,  AtomicFeatures.extractGkIntegrals(am.subshells, -2, orbitals) )
+        # append!(xVector,  AtomicFeatures.extractGkIntegrals(am.subshells, -1, orbitals) )
         append!(xVector,  AtomicFeatures.extractGkIntegrals(am.subshells,  0, orbitals, am.grid) )
-        ## append!(xVector,  AtomicFeatures.extractGkIntegrals(am.subshells,  1, orbitals) )
+        # append!(xVector,  AtomicFeatures.extractGkIntegrals(am.subshells,  1, orbitals) )
         append!(xVector,  AtomicFeatures.extractGkIntegrals(am.subshells,  2, orbitals, am.grid) )
         append!(xVector,  AtomicFeatures.extractGkIntegrals(am.subshells,  4, orbitals, am.grid) )
 

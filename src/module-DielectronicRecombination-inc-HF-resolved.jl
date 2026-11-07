@@ -1,14 +1,14 @@
 
 # Hyperfine-resolved dielectronic recombination -- a strict analogue of the fine-structure route in
 # module-DielectronicRecombination-inc-FS-resolved.jl.
-#
+
 # THE IDEA. Both operators of DR are purely ELECTRONIC -- the Coulomb interaction for the capture step, the
 # multipole field for the photon step -- so neither touches the nuclear spin. The nucleus is a spectator, and a
 # hyperfine amplitude is therefore the corresponding ELECTRONIC amplitude times a recoupling coefficient. No
 # electronic amplitude is ever recomputed here: this file runs the fine-structure route to obtain them, builds
 # the hyperfine multiplets, and recouples. That is what keeps the hyperfine route affordable, and it is also
 # what makes it a genuine analogue rather than a second implementation that can drift out of step.
-#
+
 # WHERE THE PHYSICS ACTUALLY IS. The INITIAL ion carries the full nuclear moments: its hyperfine splitting is
 # observable, the capture resonances split by F_i, and their strengths carry (2F_i+1) in place of (2J_i+1). The
 # intermediate and final levels split too, but negligibly, which is imitated by mu = Q = 0. That is not an

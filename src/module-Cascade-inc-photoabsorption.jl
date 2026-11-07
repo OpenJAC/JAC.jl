@@ -18,7 +18,7 @@
 function perform(scheme::PhotoAbsorptionScheme, comp::Cascade.Computation; output::Bool=false, outputToFile::Bool=true, outputDirectory::String="")
     if  output    results = Dict{String, Any}()    else    results = nothing    end
     printSummary, iostream = Defaults.getDefaults("summary flag/stream")
-    #
+
     # Perform the two cascade computations for the photoionization and photoexcitation separately, even if this
     # requires to run the computation of the initial multiplet twice.
     if  scheme.calcDirect
@@ -30,8 +30,8 @@ function perform(scheme::PhotoAbsorptionScheme, comp::Cascade.Computation; outpu
         iComp   = Cascade.Computation(comp, scheme=iScheme)
         iOut    = Cascade.perform(iScheme, iComp; output=true, outputToFile=false)
     end
-    #
-    #
+
+
     if  scheme.calcResonant
         println("\n> Resonant photoexcitation part of the photoabsorption cascade computations")
         println(  "  =========================================================================  \n")
@@ -41,7 +41,7 @@ function perform(scheme::PhotoAbsorptionScheme, comp::Cascade.Computation; outpu
         eComp   = Cascade.Computation(comp, scheme=eScheme)
         eOut    = Cascade.perform(eScheme, eComp; output=true, outputToFile=false)
     end
-    #
+
     # Collect the output from the computations above if required
     data = Cascade.Data[]
     if output   &&   scheme.calcDirect 
@@ -53,7 +53,7 @@ function perform(scheme::PhotoAbsorptionScheme, comp::Cascade.Computation; outpu
         push!(data, Cascade.Data{PhotoIonization.Line}(iOut[PhotoIonization.Settings]) )
         results = Base.merge( results, Dict("cascade data:"                 => data ) )
     end
-    #
+
     if output   &&   scheme.calcResonant 
         results = Base.merge( results, Dict("name"                          => comp.name) ) 
         results = Base.merge( results, Dict("cascade scheme"                => comp.scheme) ) 
@@ -63,7 +63,7 @@ function perform(scheme::PhotoAbsorptionScheme, comp::Cascade.Computation; outpu
         push!(data, Cascade.Data{PhotoExcitation.Line}(eOut[PhotoExcitation.Settings]) )
         results = Base.merge( results, Dict("cascade data:"                 => data ) )
     end
-    #
+
     #  Write out the result to file to later continue with simulations on the cascade data
     if  outputToFile
         filename = "zzz-cascade-photoabsorption-computations-" * string(Dates.now())[1:13] * ".jld"

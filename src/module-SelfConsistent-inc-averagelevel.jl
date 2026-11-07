@@ -325,7 +325,7 @@ function solveAverageLevelField(basis::Basis, nuclearModel::Nuclear.Model, primi
                 try
                     gamma = dF \ fNow
                 catch
-                    gamma = zeros(m)              ## a rank-deficient window: fall back to the plain step
+                    gamma = zeros(m)              # a rank-deficient window: fall back to the plain step
                 end
                 if  any(!isfinite, gamma)   gamma = zeros(m)   end
                 xNew = xNow + fNow - (dX + dF) * gamma

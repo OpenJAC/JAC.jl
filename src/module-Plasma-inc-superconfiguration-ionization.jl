@@ -1,5 +1,5 @@
 # Functions and methods for scheme::Plasma.SuperConfigurationIonizationScheme computations.
-#
+
 # SHARES `superConfigurationsModule()`, defined once in module-Plasma-inc-superconfiguration-opacity.jl for
 # the SAME include-order reason explained there -- visible here without redefinition, since both files are
 # `include`d into the one `module Plasma ... end` block and share its namespace.

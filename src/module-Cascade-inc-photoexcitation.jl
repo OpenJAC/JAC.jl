@@ -21,7 +21,7 @@ function computeSteps(scheme::Cascade.PhotoExcitationScheme, comp::Cascade.Compu
                                                 
         if  step.process == Basics.PhotoExc() 
             newLines = PhotoExcitation.computeLinesCascade(step.finalMultiplet, step.initialMultiplet, comp.grid, 
-                                                           ## step.settings, scheme.initialLevelSelection, output=true, printout=false) 
+                                                           # step.settings, scheme.initialLevelSelection, output=true, printout=false) 
                                                            step.settings, LevelSelection(true, indices=[1,2,3,4]), output=true, printout=false) 
             append!(linesE, newLines);    nt = length(linesE)
         else   error("Unsupported atomic process for excitation computations.")
@@ -31,7 +31,7 @@ function computeSteps(scheme::Cascade.PhotoExcitationScheme, comp::Cascade.Compu
         if  printSummary   println(iostream, "\n*    Step $st:: A total of $(length(newLines)) $(string(step.process)) lines are calculated, " *
                                                 "giving now rise to a total of $nt $(string(step.process)) decay lines." )   end      
     end
-    #
+
     return( linesE )
 end
 
@@ -51,9 +51,9 @@ function determineSteps(scheme::Cascade.PhotoExcitationScheme, comp::Cascade.Com
         for  initialBlock in initialList
             for  excitedBlock in excitedList
                 if  initialBlock.NoElectrons == excitedBlock.NoElectrons
-                    ## The multipoles must be taken from the scheme; a hard-wired [E1] made the multipole list of
-                    ## PhotoExcitationScheme act on the configuration filter (generateConfigurationsForPhotoexcitation)
-                    ## only, so that M1/E2/M2 enlarged the cascade by same-parity blocks that could never yield a line.
+                    # The multipoles must be taken from the scheme; a hard-wired [E1] made the multipole list of
+                    # PhotoExcitationScheme act on the configuration filter (generateConfigurationsForPhotoexcitation)
+                    # only, so that M1/E2/M2 enlarged the cascade by same-parity blocks that could never yield a line.
                     settings = PhotoExcitation.Settings(scheme.multipoles, [UseCoulomb, UseBabushkin], false, false, false, false, false,
                                                         LineSelection(), 0., 0., 1.0e6, Basics.ExpStokes() )
                     push!( stepList, Cascade.Step(Basics.PhotoExc(), settings, initialBlock.confs, excitedBlock.confs, 
@@ -61,7 +61,7 @@ function determineSteps(scheme::Cascade.PhotoExcitationScheme, comp::Cascade.Com
                 end
             end
         end
-        #
+
     else  error("Unsupported cascade approach.")
     end
     return( stepList )
@@ -77,17 +77,17 @@ end
 function generateBlocks(scheme::Cascade.PhotoExcitationScheme, comp::Cascade.Computation, confs::Array{Configuration,1}; printout::Bool=true)
     blockList = Cascade.Block[]
     printSummary, iostream = Defaults.getDefaults("summary flag/stream")
-    #
+
     if    comp.approach == AverageSCA()
         if  printout
             println("\n* Generate blocks for excitation computations:")
             Cascade.displayApproach(stdout, comp.approach, comp.asfSettings)
         end
-        ## Cascade.generateBoundOrbitals prints the bound-orbital assumption itself, to stdout and to the
-        ## summary file, so that what is announced can never drift from what is done.
-        ## It takes the APPROACH, not its conditions: that signature changed in 46dd775 and this call site was
-        ## missed, so every photoexcitation cascade has raised a MethodError since. Nothing caught it because
-        ## testModule_Cascade_PhotonExcitation is hollow -- it computes nothing and hardcodes success=true.
+        # Cascade.generateBoundOrbitals prints the bound-orbital assumption itself, to stdout and to the
+        # summary file, so that what is announced can never drift from what is done.
+        # It takes the APPROACH, not its conditions: that signature changed in 46dd775 and this call site was
+        # missed, so every photoexcitation cascade has raised a MethodError since. Nothing caught it because
+        # testModule_Cascade_PhotonExcitation is hollow -- it computes nothing and hardcodes success=true.
         orbitals = Cascade.generateBoundOrbitals(comp.approach, comp, confs; printout=printout)
         if  printout
         println("    + only E1 excitations are considered. \n")
@@ -98,13 +98,13 @@ function generateBlocks(scheme::Cascade.PhotoExcitationScheme, comp::Cascade.Com
         println(iostream, "    + only E1 excitations are considered. \n")
         end
         end     # printout
-        #
+
         for  confa  in confs
             print("  Multiplet computations for $(string(confa)[1:end])   with $(confa.NoElectrons) electrons ... ")
             if  printSummary   println(iostream, "\n*  Multiplet computations for $(string(confa)[1:end])   with $(confa.NoElectrons) electrons ... ")   end
-            ## generateBoundOrbitals returns one orbital set PER CHARGE STATE, keyed by the electron count,
-            ## so it has to be indexed here; passing the whole dictionary was the second half of the same
-            ## signature change missed in 46dd775.
+            # generateBoundOrbitals returns one orbital set PER CHARGE STATE, keyed by the electron count,
+            # so it has to be indexed here; passing the whole dictionary was the second half of the same
+            # signature change missed in 46dd775.
             multiplet = Hamiltonian.performCIwithFrozenOrbitals([confa], orbitals[confa.NoElectrons], comp.nuclearModel, comp.grid,
                                                                 Cascade.asfSettingsForApproach(comp.approach, comp.asfSettings); printout=false)
             push!( blockList, Cascade.Block(confa.NoElectrons, [confa], true, multiplet) )
@@ -141,7 +141,7 @@ function generateConfigurationsForPhotoexcitation(multiplets::Array{Multiplet,1}
     for conf in initialConfList    push!(en, Empirical.totalEnergy(round(Int64, nm.Z), conf, data = PeriodicTable.XrayDataBooklet() ))    end
     maxen  = maximum(en);    minen  = minimum(en);  
     println(">>> initial configuration(s) have energies from $minen  to  $maxen  [a.u.].")
-    #
+
     newBlockConfList = Configuration[]
     for  conf  in  blockConfList    meanEnergy = Empirical.totalEnergy(round(Int64, nm.Z), conf, data = PeriodicTable.XrayDataBooklet() )
         minEn = 0.2* Defaults.convertUnits("energy: from predefined to atomic unit", scheme.minPhotonEnergy) 
@@ -177,7 +177,7 @@ end
 function perform(scheme::PhotoExcitationScheme, comp::Cascade.Computation; output::Bool=false, outputToFile::Bool=true, outputDirectory::String="")
     if  output    results = Dict{String, Any}()    else    results = nothing    end
     printSummary, iostream = Defaults.getDefaults("summary flag/stream")
-    #
+
     # Perform the SCF and CI computation for the intial-state multiplets if initial configurations are given
     if  comp.initialConfigs != Configuration[]
         multiplet  = SelfConsistent.performSCF(comp.initialConfigs, comp.nuclearModel, comp.grid, comp.asfSettings; printout=false)
@@ -188,12 +188,12 @@ function perform(scheme::PhotoExcitationScheme, comp::Cascade.Computation; outpu
     # Print out initial configurations and levels 
     Cascade.displayLevels(stdout, multiplets, sa="initial ")
     if  printSummary   Cascade.displayLevels(iostream, multiplets, sa="initial ")                            end
-    #
+
     # Generate subsequent cascade configurations as well as display and group them together
     wa  = Cascade.generateConfigurationsForPhotoexcitation(multiplets, comp.scheme, comp.nuclearModel)
     wb1 = Basics.displayConfigurations(comp.nuclearModel.Z, wa[1]; sa="(initial part of the) photo-excited ")
     wb2 = Basics.displayConfigurations(comp.nuclearModel.Z, wa[2]; sa="(generated part of the) photo-excited ")
-    #
+
     # Determine first all configuration 'blocks' and from them the individual steps of the cascade
     wc1 = Cascade.generateBlocks(scheme, comp::Cascade.Computation, wb1)
     wc2 = Cascade.generateBlocks(scheme, comp::Cascade.Computation, wb2, printout=false)
@@ -216,7 +216,7 @@ function perform(scheme::PhotoExcitationScheme, comp::Cascade.Computation; outpu
         results = Base.merge( results, Dict("generated multiplets:"      => gMultiplets) )    
         results = Base.merge( results, Dict("photoexcitation lines:"     => linesE) )
         results = Base.merge( results, Dict("cascade data:"              => data ) )
-        #
+
         #  Write out the result to file to later continue with simulations on the cascade data
         if  outputToFile
             filename = "zzz-cascade-photoexcitation-computations-" * string(Dates.now())[1:13] * ".jld"
@@ -227,6 +227,6 @@ function perform(scheme::PhotoExcitationScheme, comp::Cascade.Computation; outpu
             Cascade.writeDataFile(filename, results)
         end
     end
-    ## return( results isa Dict{String,Any} ? Basics.PerformResults(results) : results )
+    # return( results isa Dict{String,Any} ? Basics.PerformResults(results) : results )
     return( results isa Dict{String,Any} ? Basics.PerformResults(results) : results )
 end

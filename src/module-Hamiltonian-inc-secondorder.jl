@@ -67,7 +67,7 @@ function matrixElement(basis::Basis, r::Int64, s::Int64, nm::Nuclear.Model, grid
     waG1 = SpinAngular.computeCoefficients(opa, basis.csfs[r], basis.csfs[s], subshellList)
     opa  = SpinAngular.TwoParticleOperator(0, plus)
     waG2 = SpinAngular.computeCoefficients(opa, basis.csfs[r], basis.csfs[s], subshellList)
-    #
+
     me = 0.
     for  coeff in waG1
         me = me + coeff.T * RadialIntegrals.GrantIab(basis.orbitals[coeff.a], basis.orbitals[coeff.b], grid, potential)
@@ -731,7 +731,7 @@ function secondOrderShapeCrossingCorrection(pMp::Multiplet, qMp::Multiplet, refC
     # PRESENTING qBasis's orbitals under pBasis's own subshell objects for this call only (same physical
     # orbitals, same (n,kappa) label), matched by (n,kappa) SEARCH rather than assumed position: this is a
     # pure relabelling for the angular machinery's benefit, not a change to any radial content.
-    #
+
     # P MAY CARRY MORE SUBSHELLS THAN Q (priority item 5, 04-Nov-2026: a prior RAS layer deepened P's own
     # ladder beyond the fixed core-valence excitation space Q's own step built) -- so Q's subshell list is
     # remapped label-for-label, NOT forced to `pBasis.subshells` wholesale, and then RE-EXPANDED onto the
@@ -779,14 +779,14 @@ function secondOrderShapeCrossingCorrection(pMp::Multiplet, qMp::Multiplet, refC
     end
 
     deltaE = zeros(length(targetLevels))
-    ratioThreshold = 0.4   ## |coupling/dd| above this is folded rather than summed, item 5 -- see the module docstring
+    ratioThreshold = 0.4   # |coupling/dd| above this is folded rather than summed, item 5 -- see the module docstring
     nFolded = 0;    worstRatio = 0.0;    worstDenominator = Inf
     for  (j, i)  in  enumerate(targetLevels)
         ePLevel      = pMp.levels[i].energy
         unflaggedIdx = Int64[];    flaggedIdx = Int64[]
         for  s = 1:nNewQ
             dd = hqq[s] - ePLevel
-            abs(dd) < 1.0e-10   &&   continue                       ## literal degeneracy, UNCHANGED hard exclusion
+            abs(dd) < 1.0e-10   &&   continue                       # literal degeneracy, UNCHANGED hard exclusion
             if  abs(coupling[i,s] / dd) > ratioThreshold
                 push!(flaggedIdx, s)
                 if  abs(coupling[i,s]/dd) > worstRatio

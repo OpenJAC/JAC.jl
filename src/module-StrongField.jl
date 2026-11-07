@@ -405,6 +405,7 @@ function Base.string(amp::StrongField.SphericalAmplitude)
     return( sa )
 end
 
+
 function Base.show(io::IO, amp::StrongField.SphericalAmplitude)
     sa = string(amp);       print(io, sa)
 end
@@ -813,7 +814,7 @@ function  computeSphericalAmplitudes(comp::StrongField.Computation)
                 envIntegrals  = StrongField.computePulseShapeIntegrals(comp.envelope, comp.beam, comp.polarization, 
                                                                         thetap, phip, energyp, initialEn)
                 fVolkovPlus, fVolkovMinus, fVolkovSquared  = envIntegrals
-                #
+
                 
                 wminus = 0.0im;    wplus = 0.0im
                 # Collect contributions from all l_p, j_p, q terms
@@ -958,7 +959,7 @@ function  computeSphericalAmplitudesUncoupled(comp::StrongField.Computation)
             envIntegrals  = StrongField.computePulseShapeIntegrals(comp.envelope, comp.beam, comp.polarization, 
                                                                     thetap, phip, energyp, initialEn)
             fVolkovPlus, fVolkovMinus, fVolkovSquared = envIntegrals
-            #
+
             reducedMEArray = ComplexF64[]
             for lp = lpMin:lpMax
                 push!( reducedMEArray, pReducedMEHydrogenicUncoupled(energyp, lp, n, l, initialEn, comp.volkov, comp.grid) )
@@ -1075,15 +1076,15 @@ function  computeSphericalAmplitudesUncoupledLengthGauge(comp::StrongField.Compu
                                     Basics.determinePolarizationVector(q, comp.polarization, star=false)   * 
                                     AngularMomentum.ClebschGordan(     AngularJ64(l),  AngularM64(m),  AngularJ64(1), 
                                                                         AngularM64(-q), AngularJ64(lp), AngularM64(m-q) )
-                    ## (-im)^lp * (-1)   * AngularMomentum.ClebschGordan(l, m, 1, -q, lp, m-q) * (-1) *
-                    ##                     AngularMomentum.ClebschGordan(lp, 0, 1, 0, l, 0)
+                    # (-im)^lp * (-1)   * AngularMomentum.ClebschGordan(l, m, 1, -q, lp, m-q) * (-1) *
+                    #                     AngularMomentum.ClebschGordan(lp, 0, 1, 0, l, 0)
 
                     wminus = wminus + AngularMomentum.sphericalYlm(lp, m+q, thetap, phip)                 * 
                                         Basics.determinePolarizationVector(q, comp.polarization, star=true) *
                                         AngularMomentum.ClebschGordan(     AngularJ64(l), AngularM64(m),  AngularJ64(1), 
                                                                             AngularM64(q), AngularJ64(lp), AngularM64(m+q) )
-                    ## AngularMomentum.ClebschGordan(l, m, 1, q, lp, m+q)*(-im)^lp * (-1) *
-                    ## AngularMomentum.ClebschGordan(lp, 0, 1, 0, l, 0) 
+                    # AngularMomentum.ClebschGordan(l, m, 1, q, lp, m+q)*(-im)^lp * (-1) *
+                    # AngularMomentum.ClebschGordan(lp, 0, 1, 0, l, 0) 
                 end
                 wplus  = KWignerEckart * wplus * fVolkovPlus
                 wminus = KWignerEckart * wminus * fVolkovMinus
@@ -1375,14 +1376,14 @@ function ReducedTime(epsiloni::Float64, volkov::AbstractVolkovState, envelope::P
         Apotx = A0eps * cos(omega*t+phiCep) * (sin(omegaOverTwoNp*t))^2
         Apoty = A0eps * epsilon * sin(omega*t+phiCep) * (sin(omegaOverTwoNp*t))^2
         
-        ## Ec     = beam.A0* omega/2.0 * ( -sin(2*beta*t)/np - cos(2*beta*t)*im + im) * exp( -im * (omega * t + phiCep) )
-        ## CHANGED: I use beam.A0 withou /sqrt(1.0 + epsilon^2), epsilon should be in polarization unit vector u
-        ## EcStar = beam.A0* omega/2.0 * ( -sin(2*beta*t)/np + cos(2*beta*t)*im - im) * exp(  im * (omega * t + phiCep) )
-        ## CHANGED:
-        ## Ec     = A0eps * omega / np * sin(omegaOverTwoNp*t) * 
-        ##          ( - cos(omegaOverTwoNp*t) + im * np * sin(omegaOverTwoNp*t) ) * exp( -im * (omega * t + phiCep) )
-        ## EcStar = A0eps * omega / np * sin(omegaOverTwoNp*t) * 
-        ##          ( - cos(omegaOverTwoNp*t) - im * np * sin(omegaOverTwoNp*t) ) * exp(  im * (omega * t + phiCep) )
+        # Ec     = beam.A0* omega/2.0 * ( -sin(2*beta*t)/np - cos(2*beta*t)*im + im) * exp( -im * (omega * t + phiCep) )
+        # CHANGED: I use beam.A0 withou /sqrt(1.0 + epsilon^2), epsilon should be in polarization unit vector u
+        # EcStar = beam.A0* omega/2.0 * ( -sin(2*beta*t)/np + cos(2*beta*t)*im - im) * exp(  im * (omega * t + phiCep) )
+        # CHANGED:
+        # Ec     = A0eps * omega / np * sin(omegaOverTwoNp*t) * 
+        #          ( - cos(omegaOverTwoNp*t) + im * np * sin(omegaOverTwoNp*t) ) * exp( -im * (omega * t + phiCep) )
+        # EcStar = A0eps * omega / np * sin(omegaOverTwoNp*t) * 
+        #          ( - cos(omegaOverTwoNp*t) - im * np * sin(omegaOverTwoNp*t) ) * exp(  im * (omega * t + phiCep) )
         
         #Envelope of Ec without amplitude and phase
         fE 	   = sin(omegaOverTwoNp*t) * ( im * cos(omegaOverTwoNp*t) / np + sin(omegaOverTwoNp*t) ) 

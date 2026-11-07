@@ -109,8 +109,8 @@ end
 
 #################################################################################################################################
 #################################################################################################################################
-## Feature-extraction primitives: each returns a fixed-length Vector{Float64} for a given, fixed shell/subshell list, so that
-## every configuration/level built from the same AtomicModel produces an x-vector of the same total length.
+# Feature-extraction primitives: each returns a fixed-length Vector{Float64} for a given, fixed shell/subshell list, so that
+# every configuration/level built from the same AtomicModel produces an x-vector of the same total length.
 
 
 """

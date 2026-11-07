@@ -1,4 +1,4 @@
-#
+
 # This module has mainly been contributed by Gediminas Gaigalas (gediminas.gaigalas@tfai.vu.lt)
 """
 `module  JAC.SpinAngularGaigalas`  
@@ -57,6 +57,7 @@ struct  OneParticleOperator  <:  AbstractAngularType
     sameOrbitalSet    ::Bool
 end
 
+
 """
 `SpinAngularGaigalas.OneParticleOperator()`  ... constructor for setting the default values.
 """
@@ -73,6 +74,7 @@ function Base.show(io::IO, op::OneParticleOperator)
         println(io, sa)
 end
 
+
 """
 `struct  SpinAngularGaigalas.TwoParticleOperator`  
     ... a struct for defining the spherial tensor structure of a two-particle operator.
@@ -86,6 +88,7 @@ struct  TwoParticleOperator
     parity            ::Basics.Parity 
     sameOrbitalSet    ::Bool
 end
+
 
 """
 `SpinAngularGaigalas.TwoParticleOperator()`  ... constructor for setting the default values.
@@ -102,6 +105,7 @@ function Base.show(io::IO, op::TwoParticleOperator)
         end
         println(io, sa)
 end
+
 
 """
 `struct  SpinAngularGaigalas.Coefficient1p`  
@@ -125,6 +129,7 @@ function Base.show(io::IO, coeff::Coefficient1p)
     sa = "   T^$(coeff.nu) [$(coeff.a), $(coeff.b)] = $(coeff.T)"
     print(io, sa)
 end
+
 
 """
 `struct  SpinAngularGaigalas.Coefficient2p`  
@@ -166,6 +171,7 @@ function Base.show(io::IO, coeff::Coefficient2p)
     print(io, sa)
 end
 
+
 """
 `struct  SpinAngularGaigalas.SchemeEta`  
     ... to define various singleton structs in order to distinguish between different irreducible tensors 
@@ -194,7 +200,7 @@ struct  DiagramC03   end
 struct  DiagramC04   end
 struct  DiagramC05   end
 
-## Sentinel type for the ordered-shells overload of recoupling2p; distinguishes it from the unordered overload.
+# Sentinel type for the ordered-shells overload of recoupling2p; distinguishes it from the unordered overload.
 struct  Ordered2p    end
 
 
@@ -221,6 +227,7 @@ function  computeCoefficients(op::SpinAngularGaigalas.OneParticleOperator, leftC
     return (coeffs)
 end
 
+
 """
 `SpinAngularGaigalas.computeCoefficients(op::SpinAngularGaigalas.TwoParticleOperator, leftCsf::CsfR, rightCsf::CsfR, subshells::Array{Subshell,1})`  
     ... computes the spin-angular coefficients for the reduced two-particle matrix element
@@ -239,6 +246,7 @@ function  computeCoefficients(op::SpinAngularGaigalas.TwoParticleOperator, leftC
     
     return (coeffs)
 end
+
 
 """
 `SpinAngularGaigalas.computeCoefficientsNonScalar(op::SpinAngularGaigalas.OneParticleOperator, leftCsf::CsfR, rightCsf::CsfR, subshells::Array{Subshell,1})`  
@@ -306,7 +314,7 @@ function  computeCoefficientsNonScalar(op::SpinAngularGaigalas.OneParticleOperat
                     wa = (-1)^Int64((Basics.twice(ja)+Basics.twice(jb)-2 * op.rank + 2)/2)
                 else    error("SpinAngularGaigalas.computeCoefficientsNonScalar: stop a")    
                 end
-                #
+
                 wa = wa * recoupling1p(leftCsf, rightCsf, j1, j2, kj, no_one, no_two, length(subshells))
                 if abs(wa) >= 2.0e-10
                     aN  = leftCsf.occupation[creation];         aNp = rightCsf.occupation[creation]
@@ -341,6 +349,7 @@ function  computeCoefficientsNonScalar(op::SpinAngularGaigalas.OneParticleOperat
     return( coeffs1p )
 end
 
+
 """
 `SpinAngularGaigalas.computeCoefficientsScalar(op::SpinAngularGaigalas.OneParticleOperator, leftCsf::CsfR, rightCsf::CsfR, subshells::Array{Subshell,1})`  
     ... computes the spin-angular coefficients for the reduced (scalar) one-particle matrix element
@@ -369,7 +378,7 @@ function  computeCoefficientsScalar(op::SpinAngularGaigalas.OneParticleOperator,
             if annihilation == 0;  annihilation = i;    else return( coeffs1p ) end
         end 
     end
-    #
+
     if count == 0 
         for  (i,shi)  in  enumerate(subshells)
             if recouplingCheck(leftCsf, rightCsf, i, i, i, i, length(subshells), 0) != 0.0
@@ -440,6 +449,7 @@ function  computeCoefficientsScalar(op::SpinAngularGaigalas.OneParticleOperator,
     return( coeffs1p )
 end
 
+
 """
 `SpinAngularGaigalas.computeCoefficientsScalar(op::SpinAngularGaigalas.TwoParticleOperator, leftCsf::CsfR, rightCsf::CsfR, subshells::Array{Subshell,1})`  
     ... computes the spin-angular coefficients for the reduced (scalar) two-particle matrix element
@@ -495,6 +505,7 @@ function  computeCoefficientsScalar(op::SpinAngularGaigalas.TwoParticleOperator,
     return( coeffs2p )
 end
 
+
 """
 `SpinAngularGaigalas.irreducibleTensor(eta::SchemeEta_a, aIndex::Int64, aN::Int64, mq::AngularM64, bIndex::Int64, bN::Int64)`  
     ... computes the submatrix elements
@@ -534,6 +545,7 @@ function  irreducibleTensor(eta::SchemeEta_a, aIndex::Int64, aN::Int64, mq::Angu
     end
     return( wa )
 end
+
 
 """
 `SpinAngularGaigalas.irreducibleTensor(eta::SchemeEta_W, aIndex::Int64, aN::Int64, mLeft::AngularM64, mRight::AngularM64, kj::Int64, 
@@ -630,6 +642,7 @@ function  irreducibleTensor(eta::SchemeEta_W, aIndex::Int64, aN::Int64, mLeft::A
     return( wa )
 end
 
+
 """
 `SpinAngularGaigalas.irreducibleTensor(eta::SchemeEta_WW, aIndex::Int64, aN::Int64, mLeft1::AngularM64, mRight1::AngularM64, 
                                 mLeft2::AngularM64, mRight2::AngularM64, kj::Int64, bIndex::Int64, bN::Int64)`  
@@ -704,6 +717,7 @@ function  irreducibleTensor(eta::SchemeEta_WW, aIndex::Int64, aN::Int64, mLeft1:
     end
     return( wa )
 end
+
 
 """
 `SpinAngularGaigalas.irreducibleTensor(eta::SchemeEta_aW,aIndex::Int64, aN::Int64, mLeft1::AngularM64, mLeft2::AngularM64, 
@@ -781,6 +795,7 @@ function  irreducibleTensor(eta::SchemeEta_aW,aIndex::Int64, aN::Int64, mLeft1::
     return( wa )
 end
 
+
 """
 `SpinAngularGaigalas.irreducibleTensor(eta::SchemeEta_Wa, aIndex::Int64, aN::Int64, mLeft1::AngularM64, mRight1::AngularM64,  
                                 mLeft2::AngularM64, kj1::Int64, kj::AngularJ64, bIndex::Int64, bN::Int64)`  
@@ -857,6 +872,7 @@ function  irreducibleTensor(eta::SchemeEta_Wa, aIndex::Int64, aN::Int64, mLeft1:
     return( wa )
 end
 
+
 """
 `SpinAngularGaigalas.normalForm(ia::Int64, ib::Int64, ic::Int64)`
     ... odering operators of second quantisation in norma form; a value::Int64 is returned.
@@ -875,6 +891,7 @@ function normalForm(ia::Int64, ib::Int64, ic::Int64)
     if ic  > wa[1]  &&  ic  < wa[3]   wa[2] = ic  end
     return( wa )
 end
+
 
 """
 `SpinAngularGaigalas.normalPhase(ia::Int64, ib::Int64, ic::Int64, id::Int64)`
@@ -927,6 +944,7 @@ function recouplingDiagram(diagram::DiagramC01,leftCsf::CsfR, rightCsf::CsfR, ra
     return( wa )
 end
 
+
 """
 `SpinAngularGaigalas.recouplingDiagram(diagram::DiagramC02, leftCsf::CsfR, rightCsf::CsfR, rank::AngularJ64, ia::Int64, ib::Int64)`  
     ... computes the coefficient C_2 from the paper of G. Gaigalas et al., 1997 J. Phys. B: At. Mol. Opt. Phys, 
@@ -958,6 +976,7 @@ function recouplingDiagram(diagram::DiagramC02, leftCsf::CsfR, rightCsf::CsfR, r
     return( wa )
 end
 
+
 """
 `SpinAngularGaigalas.recouplingDiagram(diagram::DiagramC03, leftCsf::CsfR, rightCsf::CsfR, rank::AngularJ64, ia::Int64, nwshells::Int64)`
     ... computes the coefficient C_3 from the paper of G. Gaigalas et al., 1997 J. Phys. B: At. Mol. Opt. Phys, 
@@ -984,6 +1003,7 @@ function recouplingDiagram(diagram::DiagramC03, leftCsf::CsfR, rightCsf::CsfR, r
     wa = (-1)^Int64((Basics.twice(T_r)+Basics.twice(T_s)-Basics.twice(T1_s)-Basics.twice(T1_r)+Basics.twice(JI)*2)/2) * wa
     return( wa )
 end
+
 
 """
 `SpinAngularGaigalas.recouplingDiagram(diagram::DiagramC04, leftCsf::CsfR, rightCsf::CsfR, rank_1::AngularJ64, rank_2::AngularJ64, 
@@ -1012,6 +1032,7 @@ function recouplingDiagram(diagram::DiagramC04, leftCsf::CsfR, rightCsf::CsfR, r
     return( wa )
 end
 
+
 """
 `SpinAngularGaigalas.recouplingDiagram(diagram::DiagramC05, leftCsf::CsfR, rightCsf::CsfR, rank::AngularJ64, ia::Int64, ib::Int64)`  
     ... computes the coefficient C_5 from the paper of G. Gaigalas et al., 1997 J. Phys. B: At. Mol. Opt. Phys, 
@@ -1035,6 +1056,7 @@ function recouplingDiagram(diagram::DiagramC05, leftCsf::CsfR, rightCsf::CsfR, r
     wa = (-1)^Int64((Basics.twice(csf_X_2)+Basics.twice(csf_s_J)+Basics.twice(csf_r_J_2)+Basics.twice(rank))/2) * wa
     return( wa )
 end
+
 
 """
 `SpinAngularGaigalas.recouplingCheck(leftCsf::CsfR, rightCsf::CsfR, ia::Int64, ib::Int64, ic::Int64, id::Int64, 
@@ -1097,6 +1119,7 @@ function recouplingCheck(leftCsf::CsfR, rightCsf::CsfR, ia::Int64, ib::Int64, ic
     return( wa )
 end
 
+
 """
 `SpinAngularGaigalas.recouplingCheck(leftCsf::CsfR, rightCsf::CsfR, rank::AngularJ64, ia::Int64, ib::Int64, nwshells::Int64)`  
     ... checks the angular momentum selection rules for the recoupling coefficients in the cases of one, 
@@ -1134,6 +1157,7 @@ function recouplingCheck(leftCsf::CsfR, rightCsf::CsfR, rank::AngularJ64, ia::In
     return( wa )
 end
 
+
 """
 `SpinAngularGaigalas.recoupling1p(leftCsf::CsfR, rightCsf::CsfR, rank::AngularJ64, ia::Int64, nwshells::Int64)`
     ... computes the recoupling matrix R(ja, jb, Lambda^bra, Lambda^ket) for a non scalar operator in the case 
@@ -1160,6 +1184,7 @@ function  recoupling1p(leftCsf::CsfR, rightCsf::CsfR, rank::AngularJ64, ia::Int6
     wa = wa * recouplingDiagram(DiagramC02(), leftCsf, rightCsf, rank, ia, nwshells)
     return( wa )
 end
+
 
 """
 `SpinAngularGaigalas.recoupling1p(leftCsf::CsfR, rightCsf::CsfR, rank_1::AngularJ64, rank_2::AngularJ64, 
@@ -1200,6 +1225,7 @@ function  recoupling1p(leftCsf::CsfR, rightCsf::CsfR, rank_1::AngularJ64, rank_2
     return( wa )
 end
 
+
 """
 `SpinAngularGaigalas.recoupling2p(leftCsf::CsfR, rightCsf::CsfR, rank::AngularJ64, ia::Int64, ib::Int64)`  
     ... computes the recoupling matrix R(ja, jb, Lambda^bra, Lambda^ket) for a scalar operator in the case of two 
@@ -1229,6 +1255,7 @@ function  recoupling2p(leftCsf::CsfR, rightCsf::CsfR, rank::AngularJ64, ia::Int6
     end
     return( wa )
 end
+
 
 """
 `SpinAngularGaigalas.recoupling2p(leftCsf::CsfR, rightCsf::CsfR, rank1::AngularJ64, rank2::AngularJ64, rank3::AngularJ64, 
@@ -1273,6 +1300,7 @@ function  recoupling2p(leftCsf::CsfR, rightCsf::CsfR, rank1::AngularJ64,  rank2:
     return( wa )
 end
 
+
 """
 `SpinAngularGaigalas.recoupling2p(::Ordered2p, leftCsf::CsfR, rightCsf::CsfR, rank1::AngularJ64, rank2::AngularJ64,
                             rank::AngularJ64, ia::Int64, ib::Int64, ic::Int64)`
@@ -1309,6 +1337,7 @@ function  recoupling2p(::Ordered2p, leftCsf::CsfR, rightCsf::CsfR, rank1::Angula
     wa = wa * recouplingDiagram(DiagramC02(), leftCsf, rightCsf, rank1, ia, ib)
     return( wa )
 end
+
 
 """
 `SpinAngularGaigalas.recoupling2p(leftCsf::CsfR, rightCsf::CsfR, rank1::AngularJ64, rank2::AngularJ64, rank3::AngularJ64, 
@@ -1356,6 +1385,7 @@ function  recoupling2p(leftCsf::CsfR, rightCsf::CsfR, rank1::AngularJ64, rank2::
     return( wa )
 end
 
+
 """
 `SpinAngularGaigalas.twoParticleDiffOcc2(leftCsf::CsfR, rightCsf::CsfR, creation::Int64, annihilation::Int64, 
                                     subshells::Array{Subshell,1})`
@@ -1392,6 +1422,7 @@ function twoParticleDiffOcc2(leftCsf::CsfR, rightCsf::CsfR, creation::Int64, ann
     return( coeffs2p )
 end
 
+
 """
 `SpinAngularGaigalas.twoParticleDiagonal(leftCsf::CsfR, rightCsf::CsfR, subshells::Array{Subshell,1})`
     ... calculates the spin-angular coefficients for a given pair leftCsf, rightCsf of CSF for diagonal matrix elements 
@@ -1425,6 +1456,7 @@ function twoParticleDiagonal(leftCsf::CsfR, rightCsf::CsfR, subshells::Array{Sub
     end
     return( coeffs2p )
 end
+
 
 """
 `SpinAngularGaigalas.twoParticle1(leftCsf::CsfR, rightCsf::CsfR, ia::Int64, subshells::Array{Subshell,1})`
@@ -1462,6 +1494,7 @@ function twoParticle1(leftCsf::CsfR, rightCsf::CsfR, ia::Int64, subshells::Array
     end
     return( coeffs2p )
 end
+
 
 """
 `SpinAngularGaigalas.twoParticle2to5(leftCsf::CsfR, rightCsf::CsfR, ia::Int64, ib::Int64, subshells::Array{Subshell,1})`
@@ -1531,6 +1564,7 @@ function twoParticle2to5(leftCsf::CsfR, rightCsf::CsfR, ia::Int64, ib::Int64, su
     return( coeffs2p )
 end
 
+
 """
 `SpinAngularGaigalas.twoParticle6(leftCsf::CsfR, rightCsf::CsfR, ia::Int64, ib::Int64, subshells::Array{Subshell,1})`
     ... calculates the spin-angular coefficients for a given pair leftCsf, rightCsf of CSF for 
@@ -1596,6 +1630,7 @@ function twoParticle6(leftCsf::CsfR, rightCsf::CsfR, ia::Int64, ib::Int64, subsh
     return( coeffs2p )
 end
 
+
 """
 `SpinAngularGaigalas.twoParticle7to14(leftCsf::CsfR, rightCsf::CsfR, ia::Int64, ib::Int64, ic::Int64, id::Int64, 
                                     subshells::Array{Subshell,1})`
@@ -1651,6 +1686,7 @@ function twoParticle7to14(leftCsf::CsfR, rightCsf::CsfR, ia::Int64, ib::Int64, i
     end
     return( coeffs2p )
 end
+
 
 """
 `SpinAngularGaigalas.twoParticle7to8(leftCsf::CsfR, rightCsf::CsfR, ia::Int64, ib::Int64, 
@@ -1734,6 +1770,7 @@ function twoParticle7to8(leftCsf::CsfR, rightCsf::CsfR, ia::Int64, ib::Int64,
     return( coeffs2p )
 end
 
+
 """
 `SpinAngularGaigalas.twoParticle9to10(leftCsf::CsfR, rightCsf::CsfR, ia::Int64, ib::Int64, 
                                     iaw::Int64, ibw::Int64, icw::Int64, idw::Int64, subshells::Array{Subshell,1})`
@@ -1814,6 +1851,7 @@ function twoParticle9to10(leftCsf::CsfR, rightCsf::CsfR, ia::Int64, ib::Int64,
     end
     return( coeffs2p )
 end
+
 
 """
 `SpinAngularGaigalas.twoParticle11to14(leftCsf::CsfR, rightCsf::CsfR, ia::Int64, ib::Int64, ic::Int64, 
@@ -1927,6 +1965,7 @@ function twoParticle11to14(leftCsf::CsfR, rightCsf::CsfR, ia::Int64, ib::Int64, 
     return( coeffs2p )
 end
 
+
 """
 `SpinAngularGaigalas.twoParticle15to18(leftCsf::CsfR, rightCsf::CsfR, ia::Int64, ib::Int64, ic::Int64, id::Int64, 
                                     subshells::Array{Subshell,1})`
@@ -1952,6 +1991,7 @@ function twoParticle15to18(leftCsf::CsfR, rightCsf::CsfR, ia::Int64, ib::Int64, 
     end
     return( coeffs2p )
 end
+
 
 """
 `SpinAngularGaigalas.twoParticle15to18order(leftCsf::CsfR, rightCsf::CsfR, ia::Int64, ib::Int64, ic::Int64, iaw::Int64, ibw::Int64, 
@@ -2071,6 +2111,7 @@ function twoParticle15to18order(leftCsf::CsfR, rightCsf::CsfR, ia::Int64, ib::In
     return( coeffs2p )
 end
 
+
 """
 `SpinAngularGaigalas.twoParticle19to42(leftCsf::CsfR, rightCsf::CsfR, ia::Int64, ib::Int64, ic::Int64, id::Int64, 
                                     subshells::Array{Subshell,1})`
@@ -2099,6 +2140,7 @@ function twoParticle19to42(leftCsf::CsfR, rightCsf::CsfR, ia::Int64, ib::Int64, 
     end
     return( coeffs2p )
 end
+
 
 """
 `SpinAngularGaigalas.twoParticle19to26(leftCsf::CsfR, rightCsf::CsfR, ia::Int64, ib::Int64, ic::Int64, id::Int64, 
@@ -2275,6 +2317,7 @@ function twoParticle19to26(leftCsf::CsfR, rightCsf::CsfR, ia::Int64, ib::Int64, 
     return( coeffs2p )
 end
 
+
 """
 `SpinAngularGaigalas.twoParticle27to34(leftCsf::CsfR, rightCsf::CsfR, ia::Int64, ib::Int64, ic::Int64, id::Int64, 
                                     irez::Int64, subshells::Array{Subshell,1})`
@@ -2430,6 +2473,7 @@ function twoParticle27to34(leftCsf::CsfR, rightCsf::CsfR, ia::Int64, ib::Int64, 
     end
     return( coeffs2p )
 end
+
 
 """
 `SpinAngularGaigalas.twoParticle35to42(leftCsf::CsfR, rightCsf::CsfR, ia::Int64, ib::Int64, ic::Int64, id::Int64, 

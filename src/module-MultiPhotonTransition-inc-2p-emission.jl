@@ -116,12 +116,12 @@ function computeEnergyDiffCs(sharing::MultiPhotonTransition.Sharing_2pEmission, 
             # ordering 2 emits mp2 first, so they are (symf, mp1, mp2, symi).  FOR mp1 == mp2 THE TWO SETS COINCIDE -- which is why every
             # pure-E1E1 result is bit-identical (every MultiPhotonTransition branch in `examples/` is pure E1E1) and why this could not be
             # seen at all until mixed multipoles computed anything (`94fb9cc5`, 30-Oct-2026).
-            #
+
             # MEASURED, H-like 3d_3/2 -> 1s_1/2 with [E1, M2]:  the pair (E1,M2) admits {3/2-, 5/2-} one way and {1/2-, 3/2-} the other, so
             # the single list summed 5/2- in both orderings, never summed 1/2- in either, and asked the stored channels for 80 combinations
             # that were never generated -- each answered with a warning and a zero, which reads exactly like a selection rule.  That is how
             # the three defects of 30-Oct read too, and it is the same mistake on a third index.
-            #
+
             # AND THE CHECK IS A PROVABLE IDENTITY, not a reference number.  The two emitted photons are identical bosons, so
             #     wk(mp2,mp1)[x]  ==  (-1)^(L1+L2-K) * wk(mp1,mp2)[1-x]
             # at every sharing x, and at x = 1/2 the ratio wk(M2,E1)/wk(E1,M2) must be exactly (-1)^(L1+L2-K).  With one list the identity
@@ -129,7 +129,7 @@ function computeEnergyDiffCs(sharing::MultiPhotonTransition.Sharing_2pEmission, 
             # in Babushkin where they must be +1/-1.  Per ordering the identity holds to 0.000e+00 and 6.4e-17, the midpoint ratios are
             # +1.000000000 and -1.000000000 in BOTH gauges independently, and not one channel is reported missing.  The measurement is
             # `tools/probeTwoPhotonMultipoleCoherence.jl`, run C.
-            #
+
             # WHY A SPLIT LOOP AND NOT THE UNION the sibling uses.  `-inc-2p-bichromatic.jl` takes the union of the two lists
             # (`allowedSymmetries_2pAbsorptionBichromatic`), which it must, because it STORES its channels under that union.  Here the
             # generator files each ordered pair under its own list, and ordering 2 looks the pair up with the multipole labels swapped -- so
@@ -144,21 +144,21 @@ function computeEnergyDiffCs(sharing::MultiPhotonTransition.Sharing_2pEmission, 
             # THE SUM OVER THE INTERMEDIATE SYMMETRY Jsym IS COHERENT, and sits INSIDE the modulus (corrected
             # 03-Sep-2026). It used to be the outer loop, with abs()^2 taken per Jsym and the squares added --
             # the exact mistake the K-sum note below describes, made on the other index.
-            #
+
             # THE TWO INDICES ARE NOT ALIKE. K is the total angular-momentum transfer between the initial and
             # final LEVEL: different K are distinguishable channels for an unpolarized atom and an
             # angle-integrated rate, so their squares add, which is what the note below establishes. Jsym is the
             # symmetry of the VIRTUAL intermediate state -- nothing observes it, it is summed over inside one
             # second-order sum, and np_1/2 and np_3/2 therefore INTERFERE.
-            #
+
             # THE TEST THAT SETTLED IT, and it was not fitted. For H 2s -> 1s the 2E1 operator is spin-independent
             # and orbitally rank 0 (l = 0 -> 0), hence a total scalar, so K = 1 must vanish up to (Z alpha)^2 ~
             # 1e-5. That cancellation runs BETWEEN the J_nu = 1/2 and J_nu = 3/2 intermediates, so squaring them
             # separately makes it impossible. Measured at n_max = 12, central sharing:
-            #
+
             #     K = 1 share of the rate      incoherent Jsym   21.05 %      coherent Jsym   1.2e-11
             #     total, coherent/incoherent   1.4211 in Coulomb AND 1.4211 in Babushkin, identically
-            #
+
             # Eleven digits of cancellation in both gauges independently is not something a wrong grouping
             # produces. The residual 7 % that the 31-Aug-2026 note recorded for K = 1, and left unexplained, was
             # this. NOTE the rate RISES by 1.4211: it does not close the remaining factor ~15 against the exact
@@ -166,11 +166,11 @@ function computeEnergyDiffCs(sharing::MultiPhotonTransition.Sharing_2pEmission, 
             for  K in Klist
                 # THE MODULUS IS TAKEN PER K (corrected 06-Aug-2026). The K-sum used to sit INSIDE abs(), i.e.
                 # dcs += |sum_K M_K|^2 instead of sum_K |M_K|^2, and that is wrong twice over.
-                #
+
                 # PHYSICALLY: different K are different total angular-momentum transfers between the initial and
                 # final level. For an initially unpolarized atom and an angle-integrated rate they are
                 # distinguishable channels and cannot interfere; their squares add.
-                #
+
                 # AND IT BROKE THE omega1 <-> omega2 SYMMETRY, which is how it was found. Writing the two photon
                 # orderings as A_K and B_K with phase p_K, the old expression was sum_K (A_K + p_K B_K); under
                 # omega1 <-> omega2 the orderings exchange, giving sum_K (B_K + p_K A_K). Those two agree only if
@@ -178,7 +178,7 @@ function computeEnergyDiffCs(sharing::MultiPhotonTransition.Sharing_2pEmission, 
                 # p_K = (-1)^(K+1) = -1, +1 -- so they differ, and the computed spectrum came out asymmetric by
                 # 60-90 % even though the two emitted photons are indistinguishable. Per K, p_K = +-1 gives
                 # |wk'| = |wk| identically, so taking the modulus first restores the symmetry exactly.
-                #
+
                 # THE (mp1, mp2) PAIRS THEMSELVES ADD INCOHERENTLY, for the same reason the K do:  the multipolarity of each photon is a
                 # label of the FINAL state, the multipole fields form an orthonormal basis of it, and a polarization-summed,
                 # angle-integrated rate is a trace over that basis, in which two different basis states cannot interfere.  Jsym is the
@@ -219,7 +219,7 @@ function computeEnergyDiffCs(sharing::MultiPhotonTransition.Sharing_2pEmission, 
         end
     end
     # THE PREFACTOR WAS WRONG BY A CONSTANT FACTOR OF 16, FOUND AND FIXED 13-Oct-2026 (challenge S5).
-    #
+
     # Months of measurement (Z-scans, n_max scans, box/mesh convergence, a gauge-ratio trend) had excluded a
     # grid artefact, an off-shell-omega effect and basis incompleteness one at a time, but never checked the
     # prefactor itself against an INDEPENDENT reference formula -- which is what finally settled it. Two
@@ -237,7 +237,7 @@ function computeEnergyDiffCs(sharing::MultiPhotonTransition.Sharing_2pEmission, 
     # This also matches a hypothesis from 31-Aug-2026 (below, kept for the record) that was tried and abandoned
     # as a coincidence because the THEN-current code (pre several fixes since) measured 12.98, not 16; with
     # those fixes in place the match is now exact.
-    #
+
     # THE 31-Aug-2026 HISTORY, KEPT BECAUSE IT IS WHAT LED HERE: a long Z-independence/n_max-dependence
     # argument ruled OUT several wrong explanations in turn (grid, off-shell omega, box size, two measurement
     # artefacts at n_max=12) without ever finding the right one. The one candidate it floated and set aside --
@@ -342,24 +342,24 @@ function  computeProperties_2pEmission(line::MultiPhotonTransition.Line_2pEmissi
     end
     # THE FACTOR 1/2 IS THE INDISTINGUISHABLE-PHOTON FACTOR, applied here explicitly (08-Aug-2026) and written
     # down rather than left inside a quadrature weight.
-    #
+
     # `computeEnergyDiffCs` already contains BOTH time orderings in its amplitude, so the differential rate at a
     # sharing (omega1, omega2) is the rate density for "one photon at omega1 and its partner at omega2" -- and
     # the sharings run over the FULL interval [0, E], where (omega1, omega2) and (omega2, omega1) are the SAME
     # physical event. Integrating over the full range therefore counts every event twice:
-    #
+
     #     A  =  1/2 Int_0^E domega1 (dA/domega1)  =  Int_0^(E/2) domega1 (dA/domega1)
-    #
+
     # the two being equal because the spectrum is symmetric -- which this module verifies to all printed digits
     # (branch d of example-Dh.jl) and which is exactly the symmetry the exchange-phase bug A1 was found through.
-    #
+
     # TOGETHER WITH THE CORRECTED QUADRATURE WEIGHTS this changes every two-photon emission TOTAL by a factor 4
     # and no differential rate at all. `Basics.determineEnergySharings` used to return weights that were larger
     # by exactly 2 than the quadrature weights of Int_0^E (the 1/2 of the interval map was missing), so the old
     # totalRate was 2 * Int, where the physical answer is (1/2) * Int. The two factors are independent -- one is
     # arithmetic, the other is physics -- and are now separated: the arithmetic lives in Basics, the statistics
     # lives here.
-    #
+
     # CONSEQUENCE FOR THE OPEN CONSTANT, stated so that nobody compares against a stale number: the deficit
     # measured against the exact H 2s -> 1s rate was 6.679 with the old totals, hence 4 * 6.679 = 26.7 with
     # these. THE DISCREPANCY IS THEREFORE LARGER, NOT SMALLER, and no factor has been introduced anywhere to
@@ -390,7 +390,7 @@ function computeReducedAmplitudeEmission(K::AngularJ64, finalLevel::Level, omega
     # it is now right: after the prefactor fix of 13-Oct (`b399f5ff`) it agrees with Drake at MATCHED
     # truncation, 10.046 /s against his 10.0466 /s over the same n_max = 20 bound set.  What it cannot do is
     # converge, and the reason is the intermediate SPACE rather than anything here:
-    #
+
     #   * the BOUND series saturates at 10.104 /s against the exact 8.22906 /s for H 2s -> 1s, so adding bound
     #     states does not help -- it has already converged, to the wrong number;
     #   * admitting the box-confined pseudo-continuum moves it the right way and far too slowly:  58
@@ -400,16 +400,16 @@ function computeReducedAmplitudeEmission(K::AngularJ64, finalLevel::Level, omega
     #     levels span, so solving (H - E_i + omega1) chi = O_1 |i> over the SAME CSF space returns exactly what
     #     the sum returns.  That would buy speed, not accuracy, and it is worth saying because it is the
     #     obvious-looking fix.
-    #
+
     # **AND THERE IS A HARD Z LIMIT ON THIS ROUTE, MEASURED 15-Oct-2026:  IT CONVERGES AT LOW Z AND FAILS AT
     # HIGH Z, FOR A SINGLE ELECTRON.**  H-like Ar17+ 2s -> 1s has the exact answer 8.22906 * 18^6 = 2.7989e8 /s,
     # and this route run with ONE active electron, no correlation and the box at the 12p recommendation gives
-    #
+
     #     n_max     10        30        60        100       | 100 on a 97.1 a.u. box
     #     Cou/Bab   1.063     1.332     2.286     4.009     | 1.476
     #     Bab/exact 0.1462    0.1412    0.1320    0.1266    | 0.1392
     #     Cou/exact 0.1554    0.1881    0.3016    0.5076    | 0.2054
-    #
+
     # The gauge ratio DIVERGES as states are added, Babushkin moves AWAY from the exact value, and the two
     # boxes disagree by 2.5x at the same n_max.  At Z = 1 the identical route reaches 8.22902 against 8.22906 in
     # BOTH gauges.  So this is not a truncation that more states would cure:  **do not quote a high-Z
@@ -421,7 +421,7 @@ function computeReducedAmplitudeEmission(K::AngularJ64, finalLevel::Level, omega
     #   This also settles what the He-like 2^1S_0 -> 1^1S_0 failure of `example-Dh.jl` branch (e) was:  a Z
     # effect of THIS ROUTE, not two-electron physics.  The second electron, the `MabEmission` orientation, the
     # many-electron assembly and the box were each excluded by measurement that day.
-    #
+
     # The difference that matters is the SIZE AND KIND of the intermediate space.  `DalgarnoLewis` solves in the
     # B-spline basis of one kappa channel -- 211 states on the grid used above, the whole pseudo-continuum of
     # that channel included -- where a configuration list gave 58 levels, 27 % as many and of the wrong kind.
@@ -439,13 +439,13 @@ function computeReducedAmplitudeEmission(K::AngularJ64, finalLevel::Level, omega
         # MINUS omega1, not plus (corrected 07-Aug-2026). For EMISSION the intermediate state is reached AFTER
         # the first photon has left, so it lies at E_i - omega1; the "+" here was the ABSORPTION denominator,
         # which is correct in the absorption file and wrong in this one.
-        #
+
         # The sign produced SPURIOUS POLES. For H 2s -> 1s, E_2s + omega1 - E_3p = omega1 - 1.889 eV vanishes at
         # omega1 = 1.889 eV, and the np series gives poles accumulating at the limit omega1 = 3.40 eV. The
         # differential spectrum showed exactly that: a spike at 3.225 eV and a MINIMUM at the centre, where the
         # true spectrum is a smooth dome peaked in the middle. With the correct sign the denominator is strictly
         # negative for every bound np and no pole exists.
-        #
+
         # It also explains three things that had been puzzling for days: why ADDING intermediate states made the
         # result worse (more spurious poles, accumulating toward the series limit), why the gauge ratio was
         # Z-INDEPENDENT in the Z-scan (a structural error, not a relativistic one), and why the total sat ~6 %
@@ -745,7 +745,7 @@ function  displayIntermediateRanking(stream::IO, lines::Array{MultiPhotonTransit
                 key = (nuLevel.index, "$(ch.multipole1),$(ch.multipole2)", string(ch.Jsym), ch.gauge)
                 if  key in seen    continue    end
                 push!(seen, key)
-                denom = line.initialLevel.energy - omega1 - nuLevel.energy   ## emission: see computeReducedAmplitudeEmission
+                denom = line.initialLevel.energy - omega1 - nuLevel.energy   # emission: see computeReducedAmplitudeEmission
                 if  abs(denom) < settings.selfTolerance    continue    end
                 wa = PhotoEmission.amplitude(Emission(), ch.multipole2, ch.gauge, omega2, line.finalLevel, nuLevel,
                                              grid, display=false, printout=false) *

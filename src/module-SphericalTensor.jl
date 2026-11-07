@@ -57,6 +57,7 @@ function Base.string(op::CkOperator)
     return( sa )
 end
 
+
 function Base.show(io::IO, op::CkOperator)
     sa = string(op) * " spherical tensor operator.";       print(io, sa, "\n")
 end
@@ -85,6 +86,7 @@ function Base.string(op::CoulombOperator)
     return( sa )
 end
 
+
 function Base.show(io::IO, op::CoulombOperator)
     sa = string(op) * " rank-0 Coulomb operator.";       print(io, sa, "\n")
 end
@@ -112,6 +114,7 @@ function Base.string(op::DipoleOperator)
     sa = "D^(1";        if op.star   sa = sa * "*"   end;      sa = sa * ")"
     return( sa )
 end
+
 
 function Base.show(io::IO, op::DipoleOperator)
     sa = string(op) * " spherical dipole operator.";       print(io, sa, "\n")
@@ -142,6 +145,7 @@ function Base.string(op::TkOperator)
     sa = "T^(" * string(op.k);        if op.star   sa = sa * "*"   end;      sa = sa * ")"
     return( sa )
 end
+
 
 function Base.show(io::IO, op::TkOperator)
     sa = string(op) * " spherical tensor operator.";       print(io, sa, "\n")
@@ -175,6 +179,7 @@ function Base.string(op::ScalarConstant)
     sa = string(op.symbol);        if op.star   sa = sa * "^(*)"   end
     return( sa )
 end
+
 
 function Base.show(io::IO, op::ScalarConstant)
     sa = string(op) * " scalar constant.";       print(io, sa, "\n")
@@ -214,6 +219,7 @@ function Base.string(op::UVector)
     return( sa )
 end
 
+
 function Base.show(io::IO, op::UVector)
     sa = string(op) * " spherical polarization (unit) vector.";       print(io, sa, "\n")
 end
@@ -251,6 +257,7 @@ function Base.string(op::TensorProduct)
     return( sa )
 end
 
+
 function Base.show(io::IO, op::TensorProduct)
     sa = string(op) * " spherical tensor product.";       print(io, sa, "\n")
 end
@@ -280,6 +287,7 @@ function Base.string(comp::SphericalOperatorComp)
     return( sa )
 end
 
+
 function Base.show(io::IO, comp::SphericalOperatorComp)
     sa = string(comp) * " spherical operator component.";       print(io, sa, "\n")
 end
@@ -301,6 +309,7 @@ function Base.string(comp::SphericalFieldComp)
     sa = string(comp.tensor) * "_" * string(comp.q)
     return( sa )
 end
+
 
 function Base.show(io::IO, comp::SphericalFieldComp)
     sa = string(comp) * " spherical field component.";       print(io, sa, "\n")
@@ -336,6 +345,7 @@ function Base.string(state::SphericalState; plain=false)
     end
     return( sa )
 end
+
 
 function Base.show(io::IO, state::SphericalState)
     sa = string(state) * " spherical state.";       print(io, sa, "\n")
@@ -381,6 +391,7 @@ function Base.string(me::SphericalMatrixElement)
     return( sa )
 end
 
+
 function Base.show(io::IO, me::SphericalMatrixElement)
     sa = string(me) * " reduced matrix element.";       print(io, sa, "\n")
 end
@@ -408,6 +419,7 @@ function Base.string(me::ProductMatrixElement)
     sa = sa * " | " * string(me.rightState, plain=true) * "> " 
     return( sa )
 end
+
 
 function Base.show(io::IO, me::ProductMatrixElement)
     sa = string(me) * " product matrix element.";       print(io, sa, "\n")
@@ -445,6 +457,7 @@ function Base.string(amp::SphericalAmplitude)
     return( sa )
 end
 
+
 function Base.show(io::IO, amp::SphericalAmplitude)
     sa = "Spherical amplitude with: " * string(amp);       print(io, sa, "\n")
 end
@@ -465,6 +478,7 @@ function Base.string(state::ReducedState; plain=false)
     if  plain      sa = string(state.j)    else    sa = "|" * string(state.j) * ">"    end
     return( sa )
 end
+
 
 function Base.show(io::IO, state::ReducedState)
     sa = string(state) * " reduced state.";       print(io, sa, "\n")
@@ -493,6 +507,7 @@ function Base.string(me::ReducedMatrixElement)
     sa = sa * " || " * string(me.rightState, plain=true) * ">" 
     return( sa )
 end
+
 
 function Base.show(io::IO, me::ReducedMatrixElement)
     sa = string(me) * " reduced matrix element.";       print(io, sa, "\n")
@@ -524,6 +539,7 @@ function Base.string(amp::ReducedAmplitude)
     for rme in amp.reducedMes  sa = sa * " " * string(rme)      end
     return( sa )
 end
+
 
 function Base.show(io::IO, amp::ReducedAmplitude)
     sa = "Reduced amplitude with: " * string(amp);       print(io, sa, "\n")

@@ -91,7 +91,7 @@ function computeConductivityLines(scfResult::NamedTuple, temp::Float64, radiusWS
         wc = eigenOf[kappa]
         for  i = startOf[kappa]:length(wc.values)
             wf = Basics.FermiDirac(wc.values[i], chemMu, temp)
-            if  wf < fMin    break    end          ## the energies increase, so nothing beyond can contribute
+            if  wf < fMin    break    end          # the energies increase, so nothing beyond can contribute
             orbs[(kappa,i)] = Bsplines.generateOrbitalFromPrimitives(Subshell(100, kappa), wc.values[i],
                                                                      grid.NoPoints, wc.vectors[i], primitives)
             occs[(kappa,i)] = wf
@@ -107,13 +107,13 @@ function computeConductivityLines(scfResult::NamedTuple, temp::Float64, radiusWS
         end
         return( orbs[(kappa,i)] )
     end
-    #
+
     for  (keyA, orbA)  in  collect(orbs)
         kappaA, ia = keyA;    epsA = eigenOf[kappaA].values[ia];    fA = occs[keyA]
         lA = Basics.subshell_l( Subshell(100, kappaA) )
         for  kappaB  in  spectra.kappas
             lB = Basics.subshell_l( Subshell(100, kappaB) )
-            if  abs(lA - lB) != 1    continue    end        ## E1 parity and triangle rule
+            if  abs(lA - lB) != 1    continue    end        # E1 parity and triangle rule
             cl = AngularMomentum.CL_reduced_me(Subshell(100, kappaA), 1, Subshell(100, kappaB))
             if  cl == 0.    continue    end
             wc = eigenOf[kappaB]
@@ -217,7 +217,7 @@ function displayConductivitySumRules(sumRules::NamedTuple, lines::Array{Plasma.C
         println("   No Drude damping was needed:  the free-free sum rule does not exceed the free-electron count.")
     end
     println("  " * "-"^74)
-    #
+
     for  kind  in  (:boundBound, :boundFree, :freeFree)
         wa = sort( [ line  for line in lines  if line.kind == kind ], by = x -> -x.sigma )
         if  isempty(wa)    continue    end
@@ -351,7 +351,7 @@ function computeMeanOpacities(omegas::Array{Float64,1}, sigmas::Array{Float64,1}
     massDensity > 0.      ||  error("Plasma.computeMeanOpacities(): the mass density must be positive.")
     optical = Plasma.computeOpticalProperties(omegas, sigmas)
     # alpha is per Bohr radius;  rho in g/cm^3 gives kappa in cm^2/g
-    aBohr   = Defaults.convertUnits("length: from atomic to fm", 1.0) * 1.0e-13          ## a_0 in cm
+    aBohr   = Defaults.convertUnits("length: from atomic to fm", 1.0) * 1.0e-13          # a_0 in cm
     kappa   = [ optical.absorption[i] / aBohr / massDensity   for i = 1:nw ]
     xs      = [ omegas[i] / temp                              for i = 1:nw ]
     wP      = [ x > 1.0e-8 && x < 200. ? x^3 / (exp(x) - 1)            : 0.   for x in xs ]

@@ -270,7 +270,7 @@ function  computeLines(finalMultiplet::Multiplet, initialMultiplet::Multiplet, g
     printstyled("RayleighCompton.computeLines(): The computation of Rayleigh-Compton reduced amplitudes starts now ... \n", color=:light_green)
     printstyled("----------------------------------------------------------------------------------------------------- \n", color=:light_green)
     println("")
-    #
+
     lines = RayleighCompton.determineLines(finalMultiplet, initialMultiplet, settings)
     # Display all selected pathways before the computations start
     if  settings.printBefore    RayleighCompton.displayLines(stdout, lines)    end
@@ -309,7 +309,7 @@ function  computeChannelAmplitude(channel::RayleighCompton.Channel, finalLevel::
                                   upperEnergy::Float64, upperMid::Float64,
                                   lowerNom::ComplexF64, lowerDenom::Float64, upperNom::ComplexF64, upperDenom::Float64)
         # Compute from the given parameters the contribution of the pole-interval
-        wc = ComplexF64(0.);    deltaEnergies = [0.03]  ## , 0.05, 0.1, 0.03];   
+        wc = ComplexF64(0.);    deltaEnergies = [0.03]  # , 0.05, 0.1, 0.03];   
         for dE in deltaEnergies
             wc = 0.
             if      abs(poleEnergy - lowerEnergy) < dE    wc = wc + lowerNom / lowerDenom
@@ -362,7 +362,7 @@ function  computeChannelAmplitude(channel::RayleighCompton.Channel, finalLevel::
         if  channel.isS12  poleEnergy = initialLevel.energy - channel.omega2
         else               poleEnergy = initialLevel.energy + channel.omega1
         end
-        #
+
     end
         
     # Sum over all terms of the Green function channel; distinghuis between S_12 and S_21 integrals
@@ -372,7 +372,7 @@ function  computeChannelAmplitude(channel::RayleighCompton.Channel, finalLevel::
         if   channel.isS12  # for S_12
             leftMe  = PhotoEmission.amplitude(Absorption(), channel.multipole1, channel.gauge, channel.omega1, finalLevel, gLevel, grid, display=false)
             rightMe = PhotoEmission.amplitude(Absorption(), channel.multipole2, channel.gauge, channel.omega2, gLevel, initialLevel, grid, display=false)
-            #
+
             if        ig == leftIdx     lowerNom = leftMe * rightMe;   lowerDenom = (initialLevel.energy - gLevel.energy - channel.omega2);   me = 0.0im  
             elseif    ig == leftIdx+1   upperNom = leftMe * rightMe;   upperDenom = (initialLevel.energy - gLevel.energy - channel.omega2);   me = 0.0im 
             else                        me       = leftMe * rightMe / (initialLevel.energy - gLevel.energy - channel.omega2)
@@ -381,7 +381,7 @@ function  computeChannelAmplitude(channel::RayleighCompton.Channel, finalLevel::
         else 
             leftMe  = PhotoEmission.amplitude(Absorption(), channel.multipole2, channel.gauge, channel.omega2, finalLevel, gLevel, grid, display=false)
             rightMe = PhotoEmission.amplitude(Absorption(), channel.multipole1, channel.gauge, channel.omega1, gLevel, initialLevel, grid, display=false)
-            #
+
             if        ig == leftIdx     lowerNom = leftMe * rightMe;   lowerDenom = (initialLevel.energy - gLevel.energy + channel.omega1);   me = 0.0im  
             elseif    ig == leftIdx+1   upperNom = leftMe * rightMe;   upperDenom = (initialLevel.energy - gLevel.energy + channel.omega1);   me = 0.0im 
             else                        me       = leftMe * rightMe / (initialLevel.energy - gLevel.energy + channel.omega1)
@@ -479,7 +479,7 @@ function  displayAngular(stream::IO, lines::Array{RayleighCompton.Line,1}, setti
     sb = sb * TableStrings.center(10, TableStrings.inUnits("energy"); na=1)
     sb = sb * TableStrings.center(10, TableStrings.inUnits("energy"); na=6)
     println(stream, sa[1:end]);    println(stream, sb);    println(stream, "  ", TableStrings.hLine(nx)) 
-    #   
+
     for  line in lines
         sa  = "";    isym = LevelSymmetry( line.initialLevel.J, line.initialLevel.parity)
                         fsym = LevelSymmetry( line.finalLevel.J,   line.finalLevel.parity)
@@ -492,7 +492,7 @@ function  displayAngular(stream::IO, lines::Array{RayleighCompton.Line,1}, setti
         println(stream, sa )
     end
     println("  ", TableStrings.hLine(nx))
-    #
+
     return( nothing )
 end
 
@@ -520,7 +520,7 @@ function  displayCrossSections(stream::IO, lines::Array{RayleighCompton.Line,1},
     sb = sb * TableStrings.center(10, TableStrings.inUnits("cross section"); na=3)
     sb = sb * TableStrings.center(10, TableStrings.inUnits("cross section"); na=4)
     println(stream, sa[1:end]);    println(stream, sb);    println(stream, "  ", TableStrings.hLine(nx)) 
-    #   
+
     for  line in lines
         sa  = "";    isym = LevelSymmetry( line.initialLevel.J, line.initialLevel.parity)
                         fsym = LevelSymmetry( line.finalLevel.J,   line.finalLevel.parity)
@@ -535,7 +535,7 @@ function  displayCrossSections(stream::IO, lines::Array{RayleighCompton.Line,1},
         println(stream, sa )
     end
     println("  ", TableStrings.hLine(nx))
-    #
+
     return( nothing )
 end
 
@@ -550,7 +550,7 @@ function  displayChannels(stream::IO, line::RayleighCompton.Line, settings::Rayl
     println(stream, " ")
     println(stream, "  Channels of the Rayleigh-Compton scattering line:")
     println(stream, " ")
-    #
+
     println(stream, "  ", TableStrings.hLine(nx))
     sa = "   ";   sb = "   ";   sc = "  "
     sa = sa * TableStrings.center(16, "i-level-f"; na=2);                         sb = sb * TableStrings.hBlank(18)
@@ -569,7 +569,7 @@ function  displayChannels(stream::IO, line::RayleighCompton.Line, settings::Rayl
     sa = sa * TableStrings.center(10, "Gauge"; na=4);                             sb = sb * TableStrings.hBlank(12)
     sa = sa * TableStrings.center(20, "Sik amplitude"; na=0);              
     println(stream, sa[1:end]);    println(stream, sb);    println(stream, "  ", TableStrings.hLine(nx)) 
-    #   
+
     for  (ic, ch) in enumerate(line.channels)
         if  ic == 1
             sa  = "";    isym = LevelSymmetry( line.initialLevel.J, line.initialLevel.parity)
@@ -580,7 +580,7 @@ function  displayChannels(stream::IO, line::RayleighCompton.Line, settings::Rayl
             sa = sa * @sprintf("%.4e", Defaults.convertUnits("energy: from atomic", line.finalLevel.energy))   * " "
         else  sa = sc
         end 
-        #
+
         sa = sa * " " * TableStrings.center(8, string(ch.Jsym) ) * "  " 
         sa = sa * string(ch.multipole1) * "    " 
         sa = sa * @sprintf("%.4e", Defaults.convertUnits("energy: from atomic", ch.omega1))      * "    "
@@ -593,7 +593,7 @@ function  displayChannels(stream::IO, line::RayleighCompton.Line, settings::Rayl
         println(stream, sa )
     end
     println("  ", TableStrings.hLine(nx))
-    #
+
     return( nothing )
 end
 
@@ -621,7 +621,7 @@ function  displayLines(stream::IO, lines::Array{RayleighCompton.Line,1})
     sa = sa * TableStrings.flushleft(60, "List of multipoles & intermediate level symmetries";   na=1)            
     sb = sb * TableStrings.flushleft(60, "(multipole_1, Jsym, multipole_2, gauge), ..."; na=1)
     println(stream, sa[1:end]);    println(stream, sb);    println(stream, "  ", TableStrings.hLine(nx)) 
-    #   
+
     for  line in lines
         sa  = "";    isym = LevelSymmetry( line.initialLevel.J, line.initialLevel.parity)
                         fsym = LevelSymmetry( line.finalLevel.J,   line.finalLevel.parity)
@@ -645,7 +645,7 @@ function  displayLines(stream::IO, lines::Array{RayleighCompton.Line,1})
         end
     end
     println("  ", TableStrings.hLine(nx))
-    #
+
     return( nothing )
 end
 
@@ -670,7 +670,7 @@ function  displayStokesParameters(stream::IO, lines::Array{RayleighCompton.Line,
     sb = sb * TableStrings.center(10, TableStrings.inUnits("energy"); na=1)
     sb = sb * TableStrings.center(10, TableStrings.inUnits("energy"); na=6)
     println(stream, sa[1:end]);    println(stream, sb);    println(stream, "  ", TableStrings.hLine(nx)) 
-    #   
+
     for  line in lines
         sa  = "";    isym = LevelSymmetry( line.initialLevel.J, line.initialLevel.parity)
                         fsym = LevelSymmetry( line.finalLevel.J,   line.finalLevel.parity)
@@ -683,7 +683,7 @@ function  displayStokesParameters(stream::IO, lines::Array{RayleighCompton.Line,
         println(stream, sa )
     end
     println("  ", TableStrings.hLine(nx))
-    #
+
     return( nothing )
 end
 

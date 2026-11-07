@@ -225,18 +225,18 @@ function computeLines(finalMultiplet::Multiplet, initialMultiplet::Multiplet, gr
     cfSettingsInitial = CrystalField.Settings(cfSettingsFinal; levelSelection=initialSelection)
     finalOutcomes   = CrystalField.computeOutcomes(finalMultiplet,   settings.lattice, grid, cfSettingsFinal)
     initialOutcomes = CrystalField.computeOutcomes(initialMultiplet, settings.lattice, grid, cfSettingsInitial)
-    #
+
     if  settings.printBefore
         println("CrystalFieldEmission.computeLines(): $(length(finalOutcomes)) final and " *
                  "$(length(initialOutcomes)) initial crystal-field outcome(s) selected.")
     end
-    #
+
     lines = Line[]
     for  fOutcome in finalOutcomes,  iOutcome in initialOutcomes
         for  fCfLevel in fOutcome.cfMultiplet.cfLevels,  iCfLevel in iOutcome.cfMultiplet.cfLevels
             omega = iCfLevel.energy - fCfLevel.energy
             if  omega <= settings.minEnergy  ||  omega > settings.maxEnergy   continue    end
-            #
+
             channels = Channel[]
             for  mp in settings.multipoles
                 hasMagnetic = false
@@ -254,7 +254,7 @@ function computeLines(finalMultiplet::Multiplet, initialMultiplet::Multiplet, gr
             push!(lines, Line(iCfLevel, fCfLevel, omega, channels))
         end
     end
-    #
+
     return  lines
 end
 

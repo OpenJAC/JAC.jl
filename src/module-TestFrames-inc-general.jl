@@ -1,6 +1,6 @@
 
-## Functions in this file cover: methods, structs, evaluations, representations, amplitudes.
-## Alphabetical order within this file.
+# Functions in this file cover: methods, structs, evaluations, representations, amplitudes.
+# Alphabetical order within this file.
 
 
 """
@@ -213,9 +213,9 @@ function testMethod_HydrogenicRates(; short::Bool=true)
     printTest, iostream = Defaults.getDefaults("test flag/stream")
     alpha = Defaults.getDefaults("alpha")
 
-    ## --- the independent implementation -------------------------------------------------------------------
+    # --- the independent implementation -------------------------------------------------------------------
     logfact(k::Int64) = k <= 1 ? 0.0 : sum(log, 1:k)
-    ## generalized Laguerre L_k^a(x) by the standard three-term recursion
+    # generalized Laguerre L_k^a(x) by the standard three-term recursion
     function laguerreGen(k::Int64, a::Int64, x::Float64)
         if      k == 0    return( 1.0 )
         elseif  k == 1    return( 1.0 + a - x )
@@ -226,13 +226,13 @@ function testMethod_HydrogenicRates(; short::Bool=true)
         end
         return( l0 )
     end
-    ## normalized hydrogenic radial function R_nl(r), nuclear charge Z, atomic units
+    # normalized hydrogenic radial function R_nl(r), nuclear charge Z, atomic units
     function radialR(n::Int64, l::Int64, Z::Float64, r::Float64)
         rho  = 2Z * r / n
         logN = 3*log(2Z/n) + logfact(n-l-1) - log(2n) - logfact(n+l)
         return( exp(0.5*logN) * exp(-rho/2) * rho^l * laguerreGen(n-l-1, 2l+1, rho) )
     end
-    ## A(ni li --> nf lf) = 4/3 alpha^3 omega^3 max(li,lf)/(2li+1) |<r>|^2   [atomic units]
+    # A(ni li --> nf lf) = 4/3 alpha^3 omega^3 max(li,lf)/(2li+1) |<r>|^2   [atomic units]
     function rateIndependent(ni::Int64, li::Int64, nf::Int64, lf::Int64, Z::Float64)
         if  abs(li-lf) != 1  ||  ni <= nf  ||  li >= ni  ||  lf >= nf  ||  li < 0  ||  lf < 0    return( 0.0 )   end
         rmax = 40.0 * ni^2 / Z;    npts = 200001;    h = rmax / (npts - 1);    s = 0.0
@@ -247,7 +247,7 @@ function testMethod_HydrogenicRates(; short::Bool=true)
         return( 4/3 * alpha^3 * omega^3 * max(li, lf) / (2li + 1) * rint^2 )
     end
 
-    ## --- (1) sweep against the independent implementation --------------------------------------------------
+    # --- (1) sweep against the independent implementation --------------------------------------------------
     nBad = 0;   worst = 0.0;   worstLabel = ""
     for  ni = 2:6,  li = 0:ni-1,  nf = 1:ni-1,  lf = 0:nf-1
         if  abs(li - lf) != 1    continue    end
@@ -264,7 +264,7 @@ function testMethod_HydrogenicRates(; short::Bool=true)
                                       "independent radial-dipole integration; worst $worstLabel at $(worst*100) %")   end
     end
 
-    ## --- (2) exact Z^4 scaling ------------------------------------------------------------------------------
+    # --- (2) exact Z^4 scaling ------------------------------------------------------------------------------
     a1 = DielectronicRecombination.computeHydrogenicRate(2, 1, 1, 0, 1.0)
     for  Z in [2.0, 6.0, 18.0, 54.0, 75.0]
         ratio = DielectronicRecombination.computeHydrogenicRate(2, 1, 1, 0, Z) / (a1 * Z^4)
@@ -275,7 +275,7 @@ function testMethod_HydrogenicRates(; short::Bool=true)
         end
     end
 
-    ## --- (3) the guards must return exactly zero ------------------------------------------------------------
+    # --- (3) the guards must return exactly zero ------------------------------------------------------------
     for  (ni, li, nf, lf, why) in [ (2, 1, 3, 0, "upward step ni < nf"), (3, 0, 2, 0, "Delta l = 0"),
                                     (3, 2, 2, 0, "Delta l = 2"),         (2, 1, 2, 0, "ni == nf") ]
         wa = DielectronicRecombination.computeHydrogenicRate(ni, li, nf, lf, 1.0)
@@ -408,10 +408,10 @@ function testRepresentation_GreenExpansion(; short::Bool=true)
     name          = "Lithium 1s^2 2s ground configuration"
     refConfigs    = [Configuration("[He] 2s")]
     greenSettings = GreenSettings(5, [0, 1, 2], 0.01, true, LevelSelection() )
-    #
+
     wa          = Representation(name, Nuclear.Model(8.), Radial.Grid(true), refConfigs,
-                                    ## GreenExpansion( AtomicState.SingleCSFwithoutCI(), Basics.DeExciteSingleElectron(),
-                                    ## GreenExpansion( AtomicState.CoreSpaceCI(), Basics.DeExciteSingleElectron(),
+                                    # GreenExpansion( AtomicState.SingleCSFwithoutCI(), Basics.DeExciteSingleElectron(),
+                                    # GreenExpansion( AtomicState.CoreSpaceCI(), Basics.DeExciteSingleElectron(),
                                     GreenExpansion( AtomicState.DampedSpaceCI(), Basics.DeExciteSingleElectron(),
                                                     [LevelSymmetry(1//2, Basics.plus), LevelSymmetry(3//2, Basics.plus)], 3, greenSettings) )
     wb = generate(wa, output=true)
@@ -436,19 +436,19 @@ function testRepresentation_MeanFieldBasis_CiExpansion(; short::Bool=true)
     name        = "Oxygen 1s^2 2s^2 2p^4 ground configuration"
     refConfigs  = [Configuration("[He] 2s^2 2p^4")]
     mfSettings  = MeanFieldSettings()
-    #
+
     wa          = Representation(name, Nuclear.Model(8.), Radial.Grid(true), refConfigs, MeanFieldBasis(mfSettings) )
     wb = generate(wa, output=true)
-    #
+
     orbitals    = wb[ResultKeys.MeanFieldBasis].orbitals
     ciSettings  = CiSettings(CoulombInteraction(), LevelSelection() )
     from        = [Shell("2s")]
-    #
+
     frozen      = [Shell("1s")]
     to          = [Shell("2s"), Shell("2p")]
     excitations = RasStep()
     #             RasStep(RasStep(), seFrom=from, seTo=deepcopy(to), deFrom=from, deTo=deepcopy(to), frozen=deepcopy(frozen))
-    #
+
     wc          = Representation(name, Nuclear.Model(8.), Radial.Grid(true), refConfigs,
                                     CiExpansion(orbitals, excitations, ciSettings) )
     println("wc = $wc")
@@ -491,7 +491,7 @@ function testRepresentation_RasExpansion(; short::Bool=true)
     fromShells  = [Shell("2s")]
     layers      = [ RasLayer(Shell[]; se=false, de=false),   # layer 1: reference SCF only, no correlation
                      RasLayer([Shell("2p")]) ]               # layer 2: add 2p as a correlating shell
-    #
+
     # NO grid is given: the box is derived from refConfigs by Basics.recommendedGrid, which is the point.  Until
     # 17-Aug-2026 this ran on Radial.Grid(true) -- 614 a.u. and 62 splines for a FOUR-ELECTRON atom -- and on
     # that grid a correlation layer RAISES the energy, which is not physics.  The reference box is 20.9 a.u.
@@ -526,7 +526,7 @@ function testRepresentation_RasExpansion(; short::Bool=true)
     # DIFFERENCES, so it was punished twice over, first by the gradient defect fixed the day before and then by
     # a basis too starved to be worth modelling.  Benchmarking an optimiser on a basis that cannot represent
     # the problem measures the basis.
-    #
+
     # 27-Aug-2026, the FIFTH change, and the first that alters WHICH PROBLEM is being solved rather than how
     # well it is solved: solveOptimizedLevelFieldByRotation now honours AsfSettings.frozenSubshells, which it
     # had ignored entirely.  Every layer of this expansion sets it -- step 1 freezes 1s, step 2 freezes 1s and
@@ -539,7 +539,7 @@ function testRepresentation_RasExpansion(; short::Bool=true)
     # 6.7e-09 Ha, five orders below the shift itself.  Step 1 is unmoved across all three budgets and now exits
     # on a stationary energy at iteration 15 instead of running out at 24.  The tolerance below is left at
     # 1.0e-3, which is now very loose for a number stable to 6.7e-09; tightening it is a separate decision.
-    #
+
     # 31-Aug-2026, the SIXTH change, and the same KIND of change as the fifth: solveAverageLevelField now
     # honours AsfSettings.frozenSubshells, which it too had ignored entirely -- only the DFS mean-field driver
     # observed the field.  That mattered here because performSCF runs an AL pass as the STARTING POINT of every
@@ -555,7 +555,7 @@ function testRepresentation_RasExpansion(; short::Bool=true)
     # -14.614058793496298, -14.614058864452650 and -14.614058864452650 -- identical at the last two, so the
     # residual budget dependence is 7.1e-08 Ha, five orders below the shift itself; step 1 is bit-identical at
     # all three.
-    #
+
     # Do not restore any earlier number: each was obtained on a grid, a gradient or an unconstrained layer that
     # no longer exists here.
     # REFERENCE MOVED 06-Sep-2026, from -14.614058864452650 to -14.614059017048 (1.5e-07 Ha LOWER), and
@@ -791,29 +791,29 @@ function testMethod_SettingsCopyConstructors(; short::Bool=true)
     Defaults.setDefaults("print summary: open", "test-SettingsCopyConstructors-new.sum")
     printstyled("\n\nTest all Settings copy-constructors  ... \n", color=:cyan)
     ### Make the tests
-    ## WHY THIS TEST EXISTS (added 09-Aug-2026). JAC has more than 400 keyword copy-constructor guards written in
-    ## the aligned form
-    ##      if  isnothing(a)   ax = set.a   else   ax = a   end
-    ## and that alignment, which makes them readable, also makes a one-character slip invisible. Four such slips
-    ## were live when this test was written, each broken in a DIFFERENT way and none caught by anything:
-    ##   * CoulombExcitation   -- the if-branch assigned the parameter `ionEnergies` rather than the local
-    ##                            `ionEnergiesx` the constructor reads: raised whenever the keyword was OMITTED.
-    ##   * ParticleScattering  -- the guard tested `processTypey`, a name defined nowhere: raised ALWAYS.
-    ##   * PhotoDoubleIonization -- one guard read `set.electronEnergies`, a field the struct does not have; a
-    ##                            second assigned `maxKappasx` where the constructor reads `maxKappax`, so it
-    ##                            raised whenever that keyword WAS given.
-    ##   * BeamPhotoExcitation -- tested `x == missing`, which evaluates to `missing` and not to a Bool, so the
-    ##                            `if` itself raised; two keyword types were copied from their neighbours as well.
-    ## A line-by-line scan found the first three; the last was found only by CALLING every constructor, which is
-    ## what this test does. Reflection is used deliberately: a hand-written list would go stale the moment a new
-    ## module is added, and this class of defect is precisely the one nobody thinks to add a test for.
+    # WHY THIS TEST EXISTS (added 09-Aug-2026). JAC has more than 400 keyword copy-constructor guards written in
+    # the aligned form
+    #      if  isnothing(a)   ax = set.a   else   ax = a   end
+    # and that alignment, which makes them readable, also makes a one-character slip invisible. Four such slips
+    # were live when this test was written, each broken in a DIFFERENT way and none caught by anything:
+    #   * CoulombExcitation   -- the if-branch assigned the parameter `ionEnergies` rather than the local
+    #                            `ionEnergiesx` the constructor reads: raised whenever the keyword was OMITTED.
+    #   * ParticleScattering  -- the guard tested `processTypey`, a name defined nowhere: raised ALWAYS.
+    #   * PhotoDoubleIonization -- one guard read `set.electronEnergies`, a field the struct does not have; a
+    #                            second assigned `maxKappasx` where the constructor reads `maxKappax`, so it
+    #                            raised whenever that keyword WAS given.
+    #   * BeamPhotoExcitation -- tested `x == missing`, which evaluates to `missing` and not to a Bool, so the
+    #                            `if` itself raised; two keyword types were copied from their neighbours as well.
+    # A line-by-line scan found the first three; the last was found only by CALLING every constructor, which is
+    # what this test does. Reflection is used deliberately: a hand-written list would go stale the moment a new
+    # module is added, and this class of defect is precisely the one nobody thinks to add a test for.
     success = true
     JAC     = JenaAtomicCalculator
-    ## Nothing is excluded. Liouville stood here from 09-Aug-2026 as a "known failure ... its copy-constructor
-    ## does not convert", which was not quite what was wrong with it: the module had NO copy-constructor at all,
-    ## so the hasmethod guard below would have passed over it in any case and the exclusion decided nothing. One
-    ## was written on 28-Aug-2026 and it converts, so the entry is removed rather than corrected. Postponing a
-    ## module is a decision about its PHYSICS; its constructor is ordinary code and is tested like any other.
+    # Nothing is excluded. Liouville stood here from 09-Aug-2026 as a "known failure ... its copy-constructor
+    # does not convert", which was not quite what was wrong with it: the module had NO copy-constructor at all,
+    # so the hasmethod guard below would have passed over it in any case and the exclusion decided nothing. One
+    # was written on 28-Aug-2026 and it converts, so the entry is removed rather than corrected. Postponing a
+    # module is a decision about its PHYSICS; its constructor is ordinary code and is tested like any other.
     excluded = Symbol[]
     modules  = Module[]
     for  nm in names(JAC, all=true, imported=false)
@@ -826,7 +826,7 @@ function testMethod_SettingsCopyConstructors(; short::Bool=true)
         isdefined(M, :Settings) || continue
         S = getfield(M, :Settings)
         S isa Type || continue
-        ## only those that offer both a zero-argument and a copy-constructor
+        # only those that offer both a zero-argument and a copy-constructor
         (hasmethod(S, Tuple{}) && hasmethod(S, Tuple{S})) || continue
         try
             set0 = Base.invokelatest(S)
@@ -837,7 +837,7 @@ function testMethod_SettingsCopyConstructors(; short::Bool=true)
             println("** $(M).Settings copy-constructor raises: " * first(split(sprint(showerror, e), "\n")))
         end
     end
-    ## a floor, so that a refactor which silently stops finding the modules cannot pass unnoticed
+    # a floor, so that a refactor which silently stops finding the modules cannot pass unnoticed
     if  nTested < 30
         success = false;   println("** only $nTested Settings copy-constructors were found; expected at least 30")
     end
@@ -1018,8 +1018,8 @@ function testMethod_BreitInteraction(; short::Bool=true)
     printstyled("\n\nTest that the Breit interaction retains all of its tensorial parts: \n", color=:light_green)
     printstyled(  "------------------------------------------------------------------- \n", color=:light_green)
 
-    ## (1) The even- and odd-parity reduced matrix elements must be complementary; XL_Breit_coefficients
-    ##     needs BOTH, since its 'T' block at nu = L wants l_a+l_c+L odd and every other block wants it even.
+    # (1) The even- and odd-parity reduced matrix elements must be complementary; XL_Breit_coefficients
+    #     needs BOTH, since its 'T' block at nu = L wants l_a+l_c+L odd and every other block wants it even.
     for  (sa, sc, L)  in  [ (Subshell("2p_3/2"), Subshell("2p_3/2"), 1), (Subshell("2p_3/2"), Subshell("2p_1/2"), 1),
                             (Subshell("3d_5/2"), Subshell("3p_3/2"), 1), (Subshell("3p_3/2"), Subshell("3p_1/2"), 2),
                             (Subshell("2p_1/2"), Subshell("2s_1/2"), 1) ]
@@ -1040,14 +1040,14 @@ function testMethod_BreitInteraction(; short::Bool=true)
     end
     println("  (1) The even- and odd-parity reduced matrix elements are complementary.")
 
-    ## (2) besselPhiPsi carries both radial kernels; check it against the elementary closed forms.  The closed
-    ##     forms hold for EVERY x, so they test the function without sharing any of its machinery -- and the
-    ##     range has to straddle the crossover at x = 2 where besselPhiPsi switches from its small-argument
-    ##     series to the exact functions.  THAT IS WHY THE LARGE-x POINTS ARE HERE: before 21-Oct-2026 there
-    ##     was no second route, and this block sampled x <= 2.0 only, so it passed throughout while the series
-    ##     diverged above x ~ 5 and returned 1e+25 times the right answer at x = 100 with no sign of trouble.
-    ##     A RELATIVE criterion is used because psi_1 = cos(x) + x sin(x) grows with x, so an absolute
-    ##     tolerance would silently loosen exactly where the defect lived.
+    # (2) besselPhiPsi carries both radial kernels; check it against the elementary closed forms.  The closed
+    #     forms hold for EVERY x, so they test the function without sharing any of its machinery -- and the
+    #     range has to straddle the crossover at x = 2 where besselPhiPsi switches from its small-argument
+    #     series to the exact functions.  THAT IS WHY THE LARGE-x POINTS ARE HERE: before 21-Oct-2026 there
+    #     was no second route, and this block sampled x <= 2.0 only, so it passed throughout while the series
+    #     diverged above x ~ 5 and returned 1e+25 times the right answer at x = 100 with no sign of trouble.
+    #     A RELATIVE criterion is used because psi_1 = cos(x) + x sin(x) grows with x, so an absolute
+    #     tolerance would silently loosen exactly where the defect lived.
     worstBelow = 0.;    worstAbove = 0.
     for  x  in  [0.05, 0.5, 1.0, 2.0, 2.5, 4.0, 8.0, 20.0, 60.0, 200.0]
         p0, q0 = InteractionStrength.besselPhiPsi(0, x)
@@ -1066,15 +1066,15 @@ function testMethod_BreitInteraction(; short::Bool=true)
                 "small-argument series alone cannot reach there, which is the 21-Oct-2026 defect returning.")
     end
 
-    ## (3) and (4) need one converged orbital set; Ne-like Fe is small and gives a Breit term of usable size.
+    # (3) and (4) need one converged orbital set; Ne-like Fe is small and gives a Breit term of usable size.
     grid = Radial.Grid(Radial.Grid(false); rnt = 2.0e-6, h = 5.0e-2, hp = 2.0e-2, rbox = 10.0)
     mp   = SelfConsistent.performSCF([Configuration("1s^2 2s^2 2p^6")], Nuclear.Model(26.), grid,
                                      AsfSettings(); printout=false)
     orbs = mp.levels[1].basis.orbitals
     p32  = orbs[Subshell("2p_3/2")];    s2 = orbs[Subshell("2s_1/2")]
 
-    ## (3) Four 2p_3/2 orbitals at L = 1: l_a+l_c+L = 3 is odd, so the nu = L-1, nu = L+1 and 'S' blocks are
-    ##     all vetoed and the dominant magnetic term stands alone.
+    # (3) Four 2p_3/2 orbitals at L = 1: l_a+l_c+L = 3 is odd, so the nu = L-1, nu = L+1 and 'S' blocks are
+    #     all vetoed and the dominant magnetic term stands alone.
     xcList = InteractionStrength.XL_Breit_coefficients(1, p32, p32, p32, p32)
     kinds  = unique([ (xc.kind, xc.nu) for xc in xcList ])
     xValue = InteractionStrength.XL_Breit(1, p32, p32, p32, p32, grid, Basics.CoulombGaunt())
@@ -1090,8 +1090,8 @@ function testMethod_BreitInteraction(; short::Bool=true)
                 "block needs in its OTHER parity.")
     end
 
-    ## (4) The retardation enters at O(omega^2) and CoulombBreit(factor) scales omega, so the correction
-    ##     divided by factor^2 must be constant up to an O(factor^2) remainder.
+    # (4) The retardation enters at O(omega^2) and CoulombBreit(factor) scales omega, so the correction
+    #     divided by factor^2 must be constant up to an O(factor^2) remainder.
     v0     = InteractionStrength.XL_Breit(1, p32, p32, s2, s2, grid, Basics.CoulombBreit(0.))
     ratios = Float64[]
     for  f  in  [0.25, 0.5, 1.0]
@@ -1106,14 +1106,14 @@ function testMethod_BreitInteraction(; short::Bool=true)
                 "the retardation kernel, its power of omega or its coefficients are wrong.")
     end
 
-    ## (5) The two QUADRATURES of the same integral must agree.  CoulombBreit(factor, :direct) sums the full
-    ##     double loop over the grid; CoulombBreit(factor, :swept) uses the fact that every Breit kernel
-    ##     factorises into a function of r_< times one of r_>, and accumulates the inner integral in one pass.
-    ##     They differ only in the ORDER of the summation, so they cannot be bitwise equal -- and must still
-    ##     agree to the accuracy of the quadrature.  Both frequency regimes are covered: factor = 0. takes the
-    ##     analytic omega -> 0 kernels, factor = 1. the Bessel ones, and those are DIFFERENT code in both routes.
-    ##     KEEP THIS TEST.  An unused route rots: XL_BreitDamped sat with an `error("stop a")` body behind a
-    ##     signature one argument short of its only caller, unnoticed, because no example ever selected it.
+    # (5) The two QUADRATURES of the same integral must agree.  CoulombBreit(factor, :direct) sums the full
+    #     double loop over the grid; CoulombBreit(factor, :swept) uses the fact that every Breit kernel
+    #     factorises into a function of r_< times one of r_>, and accumulates the inner integral in one pass.
+    #     They differ only in the ORDER of the summation, so they cannot be bitwise equal -- and must still
+    #     agree to the accuracy of the quadrature.  Both frequency regimes are covered: factor = 0. takes the
+    #     analytic omega -> 0 kernels, factor = 1. the Bessel ones, and those are DIFFERENT code in both routes.
+    #     KEEP THIS TEST.  An unused route rots: XL_BreitDamped sat with an `error("stop a")` body behind a
+    #     signature one argument short of its only caller, unnoticed, because no example ever selected it.
     p12   = orbs[Subshell("2p_1/2")];       s1 = orbs[Subshell("1s_1/2")]
     quads = [ (1, p32, p32, s2, s2), (1, p32, p32, p32, p32), (1, p12, p32, s2, s2),
               (2, p32, p32, p32, p32), (1, s1, p32, s2, p32),  (2, p32, s2, p32, s2) ]
@@ -1174,7 +1174,7 @@ function testMethod_Opacities(; short::Bool=true)
     printstyled("\n\nTest the mean opacities against their defining limits: \n", color=:light_green)
     printstyled(  "------------------------------------------------------ \n", color=:light_green)
 
-    ## (1) the Rosseland weights must be normalised; this residue is the accuracy floor of everything below.
+    # (1) the Rosseland weights must be normalised; this residue is the accuracy floor of everything below.
     ulist, weights = Cascade.rosselandWeights(8)
     devWeights     = abs( sum(weights) - 1.0 )
     println("  (1) Rosseland weights on 8 nodes:  |sum w_i - 1| = $devWeights ")
@@ -1183,7 +1183,7 @@ function testMethod_Opacities(; short::Bool=true)
         println("  *** The Rosseland weight is not normalised; every mean built on it is scaled wrongly.")
     end
 
-    ## (2) GREY limit: a constant kappa_nu must come back unchanged from BOTH means.
+    # (2) GREY limit: a constant kappa_nu must come back unchanged from BOTH means.
     worstGrey = 0.
     for  kappa  in  [0.4, 7.3]
         kappas   = Basics.EmProperty[ Basics.EmProperty(kappa, kappa)  for i = 1:8 ]
@@ -1197,9 +1197,9 @@ function testMethod_Opacities(; short::Bool=true)
         println("  *** A constant spectral opacity is not returned unchanged; the means are mis-normalised.")
     end
 
-    ## (3) DIRECTION: one opaque bin among seven transparent ones must separate the two means widely, with
-    ##     the harmonic mean sitting near the TRANSPARENT value. This is what an arithmetic-for-harmonic
-    ##     substitution cannot reproduce: it would make the two means equal.
+    # (3) DIRECTION: one opaque bin among seven transparent ones must separate the two means widely, with
+    #     the harmonic mean sitting near the TRANSPARENT value. This is what an arithmetic-for-harmonic
+    #     substitution cannot reproduce: it would make the two means equal.
     kappas   = Basics.EmProperty[ Basics.EmProperty(i == 4 ? 100.0 : 0.01, i == 4 ? 100.0 : 0.01)  for i = 1:8 ]
     rMean, _ = Cascade.applyOpacityMean(Cascade.RosselandMean(), kappas, weights)
     pMean, _ = Cascade.applyOpacityMean(Cascade.PlanckMean(),    kappas, weights)
@@ -1212,7 +1212,7 @@ function testMethod_Opacities(; short::Bool=true)
                 "an arithmetic mean is being returned in place of the harmonic one.")
     end
 
-    ## (4) an empty bin annihilates the harmonic mean, and must say so rather than return a usable-looking number.
+    # (4) an empty bin annihilates the harmonic mean, and must say so rather than return a usable-looking number.
     kappas[6]      = Basics.EmProperty(0., 0.)
     rMean, rNote   = Cascade.applyOpacityMean(Cascade.RosselandMean(), kappas, weights)
     pMean, _       = Cascade.applyOpacityMean(Cascade.PlanckMean(),    kappas, weights)
@@ -1223,9 +1223,9 @@ function testMethod_Opacities(; short::Bool=true)
                 "while leaving the Planck mean finite.")
     end
 
-    ## (5) Thomson scattering of a fully ionised hydrogen plasma: n_e = rho/m_H, hence kappa_es = sigma_T/m_H.
-    mHydrogen = 1.6726219e-24;      sigmaThomson = 6.6524587321e-25            ## [g], [cm^2]
-    rho       = 1.0e-7;             nElectron    = rho / mHydrogen             ## [g/cm^3], [1/cm^3]
+    # (5) Thomson scattering of a fully ionised hydrogen plasma: n_e = rho/m_H, hence kappa_es = sigma_T/m_H.
+    mHydrogen = 1.6726219e-24;      sigmaThomson = 6.6524587321e-25            # [g], [cm^2]
+    rho       = 1.0e-7;             nElectron    = rho / mHydrogen             # [g/cm^3], [1/cm^3]
     property  = Cascade.MeanOpacities(Cascade.RosselandMean(),
                                       Cascade.AbstractOpacityContribution[ Cascade.ScatteringOpacity(nElectron) ],
                                       Cascade.TemperatureOpacityDependence(0.05), [nElectron], [rho], [1.0e6], 1., 0.)
@@ -1241,19 +1241,19 @@ function testMethod_Opacities(; short::Bool=true)
                 "X = 1, which is the one literature value this module can be held to without a line list.")
     end
 
-    ## (6) Bound-free: hydrogen 1s at threshold. The Gaunt-corrected Kramers cross section is 6.30 Mb, and
-    ##     with n_ion = rho/m_H the mass opacity must be exactly sigma/m_H -- which checks the whole unit
-    ##     chain a_0^2 -> cm^2 -> cm^2/g, the piece most likely to be wrong by a power of a_0.
+    # (6) Bound-free: hydrogen 1s at threshold. The Gaunt-corrected Kramers cross section is 6.30 Mb, and
+    #     with n_ion = rho/m_H the mass opacity must be exactly sigma/m_H -- which checks the whole unit
+    #     chain a_0^2 -> cm^2 -> cm^2/g, the piece most likely to be wrong by a power of a_0.
     rhoH      = 1.0e-7;    nH = rhoH / mHydrogen
     boundFree = Cascade.BoundFreeOpacity(1.0, [ (Configuration("1s"), Configuration("1s^0")) ])
     property  = Cascade.MeanOpacities(Cascade.RosselandMean(),
                                       Cascade.AbstractOpacityContribution[ boundFree ],
                                       Cascade.TemperatureOpacityDependence(0.05), [nH], [rhoH], [1.0e6], 1., 0.)
-    ## u kT = 0.5 Ha exactly at the first node fixes the photon energy on the H 1s threshold.
+    # u kT = 0.5 Ha exactly at the first node fixes the photon energy on the H 1s threshold.
     kTthr     = 0.5 / ulist[1] * 1.0000001
     Tthr      = kTthr / Defaults.convertUnits("temperature: from Kelvin to (Hartree) units", 1.0)
     kappas    = Cascade.spectralOpacityContribution(boundFree, Cascade.Data[], property, nH, rhoH, Tthr, ulist)
-    ## kappa = n sigma / rho, so sigma [cm^2] = kappa rho / n, and 1 Mb = 1.0e-18 cm^2.
+    # kappa = n sigma / rho, so sigma [cm^2] = kappa rho / n, and 1 Mb = 1.0e-18 cm^2.
     sigmaMb    = kappas[1].Coulomb * rhoH / nH * 1.0e18
     devKramers = abs(sigmaMb - 6.30) / 6.30
     println("  (6) Bound-free, H 1s at threshold:  sigma = $sigmaMb Mb against the Gaunt-corrected " *
@@ -1263,7 +1263,7 @@ function testMethod_Opacities(; short::Bool=true)
         println("  *** The bound-free contribution does not reproduce the 6.30 Mb threshold cross section " *
                 "of hydrogen 1s, so either the cross section or the a_0^2 -> cm^2/g unit chain is wrong.")
     end
-    ## and it must vanish BELOW threshold, which is what gives a bound-free opacity its edges
+    # and it must vanish BELOW threshold, which is what gives a bound-free opacity its edges
     kappasLow = Cascade.spectralOpacityContribution(boundFree, Cascade.Data[], property, nH, rhoH, 0.2*Tthr, ulist)
     if  kappasLow[1].Coulomb != 0.
         success = false
@@ -1475,6 +1475,7 @@ function testMethod_SpinAngular(; short::Bool=true)
     return(success)
 end
 
+
 """
 `TestFrames.testMethod_SpinAngularTwoParticleLS()`
     ... tests that `SpinAngular`'s TWO-PARTICLE coefficients respect the total orbital and spin angular momenta. V_ee
@@ -1608,12 +1609,12 @@ function testMethod_DensityAtNucleus(; short::Bool=true)
     printstyled("\n\nTest the method  Basics.densityAtNucleus()  ... \n", color=:cyan)
     success = true;    printTest, iostream = Defaults.getDefaults("test flag/stream")
 
-    ## The hydrogen-like 1s density at the nucleus is Z^3/pi exactly in the non-relativistic point-nucleus
-    ## limit, so a light H-like ion is an absolute anchor: no table, no fitted number.  Relativistic and
-    ## finite-size corrections are of order (Z alpha)^2 and grow with Z.  Measured 04-Sep-2026: the ratio to
-    ## Z^3/pi is 1.0005, 1.0019 and 1.0042 at Z = 1, 2, 3 -- a MONOTONE rise, which is the relativistic
-    ## enhancement rather than numerical noise, so 1 % is a tolerance the method comfortably meets and a
-    ## failure would mean something real.
+    # The hydrogen-like 1s density at the nucleus is Z^3/pi exactly in the non-relativistic point-nucleus
+    # limit, so a light H-like ion is an absolute anchor: no table, no fitted number.  Relativistic and
+    # finite-size corrections are of order (Z alpha)^2 and grow with Z.  Measured 04-Sep-2026: the ratio to
+    # Z^3/pi is 1.0005, 1.0019 and 1.0042 at Z = 1, 2, 3 -- a MONOTONE rise, which is the relativistic
+    # enhancement rather than numerical noise, so 1 % is a tolerance the method comfortably meets and a
+    # failure would mean something real.
     d = Dict{Float64,Float64}()
     for  Z  in (1.0, 2.0, 3.0)
         grid = Radial.Grid(Radial.Grid(false); rnt = 2.0e-6/Z, h = 5.0e-2, hp = 2.0e-2, rbox = 30.0/Z)
@@ -1630,7 +1631,7 @@ function testMethod_DensityAtNucleus(; short::Bool=true)
                                           "Z^3/pi = $exact, a deviation of $(abs(d[Z]/exact - 1))")   end
         end
     end
-    ## and the Z^3 scaling itself, which divides the absolute normalisation out
+    # and the Z^3 scaling itself, which divides the absolute normalisation out
     for  (Z, factor)  in  ((2.0, 8.0), (3.0, 27.0))
         if  abs( d[Z]/d[1.0]/factor - 1.0 ) > 0.01
             success = false
@@ -1639,9 +1640,9 @@ function testMethod_DensityAtNucleus(; short::Bool=true)
         end
     end
 
-    ## A p_1/2 orbital has a NON-ZERO density at the nucleus, carried entirely by the small component -- a
-    ## purely relativistic effect, and the reason p_1/2 orbitals take part in electron capture at all.  It
-    ## must be non-zero and it must be far smaller than the s density of the same shell.
+    # A p_1/2 orbital has a NON-ZERO density at the nucleus, carried entirely by the small component -- a
+    # purely relativistic effect, and the reason p_1/2 orbitals take part in electron capture at all.  It
+    # must be non-zero and it must be far smaller than the s density of the same shell.
     grid = Radial.Grid(Radial.Grid(false); rnt = 2.0e-6, h = 5.0e-2, hp = 2.0e-2, rbox = 20.0)
     nm   = Nuclear.Model(54.0, Nuclear.UniformNucleus())
     asf  = AsfSettings(AsfSettings(); scField = Basics.DFSField())
@@ -1657,12 +1658,12 @@ function testMethod_DensityAtNucleus(; short::Bool=true)
                                       "be positive (a relativistic small-component effect) and much smaller")  end
     end
 
-    ## The guard: a POINT nucleus has no volume to average over and must refuse rather than return a number.
+    # The guard: a POINT nucleus has no volume to average over and must refuse rather than return a number.
     raised = false
     try     Basics.densityAtNucleus(bas.orbitals[Subshell("3s_1/2")], grid, Nuclear.Model(54.0, PointNucleus()))
     catch
-        raised = true          ## NOTE: the assignment must NOT sit on the `catch` line -- Julia would read
-    end                        ##       `raised` as the name of the exception variable and then fail on `=`.
+        raised = true          # NOTE: the assignment must NOT sit on the `catch` line -- Julia would read
+    end                        #       `raised` as the name of the exception variable and then fail on `=`.
     if  !raised
         success = false
         if printTest   info(iostream, "a point nucleus did not raise, although it has no volume to average over")  end
@@ -1688,8 +1689,8 @@ function testMethod_HyperfinePncFactors(; short::Bool=true)
     printstyled("\n\nTest the methods  WeakInteractionEnhancement.hyperfine*Factor()  ... \n", color=:cyan)
     success = true;    printTest, iostream = Defaults.getDefaults("test flag/stream")
 
-    ## A nucleus of spin zero has no hyperfine structure, so F = J and the dipole factor must be exactly 1:
-    ## the recoupling then does nothing at all.  This fixes both the phase and the normalization at once.
+    # A nucleus of spin zero has no hyperfine structure, so F = J and the dipole factor must be exactly 1:
+    # the recoupling then does nothing at all.  This fixes both the phase and the normalization at once.
     for  (ja, jb)  in  [(1//2, 1//2), (1//2, 3//2), (3//2, 5//2), (5//2, 5//2)]
         wa = WeakInteractionEnhancement.hyperfineMultipoleFactor(1, AngularJ64(ja), AngularJ64(ja),
                                                                  AngularJ64(jb), AngularJ64(jb), AngularJ64(0))
@@ -1699,12 +1700,12 @@ function testMethod_HyperfinePncFactors(; short::Bool=true)
         end
     end
 
-    ## The hyperfine components of one line share out the strength of the fine-structure line without
-    ## creating or destroying any: summed over both F's, the squared factor is exactly 2I+1.  This holds at
-    ## every rank, so it also covers the quadrupole, for which the same factor carries the E2 amplitudes.
-    ## The rule presupposes that the ELECTRONIC matrix element exists at all: there is no rank-2 operator
-    ## between two J = 1/2 levels, and the sum is then exactly zero rather than 2I+1.  Both branches are
-    ## asserted, since a factor that silently returned something for a forbidden rank would be worse.
+    # The hyperfine components of one line share out the strength of the fine-structure line without
+    # creating or destroying any: summed over both F's, the squared factor is exactly 2I+1.  This holds at
+    # every rank, so it also covers the quadrupole, for which the same factor carries the E2 amplitudes.
+    # The rule presupposes that the ELECTRONIC matrix element exists at all: there is no rank-2 operator
+    # between two J = 1/2 levels, and the sum is then exactly zero rather than 2I+1.  Both branches are
+    # asserted, since a factor that silently returned something for a forbidden rank would be worse.
     for  rank  in  [1, 2],  i2  in  [1, 3, 5, 7],  (ja2, jb2)  in  [(1,1), (1,3), (3,5)]
         wa = 0.
         for  fa2 = abs(ja2-i2):2:(ja2+i2),  fb2 = abs(jb2-i2):2:(jb2+i2)
@@ -1719,17 +1720,17 @@ function testMethod_HyperfinePncFactors(; short::Bool=true)
         end
     end
 
-    ## The anapole operator is proportional to the nuclear spin, so a spin-zero nucleus has no
-    ## spin-dependent amplitude whatever.  This is what makes 137-Ba, and not 138-Ba, the isotope to use.
+    # The anapole operator is proportional to the nuclear spin, so a spin-zero nucleus has no
+    # spin-dependent amplitude whatever.  This is what makes 137-Ba, and not 138-Ba, the isotope to use.
     if  WeakInteractionEnhancement.hyperfineScalarFactor(AngularJ64(3//2), AngularJ64(1//2),
                                                          AngularJ64(1//2), AngularJ64(0)) != 0.
         success = false
         if printTest   info(iostream, "a nucleus of spin zero returns a non-zero anapole factor")  end
     end
 
-    ## The selection rule the barium experiment rests on: the weak charge cannot change J, so the
-    ## spin-INDEPENDENT geometry vanishes for EVERY hyperfine component of a J = 1/2 to J = 5/2 line,
-    ## while the anapole reaches it through a J = 3/2 intermediate.  Both halves are asserted.
+    # The selection rule the barium experiment rests on: the weak charge cannot change J, so the
+    # spin-INDEPENDENT geometry vanishes for EVERY hyperfine component of a J = 1/2 to J = 5/2 line,
+    # while the anapole reaches it through a J = 3/2 intermediate.  Both halves are asserted.
     for  fi  in  [1, 2],  ff  in  [1, 2, 3, 4]
         if  WeakInteractionEnhancement.hyperfineMultipoleFactor(1, AngularJ64(5//2), AngularJ64(ff), AngularJ64(1//2),
                                                                 AngularJ64(fi), AngularJ64(3//2)) != 0.
@@ -1791,20 +1792,20 @@ function testMethod_DocstringPointers(; short::Bool=true)
     printstyled(  "---------------------------------------------------------- \n", color=:light_green)
 
     docPattern = r"\"\"\"(.*?)\"\"\""s
-    ## NOTE THE ABSENCE OF A TRAILING \b, and do not put one back.  Julia's `!` is not a word character, so
-    ## `name!\b` never matches: the boundary would have to fall between `!` and whatever follows, which is
-    ## usually `(`, and two non-word characters make no boundary.  The pattern then backtracks to the bangless
-    ## name and reports every mutating function as unresolved.  The first version of this method did exactly
-    ## that and produced TEN false positives -- Cascade.propagateProbability!, pushLevels!, walkPathways! and
-    ## the rest -- every one of which is written correctly in its docstring.  A negative lookahead does the
-    ## job that \b cannot.
+    # NOTE THE ABSENCE OF A TRAILING \b, and do not put one back.  Julia's `!` is not a word character, so
+    # `name!\b` never matches: the boundary would have to fall between `!` and whatever follows, which is
+    # usually `(`, and two non-word characters make no boundary.  The pattern then backtracks to the bangless
+    # name and reports every mutating function as unresolved.  The first version of this method did exactly
+    # that and produced TEN false positives -- Cascade.propagateProbability!, pushLevels!, walkPathways! and
+    # the rest -- every one of which is written correctly in its docstring.  A negative lookahead does the
+    # job that \b cannot.
     refPattern = r"\b([A-Z][A-Za-z0-9]*)\.([a-z][A-Za-z0-9_]*!?)(?![A-Za-z0-9_!])"
     dangling   = Dict{String,Vector{String}}();    missingBang = Dict{String,Vector{String}}()
     noTokens   = 0
 
     for  file  in  filter(x -> endswith(x, ".jl"), readdir(@__DIR__, join=true))
-        ## Strip the disabled `#= ... =#` regions first; the docstrings inside them describe code that is
-        ## deliberately switched off, so their functions are absent on purpose.
+        # Strip the disabled `#= ... =#` regions first; the docstrings inside them describe code that is
+        # deliberately switched off, so their functions are absent on purpose.
         source = replace( read(file, String), r"#=.*?=#"s => "" )
         for  doc  in  eachmatch(docPattern, source)
             for  ref  in  eachmatch(refPattern, doc.captures[1])
@@ -2127,7 +2128,7 @@ function testModule_Bsplines(; short::Bool=true)
     # clean bill of health. So the guards are tested from BOTH SIDES here: they must pass on a box matched to the
     # orbitals and REFUSE on one deliberately too small. That is the whole point of this test, and it is the part
     # that a single-sided check would have missed for as long as the guards have existed.
-    #
+
     # The basis itself is checked against the exact point-nucleus Dirac energies. That is a genuine closed-form
     # comparison and not a second opinion from the same machinery: Basics.computeDiracEnergy evaluates the
     # analytic formula, while the eigenvalue comes from diagonalizing the B-spline Galerkin matrix.
@@ -2210,7 +2211,7 @@ function testModule_StarkZeeman(; short::Bool=true)
     Defaults.setDefaults("print summary: open", "test-StarkZeeman-new.sum")
     printstyled("\n\nTest the module  StarkZeeman  ... \n", color=:cyan)
     # Three exact statements about a field-dressed level, none of which needs a reference value:
-    #
+
     #   * with both fields off, the eigenvalues must reproduce the zero-field level energies WITH their (2J+1)
     #     degeneracies -- the perturbation matrix is then diagonal and the diagonalization must not disturb it;
     #   * the CENTRE OF GRAVITY cannot move. Diagonalization preserves the trace, and the Zeeman diagonal is
@@ -2291,7 +2292,7 @@ function testModule_HfsPaschenBack(; short::Bool=true)
     Defaults.setDefaults("print summary: open", "test-HfsPaschenBack-new.sum")
     printstyled("\n\nTest the module  HfsPaschenBack  ... \n", color=:cyan)
     # Two exact statements, neither needing a reference value from outside JAC:
-    #
+
     #   * at nuclear spin I = 0 the hyperfine basis collapses to F = J exactly (one HfLevel per electronic level,
     #     no nuclear structure at all), so HfsPaschenBack must reproduce StarkZeeman's own already-validated
     #     ASF-basis Zeeman splitting BIT FOR BIT -- any sign or factor error in the recoupling this module adds
@@ -2383,7 +2384,7 @@ function testModule_Hamiltonian(; short::Bool=true)
     # check would therefore FAIL on correct code -- the obvious test for a CI matrix is the wrong one here, and the
     # convention itself is what is pinned instead, so that a later refactor filling the lower triangle inconsistently
     # cannot pass unnoticed.
-    #
+
     # The rest are exact: the trace is invariant under diagonalization, a one-dimensional block must return its own
     # diagonal element, enlarging the CSF space cannot RAISE the ground state (the variational principle), and the
     # kink-aware matrix must agree with the plain one, being the same operator through a different radial quadrature.
@@ -2472,7 +2473,7 @@ function testModule_InteractionStrength(; short::Bool=true)
     # veto and angular prefactor", differing only in using RadialIntegrals.SlaterRkKinkAware for the radial integral
     # instead of SlaterRk. Two independent quadratures of one quantity must agree, and nothing outside the module is
     # needed to say so.
-    #
+
     # This matters beyond tidiness: the kink-aware route is what the ALField and EOLField code lines use, through
     # Hamiltonian.setupMatrixKinkAware and SelfConsistent.computeTwoElectronV, so a divergence between the two would
     # move SCF energies while leaving the ordinary CI path untouched -- exactly the kind of split that is hard to
@@ -2539,7 +2540,7 @@ function testModule_InteractionStrength(; short::Bool=true)
     #     two families carry opposite parity at equal rank, (-1)^L against (-1)^(L+1), so the substitution did not
     #     merely misscale an amplitude, it swapped the SELECTION RULE -- which is why every mixed-multipole
     #     two-photon channel came back exactly zero and looked like physics.
-    #
+
     #     Each row below names an orbital pair, a multipole the parity rule ALLOWS between them and one it FORBIDS
     #     at the same rank. Both halves are asserted, and that is deliberate: a test that only checked the allowed
     #     strength would have passed on the old code for half these rows, and one that only checked the forbidden
@@ -2621,7 +2622,7 @@ function testModule_SelfConsistent(; short::Bool=true)
     # "converged" claims, it needs no reference value, and it is broken by any of the ways an SCF can stop early --
     # a stagnant-step test that fires too soon, an iteration limit reached quietly, a mixing scheme that oscillates
     # about the solution rather than settling on it.
-    #
+
     # The second check is narrower and has a history: settings.frozenSubshells must be honoured EXACTLY. A frozen
     # orbital is not "changed very little", it is not changed at all, so the assertion is bit-identity of P and Q
     # and not a tolerance. The EOL rotation solver ignored this setting until it was fixed earlier today, and
@@ -2715,7 +2716,7 @@ function testModule_SelfConsistent(; short::Bool=true)
     #     energy -- which is why this is asserted rather than trusted.  The check is the whole square, both
     #     operators, against the angular routines directly, and it needs no SCF: `Basics.generateBasis` gives
     #     the CSFs, and the coefficients do not depend on the radial functions at all.
-    #
+
     #     THE SPACE MATTERS.  Excitations are taken out of the 1s as well as the valence, because with ONE
     #     frozen core no two CSFs of a singles-and-doubles space are further apart than a double substitution,
     #     every pair then couples, and the declined-pair path is never entered.  Measured here: of 5 929 pairs
@@ -2861,7 +2862,7 @@ function testModule_SelfConsistent(; short::Bool=true)
                     SC.averageLevelPrePass(bas6, nmC, prim6, AsfSettings(AsfSettings();
                         scField = Basics.EOLField(), startScfFrom = ME.StartFromPrevious(fullO)); printout=false)  end
         for  sh  in  bas6.subshells
-            ## the basis is returned untouched here, so bit-identity IS the right test and no rebuild intervenes
+            # the basis is returned untouched here, so bit-identity IS the right test and no rebuild intervenes
             if  bFull.orbitals[sh].P != bas6.orbitals[sh].P
                 success = false
                 if printTest   info(iostream, "the pre-pass changed $sh although the handed-in set covers the " *
@@ -2920,13 +2921,13 @@ function testModule_Radial(; short::Bool=true)
     # The grid is the one object every other module depends on, and both of its constructions carry a recipe that is
     # written out in the docstring.  A recipe that is only described can drift away from the code silently, so it is
     # re-derived here from the documented formula and compared, rather than compared against a stored number.
-    #
+
     # Note which quantity witnesses the box.  `rbox` is a REQUEST: it enters only through determineNoPoints, which
     # rounds the point count UP to a multiple of orderGL, so the last break point tL[end] overshoots the request by
     # up to a percent or two and is NOT an exact witness.  `hp = rbox/300` is exact, and so is the MINIMALITY of the
     # point count, which is what is tested below.
     success = true;    printTest, iostream = Defaults.getDefaults("test flag/stream")
-    #
+
     # (1) Basics.recommendedGrid: rbox = max over shells of  r_+ + tailFactor*n/Zeff  with
     #     r_+ = (n^2/Zeff)(1 + sqrt(1 - l(l+1)/n^2))  and  Zeff = max(Z - N + 1, Z - slaterScreening, 1),
     #     and hp = rbox/300.  Both are re-derived here from the documented formula.
@@ -2944,7 +2945,7 @@ function testModule_Radial(; short::Bool=true)
         success = false
         if printTest   info(iostream, "recommendedGrid: hp = $(grid.hp), the recipe gives rbox/300 = $(rMax/300.)")   end
     end
-    #
+
     # (2) The two recommendedGrid methods must agree: the configuration route only collects the largest occupation
     #     of every shell and then calls the occupation route.
     grid2 = Basics.recommendedGrid([Configuration("1s^2 2s^2 2p^6 3s")], Nuclear.Model(Z, PointNucleus()))
@@ -2953,14 +2954,14 @@ function testModule_Radial(; short::Bool=true)
         if printTest   info(iostream, "recommendedGrid: the configuration and occupation routes disagree, " *
                                       "hp $(grid2.hp) vs $(grid.hp), NoPoints $(grid2.NoPoints) vs $(grid.NoPoints)")   end
     end
-    #
+
     # (3) An explicit rbox or hp overrides the estimate; that is the user's way in and must be honoured exactly.
     grid3 = Basics.recommendedGrid(occupations, Z; rbox = 40., hp = 0.05)
     if  grid3.hp != 0.05
         success = false
         if printTest   info(iostream, "recommendedGrid: hp = $(grid3.hp) although 0.05 was given explicitly")   end
     end
-    #
+
     # (4) Radial.determineNoPoints returns the SMALLEST multiple of orderGL whose mesh reaches beyond rbox.  The mesh
     #     point r(i) solves  log(r/rnt + 1) + (h/hp) r = (i-1) h,  which is solved here by BISECTION -- deliberately a
     #     different method from the Newton iteration the function itself uses, so the two cannot fail together.
@@ -2991,7 +2992,7 @@ function testModule_Radial(; short::Bool=true)
                                           "$predicted")   end
         end
     end
-    #
+
     # (5) The documented reason for scaling hp with the box: hp = rbox/300 holds the point count near 600 whatever the
     #     box.  The docstring quotes 602 points at rbox = 5.1 and 679 at rbox = 249, and both are reproduced exactly.
     for  (rbox, quoted)  in  [(5.1, 602), (249., 679)]
@@ -3002,7 +3003,7 @@ function testModule_Radial(; short::Bool=true)
                                           "quotes $quoted")   end
         end
     end
-    #
+
     # (6) Radial.generateGrid(maximumPrincipalQN = n) is Rule 12 written as code: rbox = 2.5 r_+.  The resulting grid
     #     must carry exactly the point count that box asks for.
     for  (n, lValue, Zeff)  in  [(4, 0, 1.), (3, 2, 2.5), (5, 1, 3.)]
@@ -3017,7 +3018,7 @@ function testModule_Radial(; short::Bool=true)
                                           "rbox = 2.5 r_+ = $(2.5*rPlus) asks for $wanted")   end
         end
     end
-    #
+
     # (7) Radial.determineZbar samples the last five points of Zr, so a potential with a constant Zr must return that
     #     constant exactly.  Until 12-Aug-2026 the loop read Zr[mtp] rather than Zr[i] and the spread could not fire.
     gridZ = Radial.Grid(true)
@@ -3028,7 +3029,7 @@ function testModule_Radial(; short::Bool=true)
         success = false
         if printTest   info(iostream, "determineZbar of a constant Zr = 7 potential returned $Zbar")   end
     end
-    #
+
     # (8) The guards.  A grid that cannot be built must say so rather than return a silently unusable one.
     guards = [ ("no shell",            () -> Basics.recommendedGrid(Dict{Shell,Int64}(), Z)),
                ("Z <= 0",              () -> Basics.recommendedGrid(occupations, -1.)),
@@ -3055,7 +3056,7 @@ function testModule_Radial(; short::Bool=true)
             if printTest   info(iostream, "the guard against '$label' did not raise")   end
         end
     end
-    #
+
     # (9) The mesh itself: strictly increasing, positive, and with no negative integration weight.
     if  !all(diff(grid.r) .> 0.)  ||  grid.r[1] <= 0.  ||  !all(grid.wr .>= 0.)
         success = false
@@ -3092,7 +3093,7 @@ function testModule_LSjj(; short::Bool=true)
         end
         return( devs )
     end
-    #
+
     # The matrix of one (l, N, J) block is assembled from the tabulated entries themselves: the distinct LS labels
     # (w, Q, L, S) give the rows, the distinct jj labels (Nm, Qm, Jm, Qp, Jp) the columns, and every element is asked
     # for through getLSjjCoefficient -- so a label pair the table does not carry contributes the 0 it should.
@@ -3124,7 +3125,7 @@ function testModule_LSjj(; short::Bool=true)
             end
         end
     end
-    #
+
     # (1) Every tabulated shell: p^3..p^6, d^3..d^10 and f^3..f^7, 108 blocks in all.
     for  (l, N, table)  in  [ (1, 3, LSjj.LS_jj_p_3),  (1, 4, LSjj.LS_jj_p_4),  (1, 5, LSjj.LS_jj_p_5),
                               (1, 6, LSjj.LS_jj_p_6),  (2, 3, LSjj.LS_jj_d_3),  (2, 4, LSjj.LS_jj_d_4),
@@ -3134,11 +3135,11 @@ function testModule_LSjj(; short::Bool=true)
                               (3, 6, LSjj.LS_jj_f_6),  (3, 7, LSjj.LS_jj_f_7) ]
         checkBlocks(l, N, table, false)
     end
-    #
+
     # (2) f^8..f^13 are NOT tabulated: getLSjjCoefficient reaches them through the Dyall-Grant electron-hole
     #     conjugation, Nm -> 2l - Nm with the phase (-1)^((Qm + Qp - Q)/2).  Their labels are therefore taken from the
     #     conjugate table with Nm mapped back.
-    #
+
     #     WHAT THIS DOES NOT COVER, and it is worth knowing.  The phase's exponent splits as (Qm + Qp)/2 - Q/2, i.e.
     #     into a part fixed by the jj label alone and a part fixed by the LS label alone, so multiplying it in is a
     #     diagonal similarity D1 * M * D2 with D1, D2 = +-1 -- and M'M is then unchanged.  Measured over all four
@@ -3149,7 +3150,7 @@ function testModule_LSjj(; short::Bool=true)
     for  (N, table)  in  [ (8, LSjj.LS_jj_f_6), (9, LSjj.LS_jj_f_5), (10, LSjj.LS_jj_f_4), (11, LSjj.LS_jj_f_3) ]
         checkBlocks(3, N, table, true)
     end
-    #
+
     # (3) The guards: an occupation or an l with no table must say so rather than return the 0. of a missed lookup,
     #     which is indistinguishable from a coefficient that is legitimately zero.
     guards = [ ("p^7",           () -> LSjj.getLSjjCoefficient(1,  7, LSjj.LS_jj_qn(0, 2, 2, 1, 1, 1, 0, 1, 2, 0))),
@@ -3223,7 +3224,7 @@ function testModule_BiOrthogonal(; short::Bool=true)
         end
         return( S )
     end
-    #
+
     # (1) The same basis on both sides.  Its orbitals are orthonormal, so S = 1, the triangular factorization is
     #     trivial and both transformation matrices must come back as the unit matrix.
     for  (kappa, (lList, rList, Cleft, Cright))  in  BiOrthogonal.computeTransformationMatrices(leftBasis, leftBasis, grid)
@@ -3239,7 +3240,7 @@ function testModule_BiOrthogonal(; short::Bool=true)
                                           "unit matrix")   end
         end
     end
-    #
+
     # (2) Two different bases: the defining property itself.  The overlap is also required to be genuinely non-trivial,
     #     so that a degenerate S cannot make the check pass for the wrong reason.
     biggestOverlapDeviation = 0.
@@ -3258,7 +3259,7 @@ function testModule_BiOrthogonal(; short::Bool=true)
         if printTest   info(iostream, "the two bases overlap almost perfectly ($biggestOverlapDeviation), so the " *
                                       "biorthonormality check above is vacuous")   end
     end
-    #
+
     # (3) Transforming a multiplet against ITSELF must leave every mixing coefficient where it was; the counter-
     #     rotation of the CI vectors is then the unit matrix as well.
     newLeftMp, newRightMp = redirect_stdout(devnull) do
@@ -3273,7 +3274,7 @@ function testModule_BiOrthogonal(; short::Bool=true)
                                           "transformation")   end
         end
     end
-    #
+
     # (4) THE DIFFERING-DIMENSION CASE, Appendix B of the same paper, implemented 04-Sep-2026.  Until then this
     #     check asserted the opposite -- that the code REFUSES a rectangular overlap -- and it is rewritten here
     #     rather than deleted, because the property it should now assert is the stronger one.  With one subshell
@@ -3349,7 +3350,7 @@ function testModule_BiOrthogonalRotation(; short::Bool=true)
     #     singular value is one, so both transformation matrices must come back ORTHOGONAL -- which is exactly what
     #     leaves the orbital norms alone.  The 3 x 3 shape keeps the third direction untouched, as a spectator
     #     subshell would be, so a factorisation that mixed it in would show here too.
-    ## an explicit departure-from-unity, since TestFrames does not import LinearAlgebra
+    # an explicit departure-from-unity, since TestFrames does not import LinearAlgebra
     unitDev(M) = maximum( abs(M[i,j] - (i == j ? 1.0 : 0.0))  for i = 1:size(M,1), j = 1:size(M,2) )
     co = cos(theta);   si = sin(theta)
     R  = [co -si 0.;  si co 0.;  0. 0. 1.]
@@ -3554,7 +3555,7 @@ function testModule_Continuum(; short::Bool=true)
     #     1 <= N <= 1/(1 - (q*hp)^2/8). Continuum.asymptoticAmplitude fits the asymptotic form instead of reading a
     #     maximum off it, so there is no sampling deficit and no one-sided bias: N scatters symmetrically about 1 at
     #     the 1e-6 level, and the bound below is |N - 1| <= 5e-5, TIGHTER than the superseded one above 0.1 Hartree.
-    #
+
     #     AND THE SWEEP IS THE POINT, not the two-sidedness. The four energies this loop ran until 03-Nov-2026 are
     #     0.5 to 2.5 Hartree, where 300 points span 1.9 to 4.3 half-wavelengths on this grid, so the window ALWAYS
     #     held a crest and the defect could not fire: the bound was derived correctly and then exercised only where
@@ -3593,7 +3594,7 @@ function testModule_Continuum(; short::Bool=true)
 
     # (5) AND THE NORMALIZATION REFUSES WHAT IT CANNOT NORMALIZE -- exercised from BOTH sides, since a refusal that
     #     cannot fire and one that fires on sound input are equally useless.
-    #
+
     #     WHAT THIS BLOCK ASSERTED UNTIL 03-Nov-2026, AND WHY IT WAS INVERTED. It fed a perfect sine divided by 1000
     #     and required a refusal, because the guard was `abs(N) > 30` on the normalization constant. But N is the ratio
     #     of a fixed physical target to the ARBITRARY scale of the Galerkin eigenvector, so that input is perfectly
@@ -3929,8 +3930,8 @@ function testModule_RandomPhase(; short::Bool=true)
     # see the module's own docstring for why a genuine two-electron coupled number is NOT yet asserted here.
     oneActive  = Dict(Subshell("2s_1/2") => targets[Subshell("2s_1/2")])
     settings1U = RandomPhase.Settings(RandomPhase.Settings(); activeSubshells=[Subshell("2s_1/2")], targetSubshells=oneActive)
-    ## directSolve=false PINNED EXPLICITLY: since 14-Oct-2026 it DEFAULTS to true, and this check exists to
-    ## exercise the ITERATION path's zero-induced-source limit.  Check (7) below covers the direct path.
+    # directSolve=false PINNED EXPLICITLY: since 14-Oct-2026 it DEFAULTS to true, and this check exists to
+    # exercise the ITERATION path's zero-induced-source limit.  Check (7) below covers the direct path.
     settings1C = RandomPhase.Settings(settings1U; couplingEnabled=true, maxIterations=5, accuracy=1.0e-10,
                                        directSolve=false)
     r1U = RandomPhase.solve(E1, Basics.Coulomb, omega, activeOrbitals, potential, primitives; settings=settings1U)
@@ -3950,7 +3951,7 @@ function testModule_RandomPhase(; short::Bool=true)
     # this toy case is NOT asserted; see the module's own docstring for the measured, honest reason why not.
     respC = RandomPhase.solve(E1, Basics.Coulomb, omega, activeOrbitals, potential, primitives;
                                settings=RandomPhase.Settings(rpSettings; couplingEnabled=true, maxIterations=3,
-                                                              directSolve=false))   ## sweeps, so nIterations == 3
+                                                              directSolve=false))   # sweeps, so nIterations == 3
     for  sh  in  (Subshell("1s_1/2"), Subshell("2s_1/2"))
         chi = respC.perturbedOrbitals[sh]
         if  any(isnan, chi.P)  ||  any(isnan, chi.Q)  ||  any(isinf, chi.P)  ||  any(isinf, chi.Q)
@@ -3966,7 +3967,7 @@ function testModule_RandomPhase(; short::Bool=true)
     # THE DIRECT SOLVE.  Two assertions, and they separate the SOLVER from the PHYSICS deliberately -- the
     # new code is a linear solver plus a coupling operator, and a failure in either would otherwise be blamed
     # on the other.
-    #
+
     # (6) `RandomPhase.gmres` SOLVES A KNOWN LINEAR SYSTEM EXACTLY.  GMRES reaches the exact solution of an
     #     n x n system within n steps, so on a fixed, non-symmetric, diagonally dominant matrix -- given to
     #     the solver ONLY through its action, exactly as the coupled problem is -- the residual must fall to
@@ -3975,8 +3976,8 @@ function testModule_RandomPhase(; short::Bool=true)
     aTest  = [ (i == j ? 4.0 : 1.0/(1.0 + i + 2j))  for i = 1:nTest, j = 1:nTest ]
     bTest  = [ sin(0.7*i) + 0.3  for i = 1:nTest ]
     xTest, kTest, resTest = RandomPhase.gmres(v -> aTest * v, bTest, nTest, 1.0e-14)
-    ## sqrt(sum(abs2, .)) rather than LinearAlgebra.norm:  TestFrames does not import LinearAlgebra, and one
-    ## assertion is not a reason to widen the test module's imports.
+    # sqrt(sum(abs2, .)) rather than LinearAlgebra.norm:  TestFrames does not import LinearAlgebra, and one
+    # assertion is not a reason to widen the test module's imports.
     trueResidual = sqrt(sum(abs2, aTest * xTest - bTest)) / sqrt(sum(abs2, bTest))
     if  trueResidual > 1.0e-10
         success = false
@@ -4010,7 +4011,7 @@ function testModule_RandomPhase(; short::Bool=true)
     # THE ANGULAR MACHINERY, ASSERTED DIRECTLY -- because it is pure algebra, costs nothing to check, and is
     # what the coupled path was silently missing until 14-Oct-2026. Four statements, each of which would have
     # failed then or would fail on the mistake most likely to be made next.
-    #
+
     # (1) CL_reduced_me(a, 0, a) = sqrt(2j_a+1) EXACTLY. This is not decoration: the occupation weight in
     #     RandomPhase.inducedPotentialZr is DERIVED from it through the L = 0 Hartree limit, so if this
     #     identity ever stopped holding the weight 2*sqrt(2j_b+1) would be void and nothing else would say so.
@@ -4121,7 +4122,7 @@ function testMethod_ThomasReicheKuhn(; short::Bool=true)
     # photoionization normalisation (item 64, wrong by 4 pi/(alpha omega)^2), MultipolePolarizibility (challenge
     # 113, wrong by ~2600 with the two gauges agreeing EXACTLY with each other), and example-Ak.jl, which ran for
     # years while reporting only counts. A sum rule cannot be satisfied by a wrongly scaled spectrum.
-    #
+
     # Thomas-Reiche-Kuhn: the dipole oscillator strengths from a given state sum to the number of electrons. For
     # hydrogen that is 1, and the BOUND states carry only 0.5650 of it -- the continuum holds the remaining
     # 0.4350. So the rule is only reachable if the B-spline pseudo-continuum is included, and it is that

@@ -204,14 +204,14 @@ end
 `RandomPhase.Settings()`  ... constructor for an `empty` instance of RandomPhase.Settings.
 """
 function Settings()
-    ## allChannels DEFAULTS TO TRUE -- changed 14-Oct-2026, on the maintainer's instruction and on a
-    ## measurement: with one target per subshell the total coherent response comes out SIGN-REVERSED
-    ## (ratio -0.793 against the uncoupled total), while the complete channel set gives a physical +0.835.
-    ## A default that produces the wrong sign is not a conservative default.
-    ## directSolve DEFAULTS TO TRUE for the same reason -- 14-Oct-2026, the maintainer's instruction.  The
-    ## iteration's spectral radius is about 2.7 and belongs to the OPERATOR, so an iterating default could not
-    ## converge for any setting of anything else.  NOTE what this changes for a caller: on the direct route
-    ## `maxIterations` bounds the KRYLOV DIMENSION and `nIterations` reports Krylov steps, not sweeps.
+    # allChannels DEFAULTS TO TRUE -- changed 14-Oct-2026, on the maintainer's instruction and on a
+    # measurement: with one target per subshell the total coherent response comes out SIGN-REVERSED
+    # (ratio -0.793 against the uncoupled total), while the complete channel set gives a physical +0.835.
+    # A default that produces the wrong sign is not a conservative default.
+    # directSolve DEFAULTS TO TRUE for the same reason -- 14-Oct-2026, the maintainer's instruction.  The
+    # iteration's spectral radius is about 2.7 and belongs to the OPERATOR, so an iterating default could not
+    # converge for any setting of anything else.  NOTE what this changes for a caller: on the direct route
+    # `maxIterations` bounds the KRYLOV DIMENSION and `nIterations` reports Krylov steps, not sweeps.
     Settings( Subshell[], Dict{Subshell,Subshell}(), false, 15, 1.0e-6, 0.3, DalgarnoLewis.Settings(), false, 0,
                true, true )
 end
@@ -1157,7 +1157,7 @@ function solve(multipole::EmMultipole, gauge::EmGauge, omega::Float64, activeOrb
     # THE ITERATION.  The fixed-point variable is the INDUCED SOURCE, one vector per active subshell, and the
     # map is "given the sources, solve for the chis;  from the chis, rebuild the sources".  Two schemes are
     # available and the choice is `settings.andersonDepth`.
-    #
+
     # **PLAIN LINEAR MIXING HAS NO USABLE WINDOW, AND THAT WAS MEASURED RATHER THAN SUSPECTED (13-Oct-2026,
     # priority item 62).**  On Ne 1s^2 2s^2 2p^6 in its own DFS potential, E1 at omega = 0.1, three active
     # subshells, the ratio |chi|_coupled/|chi|_uncoupled after 40 iterations came out
@@ -1165,7 +1165,7 @@ function solve(multipole::EmMultipole, gauge::EmGauge, omega::Float64, activeOrb
     # and `converged` was false at every one:  DIVERGENT above about 0.03 and merely CREEPING below it.  The
     # ratio FALLING with the mixing is what rules out a sign error -- positive feedback would be
     # mixing-independent -- so the induced term is sound and it is the SCHEME that fails.
-    #
+
     # **ANDERSON ACCELERATION WAS TRIED AND DOES NOT REPAIR IT -- MEASURED 13-Oct-2026, SAME CASE.**  It is the
     # construction `SelfConsistent.solveMeanFieldBasisAnderson` uses for the mean-field SCF:  keep a short
     # history of the iterate x and the residual f = x_new - x, solve gamma = dF \ f, step to
@@ -1174,12 +1174,12 @@ function solve(multipole::EmMultipole, gauge::EmGauge, omega::Float64, activeOrb
     #       depth 2 -> 18.1 / 3.22 / 1.38      depth 3 -> 77.8 / 101 / 140      depth 5 -> 124 / 48.2 / 52.9
     # none converged, and ALL ARE WORSE THAN PLAIN MIXING AT 0.003.  So the default is andersonDepth = 0 and
     # the code is kept available rather than imposed.
-    #
+
     # WHAT THAT TOGETHER IMPLIES, and it is the useful part:  a fixed point that neither damping nor Anderson
     # can reach is not a step-size problem at all.  Anderson accelerates a map whose iteration matrix has
     # spectral radius near or below one;  it cannot rescue one well above it.  So the question is WHY the
     # spectral radius is large, and that was measured next rather than argued about.
-    #
+
     # **THE ANGULAR ALGEBRA WENT IN ON 14-Oct-2026, AND THIS NOTE RECORDS WHAT IT DID AND DID NOT FIX.**
     # Until then the module applied no angular coefficient anywhere, and weighted each contributing electron
     # by its full (2j_b+1).  Both are corrected -- a weight of 2*sqrt(2j_b+1) times the channel's reduced matrix
@@ -1187,24 +1187,24 @@ function solve(multipole::EmMultipole, gauge::EmGauge, omega::Float64, activeOrb
     # the derivation in `RandomPhase.inducedPotentialZr` and the two conventions in `RandomPhase.angularCoefficient`
     # and `RandomPhase.receivingCoefficient`.  **THE (-1)^L THIS NOTE CLAIMED IS GONE, 18-Oct-2026, item 75:** it
     # belonged to a two-electron product this formulation never assembles.
-    #
+
     # THREE THINGS ARE NOW ESTABLISHED, each by a check that could have failed.
-    #
+
     #   (1) THE RADIAL ROUTE IS JAC'S OWN, TO TEN DIGITS AND INCLUDING THE SIGN.  Compared entry by entry
     #       against `RadialIntegrals.SlaterRkComponent`, the object `InteractionStrength.XL_Coulomb`
     #       contracts: ratio 1.000000 on three spline pairs.  So nothing radial was ever wrong here.
-    #
+
     #   (2) THE SIGN OF THE WHOLE ASSEMBLY IS RIGHT -- IT SCREENS.  rho depends on |eigenvalue| and is blind
     #       to this, so it was checked where the iteration converges (lambda = 1/8, residual 2.95e-05 ->
     #       4.46e-21 over 40 sweeps).  All three active subshells come out SMALLER than their uncoupled
     #       values -- 0.949, 0.982, 0.630 -- i.e. the induced field OPPOSES the external one, which is what a
     #       screening response must do and what a reversed sign would have shown as a ratio above 1.
-    #
+
     #   (3) THE SPECTRAL RADIUS IMPROVED BY 2.17x BUT IS STILL ABOVE ONE:  rho_1 = 5.03 before, 2.32 after,
     #       both as the geometric mean of the per-iteration residual ratios (the ratios cycle, so a single
     #       one is not the number).  The undamped Jacobi iteration therefore still fails at full strength,
     #       and `couplingEnabled = true` still cannot be trusted for a converged number.
-    #
+
     # **AND ONE CLAIM THIS NOTE PREVIOUSLY MADE IS WITHDRAWN:  THE CHANNEL TRUNCATION IS IMPLICATED AFTER
     # ALL.**  It had been argued that a narrower channel set could only make the induced term WEAKER, so the
     # one-target-per-subshell truncation could not explain an EXCESS.  That holds only while every
@@ -1216,17 +1216,17 @@ function solve(multipole::EmMultipole, gauge::EmGauge, omega::Float64, activeOrb
     #       2p1/2->2s, 2p3/2->2s, 2s->2p3/2   rho = 3.66
     #       only the two 2p partners active   rho = 1.94
     # Non-monotonic in the number of channels, which is the signature of cancellation rather than of a sum.
-    #
+
     # **AND BOTH REMAINING CANDIDATES ARE NOW ELIMINATED -- 14-Oct-2026, SAME DAY.**  The angular repair left
     # rho at 2.32 and named three things that might account for the rest.  All three have been measured.
-    #
+
     #   (a) THE CHANNEL TRUNCATION DOES NOT EXPLAIN IT.  `settings.allChannels` widens the Ne case from 3
     #       channels to 7 -- 2p_1/2 -> s_1/2, d_3/2;  2p_3/2 -> s_1/2, d_5/2, d_3/2;  2s_1/2 -> p_1/2, p_3/2 --
     #       and rho does NOT fall:  2.33 on three channels against 2.49 on seven.  So the cancellation between
     #       the spin-orbit partners is real (rho moves 1.94-3.66 on WHICH single target is chosen) but
     #       restoring all of it does not bring the iteration into range.  The hypothesis is dead; the setting
     #       stays, because the 7-channel field is the physically correct one regardless.
-    #
+
     #   (b) THE FACTOR 2 DOES NOT EXPLAIN IT EITHER, and the test is clean because that factor becomes EXACT
     #       at omega = 0.  Sweeping omega down with all seven channels:
     #           omega   0.100   0.030   0.010   0.003   0.001
@@ -1234,14 +1234,14 @@ function solve(multipole::EmMultipole, gauge::EmGauge, omega::Float64, activeOrb
     #       rho RISES slightly and saturates rather than falling towards one, so at the point where the
     #       symmetrization is no longer an approximation the iteration is at its WORST.  The factor 2 is
     #       therefore not the defect, and if anything it slightly understates the term.
-    #
+
     #   (c) WHAT IS LEFT IS THE APPROXIMATION ITSELF:  ONLY THE DIRECT (ring) TERM IS BUILT.  A direct-only
     #       induced field is known to OVER-screen, because exchange opposes it, and rho ~ 2.7 is what that
     #       looks like.  This is a property of "RPA without exchange" for a closed shell, not a defect in the
     #       code -- and it is omega-independent in character, which is exactly what (b) measured.
-    #
+
     # **SO TWO CONCLUSIONS, AND THE SECOND MATTERS MORE THAN THE FIRST.**
-    #
+
     # FIRST, A JACOBI ITERATION CANNOT WORK HERE AND A DIRECT SOLVE IS THE RIGHT METHOD.  rho = 2.7 is a
     # property of the operator, not of the stepping, so no damping, acceleration or channel choice will reach
     # the fixed point -- while (I - J) remains invertible and a direct solve would find it in one step.  This
@@ -1249,26 +1249,26 @@ function solve(multipole::EmMultipole, gauge::EmGauge, omega::Float64, activeOrb
     # wrong for a reason worth stating: it assumed a correctly-built induced term for a closed shell would
     # have rho ~ 0.3, extrapolating from the tens-of-percent screening the FULL RPA is known to give.  That
     # extrapolation does not survive the direct-only approximation, and nothing had measured it.
-    #
+
     # SECOND, AND IT IS A QUESTION OF SCOPE RATHER THAN OF CODE:  rho ~ 2.7 means this term OVER-SCREENS
     # badly, so even solving it exactly would not yield a trustworthy screening correction for a closed shell.
     # Exchange is not a small correction in this regime, and it remains unwired -- no longer for want of
     # machinery, since 21-Oct-2026, but for want of ONE angular convention shared by its three pieces; see the
     # module's own scope note.  **So a direct solve makes the module converge without making it right**, and that
     # remains true now that the direct solve exists.
-    #
+
     # **THE DIRECT SOLVE IS BUILT AND VERIFIED -- 14-Oct-2026, `settings.directSolve`.**  It is GMRES over
     # `RandomPhase.sourceMap`, so no matrix is assembled, and it converges in about ten Krylov steps where no
     # iteration converges at all:  11 steps on 1395 unknowns (3 channels) and 10 on 3255 (all 7), with
     # relative residuals of 1.7e-12 and 8.7e-11 and the self-consistency of the induced source independently
     # re-measured at 4.8e-12 and 1.7e-10 by applying the map once more.
-    #
+
     # **IT IS VERIFIED AGAINST THE ITERATION IN THE ONE REGIME WHERE BOTH WORK, AND THAT IS THE WHOLE PROOF.**
     # At 1/8 coupling the plain iteration converges (rho = 0.456), so an independent answer exists.  The two
     # methods agree to THIRTEEN DIGITS there -- worst |direct/iteration - 1| = 1.1e-13 over the three channels,
     # with both giving 0.94915 / 0.98168 / 0.63017 of the uncoupled response.  At full strength the iteration
     # has overflowed to 1e18 while the direct solve returns finite, self-consistent values in 12 steps.
-    #
+
     # AND WHAT THE CONVERGED ANSWER SHOWS, which is the point of having it:  at full coupling the response is
     # NOT a screened version of the uncoupled one.  The 2p_1/2 channel comes out ENHANCED, by 1.22x over three
     # channels and 1.82x over seven, where at 1/8 coupling every channel was screened.  That is what rho ~ 2.7
@@ -1318,7 +1318,7 @@ function solve(multipole::EmMultipole, gauge::EmGauge, omega::Float64, activeOrb
                     try
                         gamma = dF \ fNew
                     catch
-                        gamma = zeros(m)            ## a rank-deficient window: fall back to the plain step
+                        gamma = zeros(m)            # a rank-deficient window: fall back to the plain step
                     end
                     if  any(!isfinite, gamma)   gamma = zeros(m)   end
                     dampedSource = priorSource + fNew - (dX + dF) * gamma

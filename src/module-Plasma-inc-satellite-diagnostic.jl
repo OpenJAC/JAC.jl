@@ -92,7 +92,7 @@ function  perform(scheme::Plasma.SatelliteDiagnosticScheme, computation::Plasma.
     # (2a) Radiative decay of the bare excited level, back to refConfigs. Routed through
     #      Atomic.Computation/Basics.perform, exactly like the DR and IE steps, for the same proven
     #      orbital-/basis-reconciliation between independently-generated multiplets.
-    #
+
     #      NO competing autoionization channel is computed here, deliberately: autoionization requires
     #      a final state with ONE FEWER bound electron (the ion after ejecting one), but the bare
     #      excited level (fromShells-->toShells) has the SAME electron count as computation.refConfigs

@@ -1,27 +1,27 @@
 
 # Resonant inelastic scattering (RIXS):   gamma(omega_in) + |i>  -->  |f> + gamma(omega_out) ,  through a RESONANT intermediate.
-#
+
 # The same second-order amplitude as Rayleigh/Raman, and deliberately the same channel construction -- see
 # PhotonScattering.determineSecondOrderChannels, which serves both -- but evaluated where Rayleigh refuses to go.
-#
+
 # THE ONE PHYSICAL DIFFERENCE, and it inverts a decision made deliberately in the Rayleigh file.
 # PhotonScattering.rayleighAmplitude SKIPS an intermediate level whose energy denominator falls below settings.selfTolerance, on
 # the grounds that the perturbative expression is not defined there. RIXS is exactly the case where the incoming photon is TUNED
 # ONTO such a level, so skipping it would discard the entire signal. Instead the level is kept and the denominator regularised by
 # the resonance width,
-#
+
 #     AbsorbThenEmit :   E_i + omega_in - E_nu + i*Gamma/2        <- resonant; the width matters and is why RIXS is finite
 #     EmitThenAbsorb :   E_i - omega_out - E_nu                   <- real; this ordering never goes on shell
-#
+
 # The width sits in the resonant term ALONE. Emitting first moves AWAY from the intermediate manifold, so that denominator cannot
 # vanish and attributing a decay width to it would be attributing a lifetime to a state the process never occupies.
-#
+
 # WHAT MAKES THIS A LINE AND NOT A PATHWAY. JAC's older ResonantInelastic module is pathway-shaped -- initial -> intermediate ->
 # final, with an explicit intermediateMultiplet supplied by Basics.perform from intermediateConfigs. This implementation is
 # LINE-shaped by the maintainer's decision of 21-Aug-2026: the intermediate levels come from settings.gMultiplet like every other
 # second-order process here, so there is ONE result type and ONE entry point in the module, and PhotonScattering.Settings is
 # deliberately NOT added to the intermediateMultiplet list in module-BasicsAZ-inc-perform.jl.
-#
+
 # THE OBSERVABLE IS A MAP, not a number. RIXS is measured by scanning omega_in across the resonance and dispersing omega_out, so
 # the natural output is a two-dimensional intensity in (omega_in, omega_out). Here omega_out is FIXED by energy conservation once
 # the final level is chosen, so the second axis is the FINAL LEVEL: one Line per (final level, omega_in), and the map is read off
@@ -68,7 +68,7 @@ function computeResonantLines(finalMultiplet::Multiplet, initialMultiplet::Multi
                 color=:light_green)
     printstyled("---------------------------------------------------------------------------------------------------- \n",
                 color=:light_green)
-    #
+
     if  settings.width <= 0.
         error("PhotonScattering: ResonantScattering() requires a POSITIVE settings.width. The resonant denominator " *
               "E_i + omega_in - E_nu + i*Gamma/2 is what keeps a RIXS amplitude finite on resonance; with Gamma = 0 the " *

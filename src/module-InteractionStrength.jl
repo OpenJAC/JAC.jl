@@ -128,8 +128,8 @@ function besselPhiPsi(K::Int64, x::Float64; nmax::Int64=12, tol::Float64=1.0e-16
     # Past the crossover the series below DIVERGES instead of converging, so the exact functions are taken
     # there;  see the docstring for the measurement that fixes the crossover at 2.
     if  abs(x) > 2.0
-        dfUp = 1.0;     for  i = 1:2:(2K+1)    dfUp = dfUp * i    end    ## (2K+1)!!
-        dfDown = 1.0;   for  i = 1:2:(2K-1)    dfDown = dfDown * i    end    ## (2K-1)!!, and 1 for K = 0
+        dfUp = 1.0;     for  i = 1:2:(2K+1)    dfUp = dfUp * i    end    # (2K+1)!!
+        dfDown = 1.0;   for  i = 1:2:(2K-1)    dfDown = dfDown * i    end    # (2K-1)!!, and 1 for K = 0
         return( ( dfUp * GSL.sf_bessel_jl(K, x) / x^K,  -x^(K+1) * GSL.sf_bessel_yl(K, x) / dfDown ) )
     end
 
@@ -437,7 +437,7 @@ function MabEmission(mp::EmMultipole, gauge::EmGauge, omega::Float64, a::Orbital
     # for the magnetic members, the gauge then labelling the electric members alone -- which is what
     # `module-Hfs.jl` arranges by hand at its own call sites and what `module-PhotoEmission.jl` arranges by
     # branching on the multipole before it chooses a gauge.
-    #
+
     # AND THE OLD BEHAVIOUR DID NOT MERELY MISSCALE AN AMPLITUDE:  the two families have OPPOSITE parity at equal
     # rank, (-1)^L against (-1)^(L+1), so it swapped the SELECTION RULE.  That is why it was invisible for twenty
     # months and then total -- every mixed-multipole two-photon channel came back EXACTLY zero rather than merely
@@ -502,7 +502,7 @@ function multipoleTransition(mp::EmMultipole, gauge::EmGauge, omega::Float64, b:
     # between 1/2 --> 3/2 ME". A reader could not tell from the call site whether the Wigner-Eckart factor was
     # present, which is why the bare coeff.T beside it in module-MultipoleMoment.jl was the ONE site left
     # unclassified when every other was read under Rule 19.
-    #
+
     # The identity below is MEASURED, not transcribed: over all 162 combinations of kappa_1, kappa_2 in
     # +-1 ... +-6 and L = 1 ... 4,
     #     ChengI(kappa_1, kappa_2, L)  ==  (-1)^L * CL_reduced_me(kappa_1, L, kappa_2) / sqrt(2 j_2 + 1)
@@ -828,14 +828,14 @@ function checkFrequencyIsMeaningful(factor::Float64, a::Orbital, b::Orbital, c::
     # XL_Breit(1.) stays wild at 132).  It is the clause below, and its variable is the pair's own extent.
 
     # THE LARGE-omega END -- TWO CLAUSES THAT MEAN DIFFERENT THINGS, AND NEITHER REFUSES.
-    #
+
     # CLAUSE A is the established one, and the variable is omega TIMES THE EXTENT OF THE OVERLAP DENSITY.  That it
     # is the orbitals and not the box was settled 05-Oct-2026 by a controlled test: the SAME C orbitals in a box
     # enlarged from 12.6 to 50.4 a.u. give the ratio 1.1627 and 1.1626 at the same omega, while omega*rbox moves
     # from 7.0 to 28.2.  The box cannot be causal if changing it alone changes nothing.  Refining the MESH
     # fourfold is equally inert (1.1038/1.1041 at product 4, 1.1627/1.1626 at 7, 474 against 1893 points per
     # oscillation), which rules out quadrature resolution -- the mechanism this item asserted for a month.
-    #
+
     # AND THERE IS NO SECOND CLAUSE, which took measuring.  A box test was kept here until 05-Oct-2026 on the
     # grounds that clause A could not cover the Z = 92 Auger catastrophe this guard was filed for -- the item
     # recorded both Auger cases as sitting at omega x extent 0.5-1.0, where clause A is silent.  Measured on the
@@ -843,7 +843,7 @@ function checkFrequencyIsMeaningful(factor::Float64, a::Orbital, b::Orbital, c::
     # U gives omega x extent = 6.3 and Li-like iodine 3.7, both far past the 1.2 threshold, so clause A fires on
     # both.  The gap the second clause existed for does not exist, and a guard kept for a reason that has been
     # measured away is worse than none.
-    #
+
     # AND THE "HEALTHY Z = 53" WAS NEVER A HEALTHY STRENGTH.  Refining the mesh on the Li-like iodine quadruple,
     # XL_Breit(0.) converges to 4.6430e-03 to six figures while XL_Breit(1.) runs -7.12e-02, +6.84e-03, +2.44e+01
     # over the same three meshes.  The 0.2 % correction the item calls healthy belongs to the assembled
@@ -1516,13 +1516,13 @@ end
 # kink-aware kernels did until 971199c -- there, integrating over each spline's own support instead cut a RAS
 # ladder's allocation from 99.4 to 46.7 GB. The ten instances that remain here are NOT an oversight: the arrays
 # are handed to RadialIntegrals.SlaterRkComponent, whose length acts as the integration bound.
-#
+
 # PROFILED 15-Sep-2026 AND FOUND NOT WORTH CHANGING, on the two process modules that exercise this path hardest:
 # the Ne K-LL Auger case of example-De.jl branch a, and the F-like Ne+ electron-impact case of example-Dl.jl
 # branch e. XL_Coulomb is 7.9 % of the Auger run and 13.7 % of the impact run, and is ABSENT from both
 # allocation profiles -- under the 30 % bar that governs a speed change here, and nothing on the memory side.
 # Most of the Auger share is the bound-state CI rather than the Auger amplitude.
-#
+
 # The two runs are otherwise OPPOSITE and neither generalises to the other: the Auger case is 79 % SCF and CI
 # with 1.6 partial waves per line, the impact case 76 % process lines with 35 continuum orbitals per energy.
 # Re-measure on the module at hand before treating either as the cost of "a process module".
@@ -1913,7 +1913,7 @@ function XL_CoulombKinkAwareKernel(L::Int64, b::Orbital, d::Orbital, primitives:
     for  i = 1:nsS
         for  k = 1:nsS
             Ba = primitives.bsplinesS[i];    Bc = primitives.bsplinesS[k]
-            lo = max(2, Ba.lower, Bc.lower);    hi = min(Ba.upper, Bc.upper, length(Vk))   ## see the LL block
+            lo = max(2, Ba.lower, Bc.lower);    hi = min(Ba.upper, Bc.upper, length(Vk))   # see the LL block
             wa = 0.
             for  r = lo:hi
                 wa = wa + Ba.bs[r-Ba.lower+1] * Bc.bs[r-Bc.lower+1] * grid.wr[r] * Vk[r]

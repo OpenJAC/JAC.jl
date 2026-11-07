@@ -57,13 +57,13 @@ function Settings(set::BeamPhotoExcitation.Settings;
     printBefore::Union{Nothing,Bool}=nothing,                       lineSelection::Union{Nothing,LineSelection}=nothing,
     photonEnergyShift::Union{Nothing,Float64}=nothing)
 
-    ## REWRITTEN 09-Aug-2026. This copy-constructor raised on EVERY call, and two of its keywords could not have
-    ## been used even so. It tested `x == missing`, which in Julia evaluates to `missing` rather than to a Bool,
-    ## so the `if` died with "non-boolean (Missing) used in boolean context" whatever the caller passed. And the
-    ## declared types of the first two keywords were copied from the next two: beamType was typed
-    ## Array{EmMultipole,1} and observable Array{UseGauge,1}, where the struct holds Beam.AbstractBeamType and
-    ## Beam.AbstractObservable. Now in the house pattern -- Union{Nothing,T}=nothing with isnothing() guards --
-    ## which is also what the reflective copy-constructor test in TestFrames expects.
+    # REWRITTEN 09-Aug-2026. This copy-constructor raised on EVERY call, and two of its keywords could not have
+    # been used even so. It tested `x == missing`, which in Julia evaluates to `missing` rather than to a Bool,
+    # so the `if` died with "non-boolean (Missing) used in boolean context" whatever the caller passed. And the
+    # declared types of the first two keywords were copied from the next two: beamType was typed
+    # Array{EmMultipole,1} and observable Array{UseGauge,1}, where the struct holds Beam.AbstractBeamType and
+    # Beam.AbstractObservable. Now in the house pattern -- Union{Nothing,T}=nothing with isnothing() guards --
+    # which is also what the reflective copy-constructor test in TestFrames expects.
     if  isnothing(beamType)              beamTypex            = set.beamType                else  beamTypex            = beamType              end
     if  isnothing(observable)            observablex          = set.observable              else  observablex          = observable            end
     if  isnothing(multipoles)            multipolesx          = set.multipoles              else  multipolesx          = multipoles            end
@@ -184,13 +184,13 @@ function  computeOutcomes(finalMultiplet::Multiplet, initialMultiplet::Multiplet
     printstyled("BeamPhotoExcitation.computeOutcomes(): The computation of the observable starts now ... \n", color=:light_green)
     printstyled("--------------------------------------------------------------------------------------- \n", color=:light_green)
     println("")
-    #
+
     outcomes = BeamPhotoExcitation.determineOutcomes(finalMultiplet, initialMultiplet, settings)
     # Display all selected lines before the computations start
     if  settings.printBefore    
         for  outcome in outcomes  BeamPhotoExcitation.displaySelectedOutcome(stdout, outcome)    end
     end
-    #
+
     newOutcomes = BeamPhotoExcitation.Outcome[]
     for  outcome in outcomes
         println("\n>> Calculate outcome for line: $(outcome.initialLevel.index) - $(outcome.finalLevel.index) " *
@@ -207,7 +207,7 @@ function  computeOutcomes(finalMultiplet::Multiplet, initialMultiplet::Multiplet
     if  printSummary 
         for  outcome in newOutcomes  BeamPhotoExcitation.displayOutcome(iostream, outcome.observable, outcome, settings)  end
     end
-    #
+
     if    output    return( newOutcomes )
     else            return( nothing )
     end
@@ -265,7 +265,7 @@ function  displayOutcome(stream::IO, observable::Beam.DominantMultipoles, outcom
     end
     symi = LevelSymmetry(outcome.initialLevel.J, outcome.initialLevel.parity)
     symf = LevelSymmetry(outcome.finalLevel.J,   outcome.finalLevel.parity)
-    #
+
     println(stream, " ")
     println(stream, "  BeamPhotoExcitation computations will be performed for: \n" *
                     "  ------------------------------------------------------- \n" *
@@ -308,7 +308,7 @@ function  displaySelectedOutcome(stream::IO, outcome::Outcome)
     end
     symi = LevelSymmetry(outcome.initialLevel.J, outcome.initialLevel.parity)
     symf = LevelSymmetry(outcome.finalLevel.J,   outcome.finalLevel.parity)
-    #
+
     println(stream, " ")
     println(stream, "  BeamPhotoExcitation computations will be performed for: \n" *
                     "  ------------------------------------------------------- \n" *

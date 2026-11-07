@@ -1,28 +1,28 @@
 
 # Rayleigh and Raman scattering:   gamma(omega_in) + |i>  -->  |f> + gamma(omega_out) ,   omega_out fixed by energy conservation.
-#
+
 # A FRESH IMPLEMENTATION, not the older JAC.RayleighCompton moved here. That module was found on 21-Aug-2026 not to compute: its
 # sum over intermediate states runs for the first level only -- `if ig != 1 continue end` at module-RayleighCompton.jl:338, under
 # a comment reading "Sum over all terms of the Green function channel" -- so a second-order amplitude is reduced to its first term,
 # and its pole branch throws a MethodError besides. examples/example-Dg.jl branch a carries the full diagnosis. The maintainer's
 # decision was that getting this right is a new implementation rather than a repair.
-#
+
 # THE PATTERN FOLLOWED IS MultiPhotonTransition's two-photon amplitude, which does the same kind of sum, is validated across eight
 # dated example branches, and differs from RayleighCompton in the one respect that matters: a RESONANT intermediate level, where
 # the energy denominator vanishes, is SKIPPED by tolerance rather than integrated over as a pole. That is the honest boundary
 # between non-resonant and resonant scattering -- the perturbative expression is simply not defined there -- and it removes the
 # machinery that broke.
-#
+
 # THE TWO TIME-ORDERINGS are kept apart, because they carry different denominators and cannot be folded into one term:
-#
+
 #     AbsorbThenEmit :   |i> --absorb omega_in-->  |nu> --emit omega_out--> |f>     denominator  E_i + omega_in  - E_nu
 #     EmitThenAbsorb :   |i> --emit omega_out-->   |nu> --absorb omega_in--> |f>    denominator  E_i - omega_out - E_nu
-#
+
 # The sign is worth care rather than confidence: MultiPhotonTransition carries a long note on a sign bug of exactly this kind,
 # found 07-Aug-2026, where an absorption denominator had been used in the emission file. It produced SPURIOUS POLES, a spike where
 # the true spectrum has a smooth maximum, and a gauge ratio that was Z-independent -- the signature of a structural error rather
 # than a relativistic one. Both orderings appear here, so both signs must be right, and the symptom to watch for is the same.
-#
+
 # ENERGY CONSERVATION fixes the outgoing photon, so nothing is free:  omega_out = omega_in - (E_f - E_i).  For RAYLEIGH the final
 # level is the initial one and omega_out = omega_in exactly; for RAMAN the final level is another discrete level of the same ion.
 # The CONTINUUM Compton profile is a different calculation and is not implemented; see the module docstring.
@@ -69,7 +69,7 @@ function computeRayleighLines(finalMultiplet::Multiplet, initialMultiplet::Multi
                 color=:light_green)
     printstyled("--------------------------------------------------------------------------------------------------- \n",
                 color=:light_green)
-    #
+
     lines = PhotonScattering.determineRayleighLines(finalMultiplet, initialMultiplet, settings)
     if  settings.printBefore    PhotonScattering.displayRayleighLines(stdout, lines)    end
     PhotonScattering.checkIntermediateBasis(lines, settings)

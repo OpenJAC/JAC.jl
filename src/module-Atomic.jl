@@ -7,7 +7,7 @@
 module Atomic
 
 
-## using Interact
+# using Interact
 using   ..Basics, ..Defaults, ..LSjj, ..Radial, ..ManyElectron, ..Nuclear, ..PhotoEmission, ..SelfConsistent
 export  perform
 
@@ -167,7 +167,7 @@ function Base.show(io::IO, comp::Atomic.Computation)
     sa = Base.string(comp);             print(io, sa, "\n\n")
     println(io, "nuclearModel:          $(comp.nuclearModel)  ")
     println(io, "grid:                  $(comp.grid)  ")
-    #
+
     # For the computation of some given atomic process
     if  comp.processSettings != Nothing
         println(io, "processSettings:              \n$(comp.processSettings)  ")
@@ -179,7 +179,7 @@ function Base.show(io::IO, comp::Atomic.Computation)
         println(io, "finalAsfSettings:             \n$(comp.finalAsfSettings)  ")           end
     if  comp.orbitalSource != Basics.SeparateOrbitals()
         println(io, "orbitalSource:                $(comp.orbitalSource)  ")                end
-    #
+
     else
     # For the computation of no or several atomic properties
     if  comp.asfSettings != AsfSettings()     

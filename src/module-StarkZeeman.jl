@@ -394,7 +394,7 @@ function  displayOutcomes(selectedLevels::Array{Level,1})
     sa = sa * TableStrings.center(14, "Energy"; na=4);
     sb = sb * TableStrings.center(14, TableStrings.inUnits("energy"); na=4)
     println(sa);    println(sb);    println("  ", TableStrings.hLine(nx))
-    #
+
     for  level in selectedLevels
         sa  = "  ";    sym = LevelSymmetry( level.J, level.parity)
         sa = sa * TableStrings.center(10, TableStrings.level(level.index); na=2)
@@ -403,7 +403,7 @@ function  displayOutcomes(selectedLevels::Array{Level,1})
         println( sa )
     end
     println("  ", TableStrings.hLine(nx))
-    #
+
     return( nothing )
 end
 
@@ -425,7 +425,7 @@ function  displayResults(stream::IO, outcomes::Array{StarkZeeman.Outcome,1})
     sb = sb * TableStrings.center(16, TableStrings.inUnits("energy"); na=4)
     sa = sa * TableStrings.center(66, "Dominant zero-field (level, J^P, M) components [weight]"; na=4)
     println(stream, sa);    println(stream, sb);    println(stream, "  ", TableStrings.hLine(nx))
-    #
+
     for  (k,outcome) in enumerate(outcomes)
         sa  = "  "
         sa = sa * TableStrings.center(8, string(k); na=2)
@@ -439,7 +439,7 @@ function  displayResults(stream::IO, outcomes::Array{StarkZeeman.Outcome,1})
         println(stream, sa )
     end
     println(stream, "  ", TableStrings.hLine(nx))
-    #
+
     return( nothing )
 end
 

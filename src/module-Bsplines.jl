@@ -167,7 +167,7 @@ function checkGridRepresentation(subshells::Array{Subshell,1}, Z::Float64, primi
         return( (values2[ni], ex, abs(values2[ni]/ex - 1)) )
     end
 
-    maxDevSeen = 0.                        ## the worst deviation over ALL subshells, offender or not
+    maxDevSeen = 0.                        # the worst deviation over ALL subshells, offender or not
     for  sh  in  subshells
         l = Basics.subshell_l(sh)
         (enB, exB, devB) = deviationAt(sh, l, Z)

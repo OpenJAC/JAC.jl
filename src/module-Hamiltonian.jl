@@ -63,7 +63,7 @@ function projectHamiltonian(subshell::Subshell, matrix::Array{Float64,2}, matrix
     
     for  (subsh, bVector)  in  bVectors
         if  subsh != subshell  &&  subshell.kappa == subsh.kappa  &&  subshell.shape == subsh.shape
-            ## println(">>> Project $subshell  upon $subsh  vectors")
+            # println(">>> Project $subshell  upon $subsh  vectors")
             bbtMatrix = bVector * transpose(bVector)
             matrixP   = (matrixI - matrixB * bbtMatrix) * matrixP * (matrixI - bbtMatrix * matrixB)
         end
@@ -294,8 +294,8 @@ function setupMatrix(sym::LevelSymmetry, basis::Basis, nm::Nuclear.Model, grid::
     potential = Nuclear.nuclearPotential(nm, grid)
     if  settings.qedModel in [QedPetersburg(), QedSydney()]    
         meanPot = potential
-        ## meanPot = compute("radial potential: Dirac-Fock-Slater", grid, basis)
-        ## meanPot = Basics.add(potential, meanPot)   
+        # meanPot = compute("radial potential: Dirac-Fock-Slater", grid, basis)
+        # meanPot = Basics.add(potential, meanPot)   
     end   
 
     # Compute the Coulomb-(Breit-) interaction matrix. NOTE (28-Jul-2026): the radial-integral cache
@@ -303,7 +303,7 @@ function setupMatrix(sym::LevelSymmetry, basis::Basis, nm::Nuclear.Model, grid::
     # note. Resetting once per BLOCK here would discard cross-block-shared integrals (the same subshell
     # combination very often recurs across different symmetry blocks) for no benefit, since the cache key
     # never depends on which block is being built.
-    #
+
     # Hermitian-symmetry shortcut (28-Jul-2026): only the UPPER triangle (r<=s) is ever computed below. This
     # is not merely safe but exact -- Basics.diagonalize(MatrixWithLinearAlgebra(),...) wraps this matrix in
     # LinearAlgebra.Symmetric(matrix), whose DEFAULT uplo=:U already reads ONLY the upper triangle and
@@ -321,7 +321,7 @@ function setupMatrix(sym::LevelSymmetry, basis::Basis, nm::Nuclear.Model, grid::
             opa  = SpinAngular.TwoParticleOperator(0, plus)
             waG2 = SpinAngular.computeCoefficients(opa, basis.csfs[idx_csf[r]], basis.csfs[idx_csf[s]], subshellList)
             wa   = [waG1, waG2]
-            #
+
             me = 0.
             for  coeff in waG1
                 me = me + coeff.T * RadialIntegrals.GrantIab(basis.orbitals[coeff.a], basis.orbitals[coeff.b], grid, potential)
@@ -430,19 +430,19 @@ function performCIKinkAware(basis::Basis, nm::Nuclear.Model, grid::Radial.Grid, 
 end
 
 
-#
+
 # ===========================================================================================================
 # MEASURED 10-Aug-2026 -- why there is NO iterative (Krylov/Davidson) eigensolver here, and why the caching
 # below is already as good as it gets.  Recorded so that neither question has to be re-opened from scratch.
-#
+
 # Ne-like 1s^2 2s^2 2p^6, single + double excitations into n <= 5: 234 configurations, 19478 CSFs, largest
 # symmetry block J = 2+ of dimension 2037 (2075703 upper-triangle pairs):
-#
+
 #     BUILD           158.1 s
 #     DIAGONALIZE       1.1 s      dense LAPACK, ALL 2037 eigenvalues
 #     ratio           138 : 1
 #     memory           31.7 MB     sparsity 378903 of 4149369 nonzero (9.1%)
-#
+
 # 1) AN ITERATIVE EIGENSOLVER WOULD NOT HELP AT THESE SIZES, and would usually hurt.  Diagonalization is
 #    0.7% of the cost.  A matrix-free Davidson needs H*v per iteration, and the matrix ELEMENTS are exactly
 #    what is expensive: ~30 iterations touching the 9.1% nonzero elements costs roughly 2.7 builds, against
@@ -456,18 +456,18 @@ end
 #    deliberately NOT added as a dependency (user decision, 10-Aug-2026): BLAS is enough for now.
 #    Basics.AbstractDiagonalizeTheme is the seam if this is ever revisited -- a new member of that family
 #    keeps dense LAPACK available for the many JAC paths that want the WHOLE spectrum.
-#
+
 # 2) THE BUILD-LOCAL CACHING OF SLATER INTEGRALS IS ALREADY ~99% EFFECTIVE, so there is nothing to gain
 #    there.  Measured over one symmetry block:
-#
+
 #        n <= 3, dim 118:   17632 coefficient terms ->   257 distinct integrals, 98.54% hits (68.6x reuse)
 #        n <= 4, dim 684:  286452 coefficient terms ->  3259 distinct integrals, 98.86% hits (87.9x reuse)
-#
+
 #    The cost is therefore (number of DISTINCT integrals) x (cost of one integral), ~5.4 ms each, of which
 #    the kink-aware screened potential is the bulk.  Making the CI build faster means making ONE Slater
 #    integral cheaper -- not caching more of them, and not changing how the matrix is diagonalized.
 # ===========================================================================================================
-#
+
 
 
 """
@@ -499,7 +499,7 @@ function setupMatrixKinkAware(sym::LevelSymmetry, basis::Basis, nm::Nuclear.Mode
     # Compute the Coulomb-(Breit-) interaction matrix. NOTE (28-Jul-2026): the radial-integral cache
     # reset/lifetime is owned by the CALLER (Hamiltonian.performCIKinkAware), not here -- identical reasoning to
     # setupMatrix's own note.
-    #
+
     # Hermitian-symmetry shortcut (28-Jul-2026): only the UPPER triangle (r<=s) is ever computed below --
     # see setupMatrix's identical note for why this is exact, not just safe (Symmetric(matrix)'s default
     # uplo=:U already discards the lower triangle in Basics.diagonalize).
@@ -514,7 +514,7 @@ function setupMatrixKinkAware(sym::LevelSymmetry, basis::Basis, nm::Nuclear.Mode
             opa  = SpinAngular.TwoParticleOperator(0, plus)
             waG2 = SpinAngular.computeCoefficients(opa, basis.csfs[idx_csf[r]], basis.csfs[idx_csf[s]], subshellList)
             wa   = [waG1, waG2]
-            #
+
             me = 0.
             for  coeff in waG1
                 me = me + coeff.T * RadialIntegrals.GrantIab(basis.orbitals[coeff.a], basis.orbitals[coeff.b], grid, potential)

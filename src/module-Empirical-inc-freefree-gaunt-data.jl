@@ -1,4 +1,4 @@
-#
+
 # Sutherland's (1998, MNRAS 300, 321) thermally-averaged, frequency-resolved free-free (bremsstrahlung)
 # Gaunt factor <gff(u,gamma^2)>, read from his own ASCII table `gffgu.dat` (v1.0.0, Sutherland 1997),
 # downloaded from https://www.mso.anu.edu.au/~ralph/data/freefree/ and verified byte-exact against that
@@ -7,17 +7,17 @@
 # (2014), eq. (21), confirms this same definition from an independent, modern source]. The table is
 # already the FULL Maxwellian average over the free electron's energy (van Hoof et al., eq. 22), so no
 # further thermal averaging is needed before using it.
-#
+
 # This file is included from module-Empirical.jl and shares its namespace; it supplies ONLY the data
 # table, read by Empirical.freeFreeGauntFactor in module-Empirical-inc-plasma-rates.jl.
-#
+
 # The grid is the EXACT analytic log10 sequence, not the file's own rounded ASCII values: log10(u) in
 # [-4.0,4.0] step 0.2 (41 points), log10(gamma^2) in [-4.0,4.0] step 0.1 (81 points); the file's own values
 # agree with this analytic grid to a relative error below 2e-6 (measured when this table was generated).
 # FREEFREE_GAUNT_TABLE[i][j] is one row (fixed u, 81 gamma^2 values); i is the fast FREEFREE_LOG10_U_GRID
 # index, j the fast FREEFREE_LOG10_G2_GRID index -- i.e. FREEFREE_GAUNT_TABLE[i][j] belongs to
 # (FREEFREE_LOG10_U_GRID[i], FREEFREE_LOG10_G2_GRID[j]).
-#
+
 const FREEFREE_LOG10_U_GRID    = range(-4.0, 4.0, length=41)
 const FREEFREE_LOG10_G2_GRID   = range(-4.0, 4.0, length=81)
 

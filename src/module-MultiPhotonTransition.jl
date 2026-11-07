@@ -582,6 +582,7 @@ function stringIntermediateStates(mp::Multiplet)
     return( "mean-field multiplet with $(length(mp.levels)) level(s)" )
 end
 
+
 """
 `MultiPhotonTransition.stringIntermediateStates(gChannels::Array{AtomicState.GreenChannel,1})`
     ... summarises a Green expansion for printing -- how many channels it has and how many levels in total. A
@@ -607,6 +608,7 @@ end
 function intermediateLevels(mp::Multiplet, Jsym::LevelSymmetry)
     return( filter(lev -> LevelSymmetry(lev.J, lev.parity) == Jsym, mp.levels) )
 end
+
 
 """
 `MultiPhotonTransition.intermediateLevels(gChannels::Array{AtomicState.GreenChannel,1}, Jsym::LevelSymmetry)`

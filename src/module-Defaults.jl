@@ -24,8 +24,8 @@ INVERSE_FINE_STRUCTURE_CONSTANT = 137.035_999_139
 const BOHR_RADIUS_SI                  = 0.529_177_210_67e-10
 const BOLTZMANN_CONSTANT_SI           = 1.380_648_52e-23
 const ELECTRON_MA_SI                  = 9.109_383_56e-31
-## The muon is 206.77 times heavier than the electron and is otherwise the same particle: same charge, same
-## spin, same Dirac equation.  In atomic units the electron mass is 1, so this ratio IS the muon mass.
+# The muon is 206.77 times heavier than the electron and is otherwise the same particle: same charge, same
+# spin, same Dirac equation.  In atomic units the electron mass is 1, so this ratio IS the muon mass.
 const MUON_ELECTRON_MASS_RATIO        = 206.768_2830
 const ELEMENTARY_CHARGE_SI            = 1.602_176_620_8e-19
 const HARTREE_ENERGY_SI               = 4.359_744_650e-18
@@ -76,7 +76,7 @@ for i = 1:2*n + 1
     weights[i,:] = Math.finiteDifferenceWeights(-n + i - 1, 2*n + 1, order=1)[2,:]     
 end
 
-#
+
 # Global settings that can be (re-) defined by the user.
 GBL_FRAMEWORK                = "relativistic"
 GBL_CONT_POTENTIAL           = Basics.DFSField(0.42)
@@ -85,12 +85,12 @@ GBL_CONT_NORMALIZATION       = CoulombFunctionNorm()     ###  PureSineNorm(), Co
 GBL_QED_HYDROGENIC_LAMBDAC   = [1.0,  1.0,  1.0,  1.0,  1.0]
 GBL_QED_NUCLEAR_CHARGE       = 0.1
 GBL_WARNINGS                 = String[]
-## The warnings are collected so that a long job can be inspected AFTERWARDS -- anything printed to stdout
-## during a ten-hour cascade has scrolled away long before it ends.  Two properties are needed for that to
-## work (12-Aug-2026):  a message repeated by every line must appear ONCE, with a count, or the report is
-## unreadable; and the collector must survive Threads.@threads, since push! onto a shared Vector can lose
-## entries and can crash on a reallocation -- and the line loops of DielectronicRecombination and
-## ImpactExcitation are already threaded.
+# The warnings are collected so that a long job can be inspected AFTERWARDS -- anything printed to stdout
+# during a ten-hour cascade has scrolled away long before it ends.  Two properties are needed for that to
+# work (12-Aug-2026):  a message repeated by every line must appear ONCE, with a count, or the report is
+# unreadable; and the collector must survive Threads.@threads, since push! onto a shared Vector can lose
+# entries and can crash on a reallocation -- and the line loops of DielectronicRecombination and
+# ImpactExcitation are already threaded.
 GBL_WARNINGS_COUNT           = Dict{String,Int64}()
 const GBL_WARNINGS_LOCK      = ReentrantLock()
 
@@ -604,8 +604,8 @@ end
 """
 function setDefaults(sa::String, subshells::Array{Subshell,1}; printout::Bool=true)
     if        sa == "relativistic subshell list"
-        ## DEPRECATED as a user-facing setting (12-Aug-2026); it delegates to the internal setter below.
-        ## See there for why this does not belong in a public configuration API.
+        # DEPRECATED as a user-facing setting (12-Aug-2026); it delegates to the internal setter below.
+        # See there for why this does not belong in a public configuration API.
         Defaults.setStandardSubshellList(subshells; printout=printout)
     else
         error("Unsupported keystring:: $sa")
@@ -828,7 +828,7 @@ function warn(wa::AbstractWarning)
         finally
             unlock(GBL_WARNINGS_LOCK)
         end
-        #
+
     elseif    wa == ResetWarnings()
         lock(GBL_WARNINGS_LOCK)
         try     GBL_WARNINGS = String[];    GBL_WARNINGS_COUNT = Dict{String,Int64}()
@@ -856,9 +856,9 @@ function warn(wa::AbstractWarning, sa::String)
     global GBL_WARNINGS, GBL_WARNINGS_COUNT
 
     if        wa == AddWarning()
-        ## Recorded once, but counted every time: a condition met by 500 lines is one entry saying so, not
-        ## 500 entries.  The lock makes this safe to call from a threaded line loop; it is uncontended in
-        ## the ordinary single-threaded case and costs nothing against the work that produced the warning.
+        # Recorded once, but counted every time: a condition met by 500 lines is one entry saying so, not
+        # 500 entries.  The lock makes this safe to call from a threaded line loop; it is uncontended in
+        # the ordinary single-threaded case and costs nothing against the work that produced the warning.
         lock(GBL_WARNINGS_LOCK)
         try
             nx = get(GBL_WARNINGS_COUNT, sa, 0)

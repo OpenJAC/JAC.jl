@@ -1,13 +1,13 @@
 
 #################################################################################################################################
 ### Stopping powers (SP) ########################################################################################################
-#
+
 #  Energy loss - dE/dx of a projectile (electron, positron or bare ion) to the electrons of a material: the free
 #  electrons of a plasma, the bound electrons of a neutral atom gas, or both in a partially ionized gas. All
 #  approximations below share the (Bohr/Bethe-type) form
-#
+
 #      - dE/dx  =  sum_t  n_t  (4 pi z^2 e^4)/(m_e v^2)  ln Lambda_t ,
-#
+
 #  where the sum runs over the electron populations t of the material with densities n_t, v is the projectile
 #  velocity, and the Coulomb logarithm ln Lambda_t = ln(b_max/b_min) counts the effective range of impact
 #  parameters; each population enters through its density and one characteristic energy (hbar omega_p for free,

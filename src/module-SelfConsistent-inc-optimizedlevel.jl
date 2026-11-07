@@ -110,6 +110,7 @@ function lastScfVerdict()
     return( GBL_EOL_LAST_VERDICT[] )
 end
 
+
 """
 `struct  SelfConsistent.PairCoefficientCache`
     ... holds the orbital-independent angular coefficients of every CSF pair of ONE symmetry block, in a form whose
@@ -296,7 +297,7 @@ function cacheCsfPairCoefficientsEOL(sym::LevelSymmetry, basis::Basis)
     # so the test was redundant work in front of it, measured at 1.00x and 0.87x on 312- and 783-CSF blocks,
     # i.e. slightly SLOWER than no test at all.  Asking the angular routines and keeping what they return costs
     # the same, excludes pairs the occupation test would have let through, and rests on no claim of its own.
-    #
+
     # COLUMN-MAJOR, OVER THE FULL SQUARE.  Taking r ascending within each column is what lets pairOrdinal
     # binary-search `pairRow`.
     # NOT the upper triangle, although `buildCIMatrixEOL` alone would allow it:  `combineAngularCoefficientsEOL`
@@ -320,7 +321,7 @@ function cacheCsfPairCoefficientsEOL(sym::LevelSymmetry, basis::Basis)
                 push!(val2p, intern!(valD,  values,   cf.V))
             end
             if  length(lab1p) == was1  &&  length(lab2p) == was2    continue    end
-            ## nothing was appended for a pair that produced nothing, so there is never anything to undo here
+            # nothing was appended for a pair that produced nothing, so there is never anything to undo here
             push!(ptr1p, Int32(length(lab1p) + 1))
             push!(ptr2p, Int32(length(lab2p) + 1))
             push!(pairRow, Int32(r))
@@ -667,10 +668,10 @@ function combineAngularCoefficientsEOL(blockCaches, targetLevels::Array{Level,1}
     # pair and was then condensed by a NESTED DOUBLE LOOP over that vector -- O(N^2) in the entry count, not in
     # the CSF count.  Accumulating directly removes both.  Measured on a 7 062-CSF Ti III space: 208.8 s ->
     # 130.1 s, a factor 1.6, with the energies 1 ulp apart.
-    #
+
     # THE RESULT WAS NEVER LARGE: it is bounded by the number of distinct (nu,a,b,c,d) labels, i.e. by the
     # SUBSHELL count, while the temporary was bounded by nothing.
-    #
+
     # TWO CLAIMS THAT LED HERE WERE LATER CHECKED AND ARE FALSE.  They are recorded because both are the kind a
     # reader would otherwise re-derive, and one of them stood in this comment until 30-Sep-2026.
     #   * NOT A BOXING PROBLEM.  The vector was said to hold separately boxed objects because `Coefficient2p[]`
@@ -685,7 +686,7 @@ function combineAngularCoefficientsEOL(blockCaches, targetLevels::Array{Level,1}
     #     158 MB, not 584, because in a full solve the peak is set later in the iteration.  The memory of a
     #     large EOL run is ALLOCATION CHURN -- measured 133.5 GB allocated to hold ~2 GB live, 12 % of the wall
     #     clock in collection -- so it is a rate, not a structure, and no single routine owns it.
-    #
+
     # FIRST-ENCOUNTER ORDER IS PRESERVED DELIBERATELY, and it is what makes the change verifiable: the old code
     # summed each label's contributions in the order it met them and emitted the labels in that same order, so
     # keeping both leaves every downstream floating-point sum in the order it had.  Emitting the table in Dict
@@ -1003,7 +1004,7 @@ function computeOrbitalGradient(bVectors::Dict{Subshell, Vector{Float64}},
     # whole of one gradient evaluation, so the memo is local to this call and cannot go stale.  This is the
     # same redundancy that dominates the average-level Fock build (3.5x for argon, 9.1x for Th+), and after
     # the average-level field was memoised the rotation became the larger part of EOL: 66% of it for W+.
-    #
+
     # THREADED, 26-Oct-2026 (multi-threading item, step 4).  Re-profiled on a representative multi-config
     # case (see work/diag-threading-eol-profile2.jl): buildScreenedPotential, through its private cellMoments
     # quadrature, is 72.9% of THIS function's wall time -- the lever worth pulling, unlike the symmetry-block
@@ -1037,7 +1038,7 @@ function computeOrbitalGradient(bVectors::Dict{Subshell, Vector{Float64}},
         h1[kappa] = Bsplines.setupLocalMatrix(kappa, primitives, nucPot, storage)
     end
     for  cf  in  coeffs1p
-        if  cf.a.kappa != cf.b.kappa    continue    end          ## no one-electron element between kappas
+        if  cf.a.kappa != cf.b.kappa    continue    end          # no one-electron element between kappas
         # The SAME chain-rule factor the two-electron part applies, and for the same reason.  The energy's
         # one-electron term is built from the ORBITALS, and an orbital is scale*expand(b) -- so
         # GrantIab(orb_a, orb_b) = scale_a * scale_b * (b_a^T H1 b_b) and the derivative carries that product.
@@ -1056,7 +1057,7 @@ function computeOrbitalGradient(bVectors::Dict{Subshell, Vector{Float64}},
 
     # two-electron:  R^k(abcd) = b_a^T M(a,orb_b;c,orb_d) b_c  and, by R^k(abcd) = R^k(badc),
     #                          = b_b^T M(b,orb_a;d,orb_c) b_d
-    #
+
     # MATRIX-FREE (10-Aug-2026).  M is never formed.  Its entries are INT B_i B_k w_r V_L, so
     # (M v)_i = INT B_i(r) f(r) w_r V_L(r) with f the expansion of v -- and M is symmetric within each
     # block, so the two products a coefficient needs share one potential and differ only in the vector.
@@ -1084,7 +1085,7 @@ function computeOrbitalGradient(bVectors::Dict{Subshell, Vector{Float64}},
             end
             xc = AngularMomentum.CL_reduced_me(sA, cf.nu, sC) * AngularMomentum.CL_reduced_me(sB, cf.nu, sD)
             if  rem(cf.nu, 2) == 1    xc = - xc    end
-            Vk = vkCache[(cf.nu, sB, sD)]                           ## built in the parallel pass above
+            Vk = vkCache[(cf.nu, sB, sD)]                           # built in the parallel pass above
             (pC, qC) = expanded[sC];     (pA, qA) = expanded[sA]
             grad[sA] = grad[sA] + (cf.V * xc * scale[sA]) * SelfConsistent.screenedProduct(Vk, pC, qC, primitives)
             grad[sC] = grad[sC] + (cf.V * xc * scale[sC]) * SelfConsistent.screenedProduct(Vk, pA, qA, primitives)
@@ -1230,7 +1231,7 @@ function projectOntoPositiveBranch(bVectors::Dict{Subshell, Vector{Float64}}, su
         for  (i, sha) in enumerate(shk),  (j, shb) in enumerate(shk)
             ovl[i,j] = transpose(out[sha]) * matrixB * out[shb]
         end
-        ovl = 0.5 * (ovl + transpose(ovl))          ## exact symmetry before the eigendecomposition
+        ovl = 0.5 * (ovl + transpose(ovl))          # exact symmetry before the eigendecomposition
         wa  = LinearAlgebra.eigen(ovl)
         if  haskey(ENV, "JAC_EOL_LOWDIN")
             @printf(">> [EOL-LOWDIN] kappa %3d  overlap eigenvalues: %s   (cut at 1e-12, %d dropped)\n",
@@ -1239,7 +1240,7 @@ function projectOntoPositiveBranch(bVectors::Dict{Subshell, Vector{Float64}}, su
         end
         sinv = zeros(nk, nk)
         for  k = 1:nk
-            if  wa.values[k] < 1.0e-12    continue    end     ## a linearly dependent block keeps its input
+            if  wa.values[k] < 1.0e-12    continue    end     # a linearly dependent block keeps its input
             sinv = sinv + (wa.vectors[:,k] * transpose(wa.vectors[:,k])) / sqrt(wa.values[k])
         end
         newv = [ zeros(length(out[shk[1]]))  for i = 1:nk ]
@@ -1349,12 +1350,12 @@ function solveOptimizedLevelFieldByRotation(basis::Basis, nuclearModel::Nuclear.
     if  settings.levelSelectionCI.active  &&  !isempty(settings.levelSelectionCI.symmetries)
         relevantSyms = unique( settings.levelSelectionCI.symmetries )
     elseif  settings.levelSelectionCI.active  &&  !isempty(settings.levelSelectionCI.configurations)
-        ## selection by REFERENCE CONFIGURATIONS: only the J^P they span can ever hold a target level, so the
-        ## remaining blocks are built and held for nothing.  See SelfConsistent.referenceSymmetries.
+        # selection by REFERENCE CONFIGURATIONS: only the J^P they span can ever hold a target level, so the
+        # remaining blocks are built and held for nothing.  See SelfConsistent.referenceSymmetries.
         basisSyms    = unique( [ LevelSymmetry(csf.J, csf.parity)  for csf in basis.csfs ] )
         refSyms      = SelfConsistent.referenceSymmetries(settings.levelSelectionCI.configurations, basis.subshells)
         relevantSyms = intersect(basisSyms, refSyms)
-        if  isempty(relevantSyms)    relevantSyms = basisSyms    end       ## never leave the functional with nothing
+        if  isempty(relevantSyms)    relevantSyms = basisSyms    end       # never leave the functional with nothing
     else
         relevantSyms = unique( [ LevelSymmetry(csf.J, csf.parity)  for csf in basis.csfs ] )
     end
@@ -1403,7 +1404,7 @@ function solveOptimizedLevelFieldByRotation(basis::Basis, nuclearModel::Nuclear.
     # instead of taking the machine down without writing a line to the log.  Three runs of a 6 163-CSF layer were
     # killed by the OOM reaper at 12.9, 14.1 and 14.7 GB after SEVEN MINUTES OF COMPLETE SILENCE, and all three
     # looked like a dropped network connection rather than a memory failure; that is what this exists to prevent.
-    #
+
     # THE LAW IS MEASURED, NOT GUESSED -- AND IT WAS RE-MEASURED 04-Sep-2026, WHICH CORRECTED IT TWICE OVER.
     # A plain Coulomb CI of the same ion fits 1.58 GB + 0.181 MB/CSF; the EOL field costs about ten times that
     # per CSF because it carries per-level b-vectors forward across iterations.
@@ -1420,7 +1421,7 @@ function solveOptimizedLevelFieldByRotation(basis::Basis, nuclearModel::Nuclear.
     # levels do cost, and the BASE still dominates.  The two-term law below reproduces both points to 0.02 GB.
     # It is still an ESTIMATE and is labelled as one rather than used to refuse the run, since a refusal on an
     # estimate would be worse than a warning on a good one.
-    #
+
     # THE COST GROWS WITH THE NUMBER OF CSFs AND WITH THE ORBITAL COUNT SEPARATELY, and open d- and f-shells are
     # where both explode at once: the CSF count from the couplings, the orbital work as the square of the subshell
     # count, since the electron-electron repulsion is rebuilt for every PAIR.  Measured on C-like Z = 92 at
@@ -1437,27 +1438,27 @@ function solveOptimizedLevelFieldByRotation(basis::Basis, nuclearModel::Nuclear.
         # per-CSF slope 24x smaller.  BOTH ARE RIGHT WHERE THEY WERE FITTED AND WRONG ELSEWHERE, because a
         # single power law cannot describe a sum of two terms:  the linear one dominates below about a thousand
         # CSFs, the quadratic one above, and each fit sampled only its own side.
-        #
+
         # WHY QUADRATIC AT ALL.  Everything built per CSF PAIR within a block -- `PairCoefficientCache`, the CI
         # matrix, the combined-coefficient temporary, the radial caches -- grows with the ordered pairs, i.e. as
         # n^2 for a block of n CSFs.  Item 29 cut the CONSTANT in front of that (the cache is 15x smaller) and
         # could not change the exponent.  The cache is about 38 % of the quadratic term; the other per-pair
         # structures carry the rest, which is why shrinking the cache alone did not move the limit.
-        #
+
         # CALIBRATED ON THREE ANCHORS, Ti III with 3p opened, each run in its own process under /usr/bin/time:
-        #
+
         #        nCsf      sum n_b^2     measured      this law
         #         887       1.74e5        0.15 GB       0.13 GB      (space-dependent part, baseline subtracted)
         #       3 167       2.16e6        0.65 GB       0.64 GB
         #      25 085       1.59e8       24.5   GB     22.1   GB
-        #
+
         # -- within 15 % across a 28x span in CSFs and a 900x span in sum n^2.  At the top anchor the quadratic
         # term is 86 % of the cost;  at the bottom it is 15 %.
-        #
+
         # THE LEVEL COUNT IS DELIBERATELY ABSENT.  The old law charged 0.097 GB per 1000 CSFs per extra target
         # level.  Measured at FIXED space (1231 CSFs, nLev = 1 / 3 / 6): 1.669 / 1.636 / 1.643 GB, i.e. FLAT,
         # where that term predicts +0.6 GB across the range.  Do not reinstate it without a measurement.
-        #
+
         # AND THE BLOCKS ARE REPORTED BECAUSE THEY ARE THE LEVER.  The stores of the RELEVANT blocks are held for
         # the whole run, so the cost is the SUM of their squares;  the work, however, is done one block at a time.
         # On the Ti III balanced row the five blocks hold 6667, 6275, 6092, 4382 and 1669 CSFs, so the largest is
@@ -1475,7 +1476,7 @@ function solveOptimizedLevelFieldByRotation(basis::Basis, nuclearModel::Nuclear.
         allBasisSyms = unique( [ LevelSymmetry(csf.J, csf.parity)  for csf in basis.csfs ] )
         sumN2  = sum( Float64(n)^2  for (_, n) in blockSizes; init=0.0 )
         maxN   = isempty(blockSizes) ? 0 : maximum(values(blockSizes))
-        memEol = 1.5 + 1.2e-4 * nCsf + 1.2e-7 * sumN2                    ## GB, measured 14-Sep-2026; see above
+        memEol = 1.5 + 1.2e-4 * nCsf + 1.2e-7 * sumN2                    # GB, measured 14-Sep-2026; see above
         println(">> [EOL-C3] cost estimate: $nCsf CSFs over $nSub subshells, $nLev target level(s)" *
                 (isempty(settings.levelSelectionCI.indices) ? " ASSUMED (selection is by configuration, so this is a LOWER bound)" : "") *
                 ";  predicted peak " * @sprintf("%.1f GB", memEol) *
@@ -1522,22 +1523,22 @@ function solveOptimizedLevelFieldByRotation(basis::Basis, nuclearModel::Nuclear.
         # and pair work, which does not care how many CSFs there are, plus a CI cost which does.  Dividing the
         # total by N_CSF therefore names a quantity that does not exist, and the measured "s/CSF" duly FALLS as
         # the expansion grows -- on Yb+ from 1.045 to 0.184 across four layers.
-        #
+
         #     t  =  A(nSub)  +  b(nSub) * nCsf
-        #
+
         # A = 111 s and b = 0.0426 s/CSF at nSub = 24;  A = 169 s and b = 0.1330 at nSub = 28 (Yb+, 69 electrons,
         # Z = 70, four measured layers).  A rises about as nSub^2.73 and b as nSub^7.39 between those two points.
         # **THOSE TWO EXPONENTS ARE FITTED ON TWO VALUES OF nSub AND ARE NOT THE TRUE SCALING** -- 7.39 is simply
         # what two points give.  They are used because the SHAPE is what matters here and the shape is confirmed
         # out of sample: a fifth Yb+ run at nSub = 33 and 8086 CSFs, both outside the fitted range, came in at
         # 3316 s against 3884 s predicted, 1.17x, where the old law said 42694 s, 12.9x.
-        #
+
         # THE COEFFICIENTS DO NOT TRANSFER BETWEEN ELEMENTS, and that is stated in the printout rather than hidden.
         # Measured on Cl III (15 electrons, Z = 17) at three layers -- 802 CSF / 16 subshells / 114 s, 2816 / 25 /
         # 874 s, 6622 / 36 / 5039 s -- this law gives 0.34x, 0.33x and 1.19x of the measurement, i.e. it UNDER-
         # predicts a light ion by about three where it over-predicts Yb+. Still far better than the old law, which
         # over-predicted those same three layers by 28x, 12.9x and 5.3x.
-        #
+
         # AND THE DIRECTION OF ERROR IS NOW STATED CORRECTLY.  The old message said "within a factor of about two"
         # and "it under-predicts for a larger expansion".  Both were false and in the opposite sense: it OVER-
         # predicted on both systems measured, by 4x to 28x, and the trend is not even monotone in the expansion --
@@ -1548,8 +1549,8 @@ function solveOptimizedLevelFieldByRotation(basis::Basis, nuclearModel::Nuclear.
         # to zero -- measured, it billed a 66-CSF / 9-subshell Cl III layer at 8 s against an actual ~25 s, and
         # printed "0.000 s/CSF", which reads as a broken estimator rather than an extrapolated one.  Below the
         # anchored range the law is reported AS an extrapolation and the user is told which way it fails.
-        tFixed  = 111.0  * (nSub/24.0)^2.73                   ## the per-layer orbital and pair work
-        tPerCsf = 0.0426 * (nSub/24.0)^7.39                   ## the per-CSF CI work
+        tFixed  = 111.0  * (nSub/24.0)^2.73                   # the per-layer orbital and pair work
+        tPerCsf = 0.0426 * (nSub/24.0)^7.39                   # the per-CSF CI work
         tEol    = tFixed + tPerCsf * nCsf
         hms(t)  = t < 120. ? @sprintf("~%.0f s", t) : @sprintf("~%.1f h", t/3600)
         println(">> [EOL-C3] time estimate for this layer: " * hms(tEol) * " single-threaded  =  " *
@@ -1868,7 +1869,7 @@ function solveOptimizedLevelFieldByRotation(basis::Basis, nuclearModel::Nuclear.
         # ONLY the choice of direction: the step space, the preconditioner, the positive-branch projection, the
         # frozen-orbital restore, the line search and all five exits stay exactly as the first-order route leaves
         # them, which is what makes the comparison below a comparison of the DIRECTION and of nothing else.
-        #
+
         # WHY A SECOND-ORDER STEP IS THE REMEDY AND NOT A BETTER FIRST-ORDER ONE.  Each iteration re-solves the CI
         # eigenvector, so the function minimized at iteration n is not the one minimized at n+1 and an L-BFGS pair
         # (s,y) differences the gradients of two DIFFERENT functions.  Measured on 43Ca+ [Ar] 4s with core s -> s
@@ -1876,9 +1877,9 @@ function solveOptimizedLevelFieldByRotation(basis::Basis, nuclearModel::Nuclear.
         # cheap repair -- discard the curvature when the relaxation is large -- was implemented and is WORSE,
         # monotonically in the number of flushes.  The REDUCED Hessian contains the relaxation exactly, so the
         # alternation is removed by construction rather than patched around.
-        #
+
         # H_red v = H_oo v  -  2 <x_v| dH/db |c>,   x_v = (H - lambda)^+ P_perp (dH/db . v) c
-        #
+
         # and every piece of it comes from machinery that already exists: H_oo v from a central difference of the
         # EXACT orbital gradient, (dH/db.v)c from a central difference of buildCIMatrixEOL, and the final term from
         # a central difference of the gradient ON THE CI VECTOR -- which is EXACT rather than approximate, because
@@ -1886,11 +1887,11 @@ function solveOptimizedLevelFieldByRotation(basis::Basis, nuclearModel::Nuclear.
         # routes were verified against each other and against the energy's own mixed second difference before this
         # solver was written (JAC_EOL_HESSOC, step (2)): agreement to 7e-07, and the assembled H_red reproduces the
         # second difference of the RE-SOLVED eigenvalue to ratio 1.000001.
-        #
+
         # ONE H_red v COSTS 4 GRADIENTS AND 2 CI BUILDS.  That is why the inner solver is a TRUNCATED CG and not a
         # formed matrix: the span is nVirtual per active subshell (16 by default), so an explicit Hessian would
         # need one product per column, where CG needs ten to twenty in all.
-        #
+
         # THE SPAN DOES THE REDUNDANCY PROJECTION FOR FREE, which is step (4) of the item and is mostly already
         # answered.  applyPrecond projects onto the span virtualDirections returns, and that span is built
         # B-orthogonal to the occupied orbitals of its own kappa, so every CG vector stays inside it with no extra
@@ -1913,12 +1914,12 @@ function solveOptimizedLevelFieldByRotation(basis::Basis, nuclearModel::Nuclear.
             lvN     = targetLevels[1]
             symN    = LevelSymmetry(lvN.J, lvN.parity)
             cacheN  = blockCaches[symN];      idxCsfN = cacheN.idxCsf;      nCsfN = length(idxCsfN)
-            epsB    = 1.0e-3   ## the b-side difference step, measured as the working value: the re-solved second
-                               ## difference degrades to 0.9970 at 1e-5, ordinary round-off for a second difference
-            delC    = 1.0e-3   ## the CI-side step;  the difference is EXACT in it, so this has only to avoid round-off
+            epsB    = 1.0e-3   # the b-side difference step, measured as the working value: the re-solved second
+                               # difference degrades to 0.9970 at 1e-5, ordinary round-off for a second difference
+            delC    = 1.0e-3   # the CI-side step;  the difference is EXACT in it, so this has only to avoid round-off
             maxCG   = 20
-            cgTol   = 0.1      ## an INEXACT Newton: the caveat of item 48 is that FD quality degrades near
-                               ## convergence, and a truncated CG is what tolerates an approximate H*v
+            cgTol   = 0.1      # an INEXACT Newton: the caveat of item 48 is that FD quality degrades near
+                               # convergence, and a truncated CG is what tolerates an approximate H*v
             shiftB  = function(v::Dict{Subshell, Vector{Float64}}, t::Float64)
                 bb = Dict{Subshell, Vector{Float64}}( sh => copy(bVectors[sh])  for sh in basis.subshells )
                 for  sh  in  activeSubshells    bb[sh] = bVectors[sh] + t * v[sh]    end
@@ -2070,7 +2071,7 @@ function solveOptimizedLevelFieldByRotation(basis::Basis, nuclearModel::Nuclear.
             if  !isempty(dirPrev)  &&  iterSinceRestart < cgRestart  &&  abs(sgPrev) > 1.0e-30
                 num = 0.
                 for  sh  in  activeSubshells    num = num + sum( (gVec[sh] - gPrev[sh]) .* sVec[sh] )    end
-                beta = max( 0., num / sgPrev )                   ## Polak-Ribiere+, i.e. restart on beta < 0
+                beta = max( 0., num / sgPrev )                   # Polak-Ribiere+, i.e. restart on beta < 0
             end
             for  sh  in  activeSubshells
                 dir[sh] = beta == 0. ? sVec[sh] : sVec[sh] + beta * dirPrev[sh]
@@ -2079,14 +2080,14 @@ function solveOptimizedLevelFieldByRotation(basis::Basis, nuclearModel::Nuclear.
             for  sh  in  activeSubshells    dir[sh] = sVec[sh]    end
         end
         # Guard: a conjugate direction must still descend.  If it does not, fall back to steepest descent.
-        #
+
         # THE PAIRING IS WITH THE RAW GRADIENT, NOT WITH gVec, AND THE DIFFERENCE IS A FACTOR OF FIVE TO NINE.
         # virtualDirections returns a B-ORTHONORMAL set (phi^T B phi = 1).  gVec is rebuilt from the gradient's
         # components along that set, gVec = sum_i (phi_i^T grad) phi_i, so pairing it with dir by a plain
         # Euclidean dot gives sum_ij gv_i s_j (phi_i^T phi_j) -- and phi_i^T phi_j is NOT delta_ij, because the
         # phi are orthonormal in B and not in the Euclidean metric.  grad and dir both live in b-space, so
         # their plain pairing IS the directional derivative, with no metric to get wrong.
-        #
+
         # MEASURED 31-Aug-2026 against a central difference of the functional itself (JAC_EOL_FDCHECK), on the
         # Be RAS step-2 case: FD = -6.3452e-03, raw pairing = -6.5391e-03 (3 % high, the residue being the
         # normalization projection that computeOrbitalGradient still omits), old dg = -4.5380e-02 -- SEVEN
@@ -2170,7 +2171,7 @@ function solveOptimizedLevelFieldByRotation(basis::Basis, nuclearModel::Nuclear.
         # item 48, and it is deliberately a CORRECTNESS GATE placed BEFORE any solver exists: a wrong H_oc would
         # otherwise not announce itself at all, it would look like a convergence problem inside the Newton
         # iteration and be debugged there, which is the expensive place to find it.
-        #
+
         # WHAT IT MEASURES, and why three routes rather than one.  The EOL functional is E(b,c) = c^T H(b) c with c
         # the CI vector, and the alternation that item 48 is about is exactly the OFF-DIAGONAL block H_oc =
         # d2E/db dc: it is the term a first-order method cannot see, because between two iterations the CI re-solve
@@ -2181,7 +2182,7 @@ function solveOptimizedLevelFieldByRotation(basis::Basis, nuclearModel::Nuclear.
         # generalized weight d_rs of combineAngularCoefficientsEOL is QUADRATIC in mc and the gradient is LINEAR in
         # the coefficients, so the central difference reproduces the linear term with NO truncation error at all.
         # Only the b-side differences below carry an eps, and they are scanned.
-        #
+
         # THE THREE ROUTES ARE INDEPENDENT CODE PATHS, which is the point:
         #   (a) <v, H_oc w> from the ORBITAL GRADIENT, differenced on c;
         #   (b) the same number as 2 w^T (dH/db . v) c, from buildCIMatrixEOL, differenced on b -- the other
@@ -2190,7 +2191,7 @@ function solveOptimizedLevelFieldByRotation(basis::Basis, nuclearModel::Nuclear.
         #       functional rather than to any derivative routine.
         # Agreement of (a) with (b) tests the two implementations against each other; agreement with (c) tests both
         # against the thing being differentiated.  A Hessian block that is merely plausible is worthless.
-        #
+
         # THEN THE ASSEMBLED REDUCED HESSIAN, which is the quantity a Newton step actually needs.  Because c is
         # re-solved at every b, the curvature of the function the solver really walks on is not H_oo but
         #       H_red(v,v) = <v, H_oo v>  -  2 r^T (H - lambda)^+ r ,     r = P_perp (dH/db . v) c
@@ -2198,7 +2199,7 @@ function solveOptimizedLevelFieldByRotation(basis::Basis, nuclearModel::Nuclear.
         # the curvature-level statement of item 48's measured "always downward" unmodelled descent.  It is checked
         # against the second difference of the RE-SOLVED eigenvalue, i.e. against the true total curvature, which no
         # part of the construction has been told about.
-        #
+
         # EVERYTHING IS RE-DIAGONALIZED AT THE CURRENT bVectors FIRST, and that is not pedantry: `orbitals`,
         # `targetLevels` and the loop's `coeffs1p/coeffs2p` were built BEFORE projectOntoPositiveBranch touched
         # bVectors above.  The projection is a no-op on an iterate already on the manifold, so the two agree in
@@ -2390,7 +2391,7 @@ function solveOptimizedLevelFieldByRotation(basis::Basis, nuclearModel::Nuclear.
         # if both differ from dg by a fixed factor, the direction is built on a gradient that is not the
         # functional's, which would explain every plateau seen so far.
         if  haskey(ENV, "JAC_EOL_FDCHECK")  &&
-                    iter == something(tryparse(Int, ENV["JAC_EOL_FDCHECK"]), 5)   ## the value selects the iteration
+                    iter == something(tryparse(Int, ENV["JAC_EOL_FDCHECK"]), 5)   # the value selects the iteration
             @printf(">> [EOL-FD] iteration %d:  <grad,dir> = %+.10e\n", iter, dg)
             # IS THE GRADIENT ORTHOGONAL TO ITS OWN b-VECTOR?  generateOrbitalFromVector normalizes, so the
             # functional is SCALE-INVARIANT in b: E(lambda*b) = E(b), and differentiating at lambda = 1 gives
@@ -2473,13 +2474,13 @@ function solveOptimizedLevelFieldByRotation(basis::Basis, nuclearModel::Nuclear.
         # test: the old sole criterion, |E - E_prev| < accuracyScf, halts when PROGRESS is slow, which is a
         # statement about the optimizer and not about the solution -- and it is why every EOL value quoted
         # before 16-Aug-2026 was an upper bound.
-        #
+
         # "BOTH TESTS ARE KEPT" IS NO LONGER TRUE, and this sentence stood here after it stopped being true --
         # corrected 04-Sep-2026.  The energy test was REMOVED on 03-Sep in favour of the gradient-STAGNATION
         # exit below (see its own note: a stationary energy stopped every step of Be Scenario A short, at
         # iterations 3, 15, 37 and 80, where the same runs converged at 63, 154, 51 and 40).  THIS IS NOW THE
         # ONLY CONVERGENCE EXIT; every other one below is a give-up and says so.
-        #
+
         # AND IT IS KNOWN TO BE INADEQUATE AT BOTH ENDS OF Z -- priority item 6, measured 03-Sep-2026.  |grad|
         # is not scale-free: its size is set by the excitation energies that set the curvature, ~1000 Ha at
         # Z = 92 against ~1 Ha at Z = 4.  At Z = 92 the run is DONE and cannot say so (energy flat to 4e-15 Ha,
@@ -2509,7 +2510,7 @@ function solveOptimizedLevelFieldByRotation(basis::Basis, nuclearModel::Nuclear.
             dHd = 0.
             gg  = 0.;    for sh in activeSubshells   gg = gg + sum( dir[sh].^2 )   end
             gg < 1.0e-30  &&  return( 0.0 )
-            epsH = 1.0e-5 / sqrt(gg)                     ## scaled so the probe displacement is ~1e-5 in norm
+            epsH = 1.0e-5 / sqrt(gg)                     # scaled so the probe displacement is ~1e-5 in norm
             bp = Dict{Subshell, Vector{Float64}}( sh => copy(bVectors[sh])  for sh in basis.subshells )
             bm = Dict{Subshell, Vector{Float64}}( sh => copy(bVectors[sh])  for sh in basis.subshells )
             for  sh  in  activeSubshells
@@ -2520,7 +2521,7 @@ function solveOptimizedLevelFieldByRotation(basis::Basis, nuclearModel::Nuclear.
             gm = SelfConsistent.computeOrbitalGradient(bm, coeffs1p, coeffs2p, basis.subshells,
                                                                primitives, nucPot, storage, matrixB)
             for  sh  in  activeSubshells   dHd = dHd + sum( dir[sh] .* (gp[sh] - gm[sh]) ) / (2*epsH)   end
-            dHd <= 1.0e-30  &&  return( NaN )            ## no positive curvature along the direction taken
+            dHd <= 1.0e-30  &&  return( NaN )            # no positive curvature along the direction taken
             return( dg*dg / (2*dHd) )
         end
         if  gNorm < settings.accuracyScf
@@ -2762,7 +2763,7 @@ function solveOptimizedLevelFieldByRotation(basis::Basis, nuclearModel::Nuclear.
                 end
                 (projB, negW) = SelfConsistent.projectOntoPositiveBranch(newB, basis.subshells,
                                                     primitives, nucPot, matrixB, storage; spectrum=posSpectrum)
-                restoreFrozen!(projB)                    ## measure the point that would be stored; see the main loop
+                restoreFrozen!(projB)                    # measure the point that would be stored; see the main loop
                 (_, eTrial) = SelfConsistent.energyFromBVectorsSplit(projB, coeffs1p, coeffs2p, basis.subshells,
                                                          primitives, grid, nucPot, isFrozenSub, frozenRk)
                 if  eTrial < e0    bVectors = projB;   accepted = true;   break    end
@@ -2809,23 +2810,23 @@ function solveOptimizedLevelFieldByRotation(basis::Basis, nuclearModel::Nuclear.
         end
         # THE INCREMENT HAS STOPPED MOVING UNDER A DOUBLING OF THE EFFORT -- the one exit that is a convergence
         # criterion for a CORRELATION LAYER, off unless the route asks for it (incrementTolerance > 0).
-        #
+
         # WHY NOT THE ENERGY CHANGE PER ITERATION, which is the obvious thing and is wrong.  A correlation layer
         # creeps: measured on Be Scenario A, a stationary-energy test stopped it at iterations 3, 15, 37 and 80
         # where the same runs were still improving at 63, 154, 51 and 40.  A one-iteration difference cannot tell
         # a layer that has converged from one that is descending slowly, because both look flat from step to step.
-        #
+
         # WHAT WORKS IS A LONG BASELINE.  Compare the descent achieved so far, D(n) = E(1) - E(n), against the
         # descent at HALF the iterations, D(n/2).  If doubling the effort from n/2 to n changed the layer's
         # increment by less than the tolerance, doubling it again will not change it either, and the layer is as
         # converged as it is going to get.  This is the doubling test of the RAS strategy, applied continuously
         # instead of by running the whole computation twice -- the maintainer's suggestion, 07-Oct-2026 -- so the
         # budget becomes a CEILING rather than the thing that decides the answer.
-        #
+
         # THE SCALE IS THE DESCENT ITSELF, which is what makes the test free of units and of Z.  An absolute
         # tolerance cannot serve both a layer worth 160 mHa (Ti III 3d^2) and one worth 0.06 mHa (Ca+ 4s with core
         # s singles), and those two were measured on the same afternoon.
-        #
+
         # NOT BELOW SIX ITERATIONS, measured: at a budget of 3 a reference step returned an energy BELOW its own
         # converged value, so a test allowed to fire that early can stop on noise.
         if  settings.scfRoute isa Basics.RotationRoute  &&  Basics.incrementTolerance(settings.scfRoute) > 0.  &&
@@ -3104,12 +3105,12 @@ function solveOptimizedLevelField(basis::Basis, nuclearModel::Nuclear.Model, pri
     if  settings.levelSelectionCI.active  &&  !isempty(settings.levelSelectionCI.symmetries)
         relevantSyms = unique( settings.levelSelectionCI.symmetries )
     elseif  settings.levelSelectionCI.active  &&  !isempty(settings.levelSelectionCI.configurations)
-        ## selection by REFERENCE CONFIGURATIONS: only the J^P they span can ever hold a target level, so the
-        ## remaining blocks are built and held for nothing.  See SelfConsistent.referenceSymmetries.
+        # selection by REFERENCE CONFIGURATIONS: only the J^P they span can ever hold a target level, so the
+        # remaining blocks are built and held for nothing.  See SelfConsistent.referenceSymmetries.
         basisSyms    = unique( [ LevelSymmetry(csf.J, csf.parity)  for csf in basis.csfs ] )
         refSyms      = SelfConsistent.referenceSymmetries(settings.levelSelectionCI.configurations, basis.subshells)
         relevantSyms = intersect(basisSyms, refSyms)
-        if  isempty(relevantSyms)    relevantSyms = basisSyms    end       ## never leave the functional with nothing
+        if  isempty(relevantSyms)    relevantSyms = basisSyms    end       # never leave the functional with nothing
     else
         relevantSyms = unique( [ LevelSymmetry(csf.J, csf.parity)  for csf in basis.csfs ] )
     end

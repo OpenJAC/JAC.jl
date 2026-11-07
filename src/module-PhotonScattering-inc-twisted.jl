@@ -1,6 +1,6 @@
 
 # TWISTED (Bessel) photon beams, in the form-factor approximation, for an atom at FINITE IMPACT PARAMETER from the beam axis.
-#
+
 # WHY THIS IS TRACTABLE HERE AND NOWHERE ELSE IN THE MODULE. A Bessel beam is a coherent superposition of plane waves whose
 # wave vectors lie on a cone of half-angle theta_k, each carrying the azimuthal phase exp(i m phi_k). For a general scattering
 # amplitude that superposition requires the partial-wave/OAM coupling that ParticleScattering explicitly declined to re-derive
@@ -8,14 +8,14 @@
 # depends on NOTHING but the momentum transfer q, so each plane-wave component's amplitude is already known and the twisted
 # case collapses to a one-dimensional integral over phi_k. That is the whole reason this file can exist while the second-order
 # twisted case cannot.
-#
+
 #     A_m(b, phi_b)  =  (1/2pi) Int_0^2pi  d phi_k  exp(i m phi_k)  exp(i kappa b cos(phi_k - phi_b))  F(q(theta_k, phi_k; theta, phi))
-#
+
 # with kappa = k sin(theta_k) the transverse momentum, b the impact parameter and phi_b its azimuth about the beam
 # axis -- (b, phi_b) is settings.impactVectors' own (bPerp, phiB) pair. The geometry is exact:
-#
+
 #     cos(Theta) = sin(theta_k) sin(theta) cos(phi_k - phi) + cos(theta_k) cos(theta) ,      q = 2 k sin(Theta/2) .
-#
+
 # COHERENT AND INCOHERENT SCATTERING BEHAVE DIFFERENTLY HERE, and the difference is physical rather than technical.
 #   * RAYLEIGH is coherent: the amplitudes from the different cone components ADD before being squared, so the OAM phase and
 #     the impact-parameter phase survive and produce the vortex structure. That is what this file computes.
@@ -25,18 +25,18 @@
 #     and NO b-dependence whatever. THAT IS A LIMITATION OF THE CLOSURE, NOT A PHYSICAL PREDICTION: a proper treatment needs
 #     the amplitude to each final state separately, which S(q) has already summed away. It is computed and reported, with the
 #     degeneracy stated, rather than omitted -- but no OAM physics should be read out of it.
-#
+
 # WHAT IS NOT HERE. This is a SCALAR treatment: the vector nature of the Bessel field and its polarization structure are not
 # included, so the (1 + cos^2 theta) factor is carried over unchanged from the plane-wave case. A full vector treatment would
 # change the angular distribution and is the natural next step; nothing in this file should be quoted as a polarization result.
-#
+
 # TWO CHECKS THAT COST NOTHING AND CAN BOTH FAIL.
 #   1. theta_k --> 0 must reproduce the PLANE-WAVE result, and example-Pd.jl branch a is DATED, so this is a limit check
 #      against an anchored absolute number rather than against another unverified calculation.
 #   2. AT b = 0 THE CROSS SECTION MUST VANISH FOR m /= 0. On the axis a vortex beam has a node: with F depending on phi_k only
 #      weakly, the integral tends to i^m J_m(kappa b) times a constant, and J_m(0) = 0 for every m /= 0. A non-zero on-axis
 #      result for m = 1 would mean the OAM phase is not being applied.
-#
+
 # phi_b WAS FIXED AT ZERO until 12-Oct-2026 (settings.impactParameters carried only bare magnitudes); now read from
 # settings.impactVectors' (bPerp, phiB) pairs and used here as cos(phi_k - phi_b), identical to Beam.displace's own
 # phase. At phi_b = 0 this is exactly the formula every example branch has run against so far, so no number moves for
@@ -90,7 +90,7 @@ function computeTwistedLines(finalMultiplet::Multiplet, initialMultiplet::Multip
     println("")
     printstyled("PhotonScattering.computeTwistedLines(): The twisted-beam computation starts now ... \n", color=:light_green)
     printstyled("------------------------------------------------------------------------------------ \n", color=:light_green)
-    #
+
     beam = settings.beamType
     println(">> $(beam);  impact vectors $(settings.impactVectors) [a.u., rad]")
     if  settings.process == PhotonScattering.ComptonScattering()

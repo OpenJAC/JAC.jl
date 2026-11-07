@@ -1,14 +1,14 @@
 
 #################################################################################################################################
 ### Charge exchange (CX) ########################################################################################################
-#
+
 #  Single-electron capture in a slow ion-atom or ion-ion collision,  A^q+ + B --> A^(q-1)+ + B^+,  where B carries a
 #  weakly-bound "active" electron of ionization potential I_p -- B's *own*, whatever B's own charge state already
 #  is. Charge exchange from a neutral-atom donor and from an already-ionized donor therefore use the *same*
 #  formulas below, just with the donor's I_p taken in its actual (possibly ionized) charge state; this is why the
 #  Configuration-based convenience methods accept any standard-filling Configuration, atom or ion alike, and simply
 #  hand it to Empirical.ionizationPotential.
-#
+
 #  Both approximations below are restricted to the *slow-collision* (adiabatic, quasi-molecular) regime, relative
 #  collision velocity v << 1 a.u. (25 keV/amu for a proton), where the active electron moves quasi-statically near
 #  the saddle point of the two-center potential and the cross section becomes energy-independent to leading order.
@@ -238,7 +238,7 @@ end
 
 #################################################################################################################################
 ### State-selective (n,l) charge exchange #######################################################################################
-#
+
 #  Empirical.chargeExchangeCrossSection() above returns only the *total*, state-summed capture cross section. The
 #  functions below additionally estimate *which* shell the electron is most likely captured into -- a considerably
 #  cruder, explicitly labeled extension (see the "StateSelective" name and the named-tuple field names below, so

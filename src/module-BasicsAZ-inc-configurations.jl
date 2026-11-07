@@ -35,7 +35,7 @@ function  Basics.checkConfigurations(theme::Basics.NumberOfElectrons, confs::Arr
                                      confsMinus1::Array{Configuration,1})
     Basics.checkConfigurations(Basics.NumberOfElectrons(), confs)
     Basics.checkConfigurations(Basics.NumberOfElectrons(), confsMinus1)
-    #
+
     was = Basics.extractFromConfigurations(theme, confs);         was = unique(was)
     wbs = Basics.extractFromConfigurations(theme, confsMinus1);   wbs = unique(wbs)
 
@@ -137,6 +137,7 @@ function  Basics.displayConfiguration(stream::IO, theme::Basics.FineStructureLS,
     return( nothing )
 end
 
+
 """
 `Basics.displayConfiguration(stream::IO, theme::Basics.HyperfineStructure, config::Configuration; 
                              details::String="", header::Bool=true)`  
@@ -187,7 +188,7 @@ end
 function  Basics.displayConfiguration(stream::IO, theme::Basics.MeanConfiguration, confs::Array{Configuration,1}; details::String="")
     shellList  = Basics.generateShellList(1, 10, "k");   sa = "\n   +  "
     meanShells = Dict{Shell,Float64}();    
-    #
+
     if  details == ""   println(stream,"  Mean configuration:")
     else                println(stream,"  Mean configurations for $details:") 
     end
@@ -444,7 +445,7 @@ function Basics.extractConfiguration(theme::Basics.ExpandShells, conf::Configura
         else                              shells[shell] = 0
         end
     end
-    #
+
     if  noe != conf.NoElectrons
         error("No all shells $(theme.shells) occur in $conf")
     end
@@ -819,7 +820,7 @@ function Basics.extractFromConfiguration(theme::Basics.ClosedCore, conf::Configu
     closedShells = Basics.extractFromConfiguration(Basics.ClosedShells(), conf::Configuration)
     shellList    = Basics.generateShellList(1, 6, 5)
     coreShellD   = Dict{Shell,Int64}();   noElectrons = 0
-    #
+
     for shell in shellList 
         if      !(haskey(conf.shells, shell))           # do nothing, jump over
         elseif  conf.shells[shell] == 2*(2*shell.l + 1)    
@@ -1040,7 +1041,7 @@ function Basics.extractFromConfiguration(theme::Basics.OpenSubshells, conf::Conf
     
     for shell  in  shells
         subshellOccupations = Basics.shellSplitOccupation(shell, conf.shells[shell]);
-        #
+
         for subshellOcc  in  subshellOccupations
             for (subsh, occ)  in  subshellOcc
                 if      occ == 0  ||  occ == 2*(Basics.twice( Basics.subshell_j(subsh) ) + 1)
@@ -1321,7 +1322,7 @@ end
 """
 function Basics.generateConfigurations(theme::Basics.AddElectrons, confs::Array{Configuration,1})
     currentConfs = confs;    newConfs = Configuration[]
-    #
+
     for na = 1:theme.ne
         newConfs = Configuration[]
         for  shell in theme.intoShells
@@ -1351,7 +1352,7 @@ end
 """
 function Basics.generateConfigurations(theme::Basics.ExciteElectrons, confs::Array{Configuration,1})
     currentConfs = confs;   newConfs = Configuration[] 
-    #
+
     for na = 1:theme.ne
         newConfs = Configuration[]
         for  fromShell in theme.fromShells,   intoShell in theme.intoShells
@@ -1387,7 +1388,7 @@ end
 """
 function Basics.generateConfigurations(theme::Basics.RemoveElectrons, confs::Array{Configuration,1})
     currentConfs = confs;   newConfs = Configuration[]    
-    #
+
     for na = 1:theme.ne
         newConfs = Configuration[]
         for  shell in theme.fromShells
@@ -1416,10 +1417,10 @@ end
         confList::Array{Configuration,1} is returned.
 """
 function Basics.generateConfigurations(theme::Basics.RestrictExcitations, refConfigs::Array{Configuration,1})
-    ## Replace in code: Basics.generateConfigurations(refConfigs::Array{Configuration,1}, fromShells::Array{Shell,1}, toShells::Array{Shell,1}, 
-    ##                         noex::Int64; restrictions::Array{AbstractConfigurationRestriction,1}=AbstractConfigurationRestriction[])
+    # Replace in code: Basics.generateConfigurations(refConfigs::Array{Configuration,1}, fromShells::Array{Shell,1}, toShells::Array{Shell,1}, 
+    #                         noex::Int64; restrictions::Array{AbstractConfigurationRestriction,1}=AbstractConfigurationRestriction[])
     newConfigs = Configuration[];    
-    #
+
     if     theme.ne == 0
         newConfigs = refConfigs
     elseif theme.ne > 0
@@ -1468,7 +1469,7 @@ function Basics.generateConfigurations(theme::Basics.ForAutoIonization, confs::A
         valenceShells  = Basics.extractFromConfiguration(Basics.ValenceShells(),   conf)
         # Determine configuration due to an de-excitation of an electron within valenceShells
         if     length(valenceShells) < 2   @warn("Less than two valence shells are found for autoionization: $valenceShells ")
-               ## newConfigs = Configuration[]
+               # newConfigs = Configuration[]
                return( Configuration[] )
         else 
                addConfigs = Basics.generateConfigurations(AddElectrons(1, valenceShells[1:1]), [conf])
@@ -1611,7 +1612,7 @@ function Basics.generateConfigurations(theme::Basics.ForHollowIons, confs::Array
     
     # First capture theme.ne electrons into theme.intoShells
     newConfs = Basics.generateConfigurations(AddElectrons(theme.ne, theme.intoShells), confs)
-    #
+
     # Build configurations with all decayShells 'in between', even if zero occupation
     currentConfs = Configuration[]
     for  conf  in  newConfs 
@@ -1639,7 +1640,7 @@ function Basics.generateConfigurations(theme::Basics.ForHollowIons, confs::Array
         append!(newConfs, newConfigs)
         if  length(newConfigs) == 0   break   end
     end 
-    #
+
     newConfs = unique(newConfs)
     wb = Basics.extractFromConfigurations(NumberOfElectrons(), newConfs)
     
@@ -1763,10 +1764,10 @@ end
         can occur. Intra-shell processes can be considered but are not reflected in the generated configurations. A list of possible newConfs::Array{Configuration,1} is returned.
 """
 function Basics.generateConfigurations(theme::Basics.ForStepwiseDecay, confs::Array{Configuration,1})
-    ## A shell that does not occur in a configuration cannot take part in its decay, because the shells that may
-    ## participate are read off the configuration below.  theme.decayShells are therefore inserted here with ZERO
-    ## occupation, which is what makes them visible without adding an electron: Configuration("1s^2 2p^4") alone
-    ## offers only 2p and yields no decay configuration at all, silently, whereas with 2s listed it yields five.
+    # A shell that does not occur in a configuration cannot take part in its decay, because the shells that may
+    # participate are read off the configuration below.  theme.decayShells are therefore inserted here with ZERO
+    # occupation, which is what makes them visible without adding an electron: Configuration("1s^2 2p^4") alone
+    # offers only 2p and yields no decay configuration at all, silently, whereas with 2s listed it yields five.
     confs = deepcopy(confs)
     if  !isempty(theme.decayShells)
         newList = Configuration[]
@@ -1787,22 +1788,22 @@ function Basics.generateConfigurations(theme::Basics.ForStepwiseDecay, confs::Ar
         newConfigs = Configuration[]
         for  conf in currentConfs
             valenceShells  = Basics.extractFromConfiguration(Basics.ValenceShells(),   conf)
-            ## EVERY HOLE MAY DECAY, NOT ONLY THE DEEPEST ONE.  Until 05-Oct-2026 the filling electron went into
-            ## valenceShells[1:1] alone -- the deepest open shell -- so for a state with TWO inner-shell holes
-            ## only the deeper one was ever filled, and every channel in which the SHALLOWER hole decays while
-            ## the deeper one survives as a spectator was absent from the tree.  Nothing said so.  Measured on
-            ## Kr(2+) 3p^-1 3d^-1, whose valence shells are [3p, 3d, 4s, 4p]: all eight first-generation steps
-            ## filled the 3p hole and none the 3d, so the route in which the 3d hole decays first -- about 5 % of
-            ## the decay by an independent hand calculation -- was simply not there.  "Which hole decays first"
-            ## is the question a double-core-hole measurement asks, and the answer returned was the assumption.
-            ## The loop below fills each shell that HAS a hole in turn.  A shell that is already closed is
-            ## skipped, since it has nothing to fill; and the electron that fills hole i is always taken from a
-            ## shell ABOVE i, which is what makes the step a decay rather than an excitation.  For a state with a
-            ## SINGLE open inner shell only i = 1 qualifies, so such a cascade is unchanged.
-            ## PRIORITY ITEM 37 WAS CLOSED BY THIS LOOP, 05-Oct-2026.  Do not narrow it back to valenceShells[1:1]
-            ## as an optimisation: the cost is real (the Kr(2+) 3p^-1 3d^-1 tree grew +37 % in lines) but the
-            ## channels it buys are 4.4 % of the radiative and 1.9 % of the Auger rate there, and without them the
-            ## cascade answers "which hole decays first" with its own assumption rather than with a calculation.
+            # EVERY HOLE MAY DECAY, NOT ONLY THE DEEPEST ONE.  Until 05-Oct-2026 the filling electron went into
+            # valenceShells[1:1] alone -- the deepest open shell -- so for a state with TWO inner-shell holes
+            # only the deeper one was ever filled, and every channel in which the SHALLOWER hole decays while
+            # the deeper one survives as a spectator was absent from the tree.  Nothing said so.  Measured on
+            # Kr(2+) 3p^-1 3d^-1, whose valence shells are [3p, 3d, 4s, 4p]: all eight first-generation steps
+            # filled the 3p hole and none the 3d, so the route in which the 3d hole decays first -- about 5 % of
+            # the decay by an independent hand calculation -- was simply not there.  "Which hole decays first"
+            # is the question a double-core-hole measurement asks, and the answer returned was the assumption.
+            # The loop below fills each shell that HAS a hole in turn.  A shell that is already closed is
+            # skipped, since it has nothing to fill; and the electron that fills hole i is always taken from a
+            # shell ABOVE i, which is what makes the step a decay rather than an excitation.  For a state with a
+            # SINGLE open inner shell only i = 1 qualifies, so such a cascade is unchanged.
+            # PRIORITY ITEM 37 WAS CLOSED BY THIS LOOP, 05-Oct-2026.  Do not narrow it back to valenceShells[1:1]
+            # as an optimisation: the cost is real (the Kr(2+) 3p^-1 3d^-1 tree grew +37 % in lines) but the
+            # channels it buys are 4.4 % of the radiative and 1.9 % of the Auger rate there, and without them the
+            # cascade answers "which hole decays first" with its own assumption rather than with a calculation.
             for  (i, iShell)  in  enumerate(valenceShells)
                 i >= length(valenceShells)                      &&  continue
                 conf.shells[iShell] < 2*(2*iShell.l + 1)        ||  continue
@@ -1819,7 +1820,7 @@ function Basics.generateConfigurations(theme::Basics.ForStepwiseDecay, confs::Ar
         currentConfs = deepcopy(newConfigs)
         append!(newConfs, newConfigs)
     end 
-    #
+
     newConfs = unique(newConfs)
     wb = Basics.extractFromConfigurations(NumberOfElectrons(), newConfs);
     
@@ -1918,22 +1919,22 @@ function Basics.displayConfigurations(Z::Float64, confs::Array{Configuration,1};
         minNoElectrons = min(minNoElectrons, conf.NoElectrons)
         maxNoElectrons = max(maxNoElectrons, conf.NoElectrons)
     end
-    #
+
     printSummary, iostream = Defaults.getDefaults("summary flag/stream")
-    #
+
     println("\n* Electron configuration(s) used:    " * sa)
-    ## @warn "*** Limit to just 4 configurations for each No. of electrons. ***"                       ## delete nxx
+    # @warn "*** Limit to just 4 configurations for each No. of electrons. ***"                       ## delete nxx
     if  printSummary   println(iostream, "\n* Electron configuration(s) used:    " * sa)    end
     confList = Configuration[];   nc = 0
     for  n = maxNoElectrons:-1:minNoElectrons
-        nxx = 0                                                                                        ## delete nxx
+        nxx = 0                                                                                        # delete nxx
         println("\n  Configuration(s) with $n electrons:")
         if  printSummary   println(iostream, "\n    Configuration(s) with $n electrons:")      end
         nd = 0
         for  conf in confs  nd = max(nd, length("      " * string(conf)))   end
         for  conf in confs
             if n == conf.NoElectrons  
-                ## nxx = nxx + 1;    if nxx > 4   break    end                                         ## delete nxx
+                # nxx = nxx + 1;    if nxx > 4   break    end                                         ## delete nxx
                 nc = nc + 1
                 push!(confList, conf ) 
                 wa = -Empirical.totalEnergy(round(Int64, Z), conf, data = PeriodicTable.XrayDataBooklet() )

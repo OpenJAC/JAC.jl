@@ -56,6 +56,7 @@ struct  MeanFieldSettings
     gridStopper           ::Bool
 end
 
+
 """
 `AtomicState.MeanFieldSettings()`  ... constructor for setting the default values.
 """
@@ -184,6 +185,7 @@ struct  OneElectronSettings
     lValues                ::Array{Int64,1}
     levelSelectionMean     ::LevelSelection
 end
+
 
 """
 `AtomicState.OneElectronSettings()`  ... constructor for setting the default values.
@@ -389,11 +391,12 @@ function RasSettings(levelsScf::Array{Int64,1}, scfRoute::Basics.AbstractScfRout
     RasSettings(levelsScf, scfRoute, accuracyScf, eeInteractionCI, levelSelectionCI, :previousLayersFrozen)
 end
 
+
 """
 `AtomicState.RasSettings()`  ... constructor for setting the default values.
 """
 function RasSettings()
-    ## RotationRoute(24) is what the driver built from the old maxIterationsScf = 24, so the default is unchanged in behaviour.
+    # RotationRoute(24) is what the driver built from the old maxIterationsScf = 24, so the default is unchanged in behaviour.
     RasSettings(Int64[1], Basics.RotationRoute(24), 1.0e-6, CoulombInteraction(), LevelSelection(), :previousLayersFrozen )
 end
 
@@ -509,6 +512,7 @@ struct  RasStep
     treatment           ::Basics.AbstractQTreatment
     scfRoute            ::Union{Nothing,Basics.AbstractScfRoute}
 end
+
 
 """
 `AtomicState.RasStep()`  ... constructor for an 'empty' instance of a variable::AtomicState.RasStep
@@ -629,6 +633,7 @@ struct  RasLayer
     de                 ::Bool
     treatment          ::Basics.AbstractQTreatment
 end
+
 
 """
 `AtomicState.RasLayer(newShells::Array{Shell,1}; se::Bool=true, de::Bool=true,`
@@ -900,7 +905,7 @@ end
         `verdict::AtomicState.RasStoppingVerdict` is returned.
 """
 function evaluateStoppingPolicy(policy::IncrementBelow, history::Array{RasLayerVerdict,1})
-    if  length(history) < policy.consecutive + 1    ## +1: the reference layer itself carries no increment
+    if  length(history) < policy.consecutive + 1    # +1: the reference layer itself carries no increment
         return( RasStoppingVerdict(false, "") )
     end
     tail = history[end-policy.consecutive+1:end]
@@ -935,7 +940,7 @@ end
         `verdict::AtomicState.RasStoppingVerdict` is returned.
 """
 function evaluateStoppingPolicy(policy::IncrementRatioBelow, history::Array{RasLayerVerdict,1})
-    if  length(history) < 3    return( RasStoppingVerdict(false, "") )    end   ## need two non-NaN increments
+    if  length(history) < 3    return( RasStoppingVerdict(false, "") )    end   # need two non-NaN increments
     last = history[end];    prev = history[end-1]
     if  isnan(last.increment)  ||  isnan(prev.increment)  ||  prev.increment == 0.
         return( RasStoppingVerdict(false, "") )
@@ -1185,7 +1190,7 @@ function proposeNextShells(policy::RasSpectrumOrderedShellPolicy, coreShells::Ar
                 energy = minimum( orb.energy  for (ss, orb) in candidateOrbitals
                                               if  ss.n == n  &&  Basics.subshell_l(ss) == l )
                 push!(candidates, (sh, energy))
-                break    ## the lowest unused n of this l only; a higher n of the SAME l is not offered yet
+                break    # the lowest unused n of this l only; a higher n of the SAME l is not offered yet
             end
         end
     end
@@ -1242,6 +1247,7 @@ struct  CiSettings
     eeInteractionCI        ::AbstractEeInteraction 
     levelSelectionCI       ::LevelSelection
 end
+
 
 """
 `AtomicState.CiSettings()`  ... constructor for setting the default values.
@@ -1824,6 +1830,7 @@ function sizeRasStep(refConfigs::Array{Configuration,1}, symmetries::Array{Level
     return( (nCsf=nCsf, nSub=nSub, lMax=lMax, blocks=blocks, sumN2=sumN2, maxN2=maxN2, blockShare=share) )
 end
 
+
 """
 `AtomicState.tryRun(rep::AtomicState.Representation; nSample::Int64=2000, printout::Bool=true)`
     ... a TRY RUN of a RAS ladder: for every step it reports what the production job would cost in memory and in
@@ -1871,7 +1878,7 @@ function tryRun(rep::AtomicState.Representation; nSample::Int64=2000, printout::
         error("AtomicState.tryRun is implemented for a RasExpansion; the representation given carries " *
               "$(typeof(rep.repType)).  Other representation types follow by the same pattern.")
     end
-    ## Through the accessor, so that a new route type needs no change here; every route carries its own natural budget.
+    # Through the accessor, so that a new route type needs no change here; every route carries its own natural budget.
     repType = rep.repType;    maxIter = Basics.maxIterations(repType.settings.scfRoute)
     results = NamedTuple[]
 
@@ -1969,8 +1976,8 @@ function tryRun(rep::AtomicState.Representation; nSample::Int64=2000, printout::
         # orbital update or the diagonalisation, so that factor is carried explicitly.
         iterOverAngular = 3.0
         tIter  = tBuild * iterOverAngular
-        tAllT  = tBuild + tIter * maxIter                      ## build once, then iterate
-        tOneT  = (tBuild + tIter) * maxIter                    ## rebuild every iteration
+        tAllT  = tBuild + tIter * maxIter                      # build once, then iterate
+        tOneT  = (tBuild + tIter) * maxIter                    # rebuild every iteration
 
         if  printout
             println("\n>> step $istep:  $nCsf CSFs, $nSub subshells, $(length(blocks)) blocks, largest " *

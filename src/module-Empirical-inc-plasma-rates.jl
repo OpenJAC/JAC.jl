@@ -501,7 +501,7 @@ function photoexcitationPlasmaRatePerIon(dist::Distribution.AbstractPhotonDistri
     EinsteinA = Empirical.photoemissionEinsteinA(iConf, fConf, approx, printout=false)
     c         = Defaults.getDefaults("speed of light: c")
     pnDensity = Distribution.photonNumberDensity(dist, EinsteinA.energy)
-    occNumber = pnDensity * pi^2 * c^3 / EinsteinA.energy^2    ## n̄ = 1/(exp(ω/T)-1); photonNumberDensity returns n(ω) = ω²/(π²c³) × n̄
+    occNumber = pnDensity * pi^2 * c^3 / EinsteinA.energy^2    # n̄ = 1/(exp(ω/T)-1); photonNumberDensity returns n(ω) = ω²/(π²c³) × n̄
     rate      = Basics.extractFromConfiguration(Basics.Multiplicity(), iConf) /
                 Basics.extractFromConfiguration(Basics.Multiplicity(), fConf) * EinsteinA.rate * occNumber
 
@@ -546,7 +546,7 @@ function photodeexcitationPlasmaRatePerIon(dist::Distribution.AbstractPhotonDist
     EinsteinA = Empirical.photoemissionEinsteinA(iConf, fConf, approx, printout=false)
     c         = Defaults.getDefaults("speed of light: c")
     pnDensity = Distribution.photonNumberDensity(dist, EinsteinA.energy)
-    occNumber = pnDensity * pi^2 * c^3 / EinsteinA.energy^2    ## n̄ = 1/(exp(ω/T)-1)
+    occNumber = pnDensity * pi^2 * c^3 / EinsteinA.energy^2    # n̄ = 1/(exp(ω/T)-1)
     rate      = EinsteinA.rate * (1.0 + occNumber)
 
     # Report about this estimate
@@ -2097,19 +2097,19 @@ function excitationAutoionizationPlasmaAlpha(eDist::Distribution.ElectronMaxwell
     kTeV = Defaults.convertUnits("energy: from atomic to eV", eDist.T)
     sequence = "";   IEA = 0.;   alphaCgs = 0.;   f1 = Empirical.exponentialIntegralF1
 
-    if      (Z,N) == (20,20)                                  ## Ca (neutral)
+    if      (Z,N) == (20,20)                                  # Ca (neutral)
         sequence = "Ca (neutral), other species";   a = 6.0e-17;   IEA = 25.;   y = IEA/kTeV
         alphaCgs = 6.69e7 * a*IEA / sqrt(kTeV) * exp(-y) * (1 + 1.12*f1(y))
-    elseif  (Z,N) == (20,19)                                  ## Ca+
+    elseif  (Z,N) == (20,19)                                  # Ca+
         sequence = "Ca+, other species";   a = 9.8e-17;   IEA = 29.;   y = IEA/kTeV
         alphaCgs = 6.69e7 * a*IEA / sqrt(kTeV) * exp(-y) * (1 + 1.12*f1(y))
-    elseif  (Z,N) == (26,23)                                  ## Fe3+
+    elseif  (Z,N) == (26,23)                                  # Fe3+
         sequence = "Fe3+, other species";   a = 1.8e-17;   IEA = 60.;   y = IEA/kTeV
         alphaCgs = 6.69e7 * a*IEA / sqrt(kTeV) * exp(-y) * (1 + 1.00*f1(y))
-    elseif  (Z,N) == (26,22)                                  ## Fe4+
+    elseif  (Z,N) == (26,22)                                  # Fe4+
         sequence = "Fe4+, other species";   a = 5.0e-18;   IEA = 73.;   y = IEA/kTeV
         alphaCgs = 6.69e7 * a*IEA / sqrt(kTeV) * exp(-y) * (1 + 1.00*f1(y))
-    elseif  N == 3                                            ## Li-like
+    elseif  N == 3                                            # Li-like
         sequence = "Li-like"
         Zeff = Z - 0.43;   b = 1.0/(1.0 + 2.0e-4*Z^3)
         IEA  = 13.6 * ( (Z-0.835)^2 - 0.25*(Z-1.62)^2 );   y = IEA/kTeV
@@ -2119,7 +2119,7 @@ function excitationAutoionizationPlasmaAlpha(eDist::Distribution.ElectronMaxwell
         elseif  (Z,N) == (7,3)     alphaCgs = alphaCgs * 0.8
         elseif  (Z,N) == (8,3)     alphaCgs = alphaCgs * 1.25
         end
-    elseif  N == 11                                           ## Na-like
+    elseif  N == 11                                           # Na-like
         sequence = "Na-like"
         if      Z <= 16
             IEA = 26.0*(Z-10);   a = 2.8e-17*(Z-11.0)^(-0.7);   y = IEA/kTeV
@@ -2131,7 +2131,7 @@ function excitationAutoionizationPlasmaAlpha(eDist::Distribution.ElectronMaxwell
             error("Empirical.excitationAutoionizationPlasmaAlpha (Arnaud1985EA, Na-like): Z = 17 falls in the " *
                   "gap between the paper's two fitted ranges (Z<=16 and 18<=Z<=28) and is not covered.")
         end
-    elseif  N in (12,13,14,15,16)  &&  Z >= 18                ## Mg/Al/Si/P/S-like
+    elseif  N in (12,13,14,15,16)  &&  Z >= 18                # Mg/Al/Si/P/S-like
         aIEA = 4.0e-13 / Z^2
         if      N == 12   sequence = "Mg-like";  IEA = 10.3*(Z-10.0)^1.52
         elseif  N == 13   sequence = "Al-like";  IEA = 18.0*(Z-11.0)^1.33

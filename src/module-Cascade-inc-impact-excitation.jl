@@ -19,9 +19,9 @@ function computeSteps(scheme::Cascade.ImpactExcitationScheme, comp::Cascade.Comp
                                                 "up to $nc impact-excitation lines: ")   end 
                                                 
         if  step.process == Basics.ImpactExc() 
-            ## The nuclear model has to be passed on: the continuum orbital of the scattered electron is generated
-            ## in its field.  The former call omitted it, but that could not be noticed because
-            ## ImpactExcitation.computeLinesCascade did not exist at all.
+            # The nuclear model has to be passed on: the continuum orbital of the scattered electron is generated
+            # in its field.  The former call omitted it, but that could not be noticed because
+            # ImpactExcitation.computeLinesCascade did not exist at all.
             newLines = ImpactExcitation.computeLinesCascade(step.finalMultiplet, step.initialMultiplet, comp.nuclearModel,
                                                             comp.grid, step.settings, output=true, printout=false)
             append!(linesE, newLines);    nt = length(linesE)
@@ -32,7 +32,7 @@ function computeSteps(scheme::Cascade.ImpactExcitationScheme, comp::Cascade.Comp
         if  printSummary   println(iostream, "\n*    Step $st:: A total of $(length(newLines)) $(string(step.process)) lines are calculated, " *
                                                 "giving now rise to a total of $nt $(string(step.process)) impact-excitation lines." )   end      
     end
-    #
+
     return( linesE )
 end
 
@@ -52,15 +52,15 @@ function determineSteps(scheme::Cascade.ImpactExcitationScheme, comp::Cascade.Co
         for  initialBlock in initialList
             for  excitedBlock in excitedList
                 if  initialBlock.NoElectrons == excitedBlock.NoElectrons
-                    ## The former call was ImpactExcitation.Settings(false, false, false, false, LineSelection()),
-                    ## i.e. five positional arguments of the wrong types against a ten-field struct -- a MethodError
-                    ## before any physics happened, and it also passed no electron energies at all.  Take the
-                    ## energies, the partial-wave cap and the energy shift from the scheme, as the other schemes do.
+                    # The former call was ImpactExcitation.Settings(false, false, false, false, LineSelection()),
+                    # i.e. five positional arguments of the wrong types against a ten-field struct -- a MethodError
+                    # before any physics happened, and it also passed no electron energies at all.  Take the
+                    # energies, the partial-wave cap and the energy shift from the scheme, as the other schemes do.
                     maxKappa = length(scheme.lValues) > 0 ? maximum(scheme.lValues) + 1 : 300
-                    ## calcRateCoefficient is deliberately NOT set here.  A cascade COMPUTATION produces lines and
-                    ## nothing else; turning lines into collision strengths and rate coefficients is the job of a
-                    ## cascade SIMULATION, which is the distinction drawn in Symmetry 13, 520 (2021) and
-                    ## Eur. Phys. J. D 78, 75 (2024).  See Cascade.EieRateCoefficients for the simulation side.
+                    # calcRateCoefficient is deliberately NOT set here.  A cascade COMPUTATION produces lines and
+                    # nothing else; turning lines into collision strengths and rate coefficients is the job of a
+                    # cascade SIMULATION, which is the distinction drawn in Symmetry 13, 520 (2021) and
+                    # Eur. Phys. J. D 78, 75 (2024).  See Cascade.EieRateCoefficients for the simulation side.
                     settings = ImpactExcitation.Settings(ImpactExcitation.Settings(),
                                                          electronEnergies = scheme.electronEnergies,
                                                          energyShift      = scheme.electronEnergyShift,
@@ -70,7 +70,7 @@ function determineSteps(scheme::Cascade.ImpactExcitationScheme, comp::Cascade.Co
                 end
             end
         end
-        #
+
     else  error("Unsupported cascade approach.")
     end
     return( stepList )
@@ -86,7 +86,7 @@ end
 function generateBlocks(scheme::Cascade.ImpactExcitationScheme, comp::Cascade.Computation, confs::Array{Configuration,1}; printout::Bool=true)
     blockList = Cascade.Block[]
     printSummary, iostream = Defaults.getDefaults("summary flag/stream")
-    #
+
     if    comp.approach == AverageSCA()
         if  printout
         println("\n* Generate blocks for excitation computations:")
@@ -102,12 +102,12 @@ function generateBlocks(scheme::Cascade.ImpactExcitationScheme, comp::Cascade.Co
         println(iostream, "    + only E1 excitations are considered. \n")
         end
         end     # printout
-        #
+
         for  confa  in confs
             print("  Multiplet computations for $(string(confa)[1:end])   with $(confa.NoElectrons) electrons ... ")
             if  printSummary   println(iostream, "\n*  Multiplet computations for $(string(confa)[1:end])   with $(confa.NoElectrons) electrons ... ")   end
-            ## SelfConsistent.performSCF returns a Multiplet, not a Basis; the orbitals sit one level deeper.
-            ## The variable was still named and used as if it were a Basis, which raised a FieldError here.
+            # SelfConsistent.performSCF returns a Multiplet, not a Basis; the orbitals sit one level deeper.
+            # The variable was still named and used as if it were a Basis, which raised a FieldError here.
             scfMultiplet = SelfConsistent.performSCF([confa], comp.nuclearModel, comp.grid, comp.asfSettings; printout=false)
             multiplet    = Hamiltonian.performCIwithFrozenOrbitals([confa], scfMultiplet.levels[1].basis.orbitals, comp.nuclearModel,
                                                                    comp.grid, Cascade.asfSettingsForApproach(comp.approach, comp.asfSettings); printout=false)
@@ -132,8 +132,8 @@ function generateConfigurationsForImpactExcitation(multiplets::Array{Multiplet,1
     # Determine all (reference) configurations from multiplets and generate the 'excited' configurations due to the specificed excitations
     initialConfList = Configuration[]
     for mp  in  multiplets   
-        ## Basics.extractNonrelativisticConfigurations no longer exists; every other cascade scheme uses the
-        ## FromBasis theme of Basics.extractConfigurations for exactly this purpose.
+        # Basics.extractNonrelativisticConfigurations no longer exists; every other cascade scheme uses the
+        # FromBasis theme of Basics.extractConfigurations for exactly this purpose.
         confList = Basics.extractConfigurations(Basics.FromBasis(), mp.levels[1].basis)
         for  conf in confList   if  conf in initialConfList   nothing   else   push!(initialConfList, conf)      end      end
     end
@@ -142,12 +142,12 @@ function generateConfigurationsForImpactExcitation(multiplets::Array{Multiplet,1
     en     = Float64[];   for conf in initialConfList    push!(en, -Semiempirical.estimate(EstimateBindingEnergyWilliams2000(), round(Int64, nm.Z), conf))   end
     maxen  = maximum(en);    minen  = minimum(en);  
     println(">>> initial configuration(s) have energies from $minen  to  $maxen  [a.u.].")
-    #
+
     if      scheme.NoFreeElectronEnergies > 0  mx = scheme.maxFreeElectronEnergy 
     else                                       mx = maximum( scheme.electronEnergies )
     end
     maxen = maxen + Defaults.convertUnits("energy: from predefined to atomic unit", mx) 
-    #
+
     newBlockConfList = Configuration[]
     for  conf  in  blockConfList    meanEnergy = -Semiempirical.estimate(EstimateBindingEnergyWilliams2000(), round(Int64, nm.Z), conf)
         if  meanEnergy <= maxen     push!(newBlockConfList, conf) 
@@ -173,7 +173,7 @@ end
 function perform(scheme::ImpactExcitationScheme, comp::Cascade.Computation; output::Bool=false, outputToFile::Bool=true, outputDirectory::String="")
     if  output    results = Dict{String, Any}()    else    results = nothing    end
     printSummary, iostream = Defaults.getDefaults("summary flag/stream")
-    #
+
     # Perform the SCF and CI computation for the intial-state multiplets if initial configurations are given
     if  comp.initialConfigs != Configuration[]
         multiplet  = SelfConsistent.performSCF(comp.initialConfigs, comp.nuclearModel, comp.grid, comp.asfSettings; printout=false)
@@ -184,12 +184,12 @@ function perform(scheme::ImpactExcitationScheme, comp::Cascade.Computation; outp
     # Print out initial configurations and levels 
     Cascade.displayLevels(stdout, multiplets, sa="initial ")
     if  printSummary   Cascade.displayLevels(iostream, multiplets, sa="initial ")                            end
-    #
+
     # Generate subsequent cascade configurations as well as display and group them together
     wa  = Cascade.generateConfigurationsForImpactExcitation(multiplets, comp.scheme, comp.nuclearModel)
     wb1 = Basics.displayConfigurations(comp.nuclearModel.Z, wa[1], sa="(initial part of the) impact-excited ")
     wb2 = Basics.displayConfigurations(comp.nuclearModel.Z, wa[2], sa="(generated part of the) impact-excited ")
-    #
+
     # Determine first all configuration 'blocks' and from them the individual steps of the cascade
     wc1 = Cascade.generateBlocks(scheme, comp::Cascade.Computation, wb1)
     wc2 = Cascade.generateBlocks(scheme, comp::Cascade.Computation, wb2, printout=false)
@@ -212,11 +212,11 @@ function perform(scheme::ImpactExcitationScheme, comp::Cascade.Computation; outp
         results = Base.merge( results, Dict("generated multiplets:"      => gMultiplets) )    
         results = Base.merge( results, Dict("impact-excitation lines:"   => linesE) )
         results = Base.merge( results, Dict("cascade data:"              => data ) )
-        #
+
         #  Write out the result to file to later continue with simulations on the cascade data
         if  outputToFile
-            ## Was "zzz-cascade-photoexcitation-computations-...", a copy-paste artefact: this scheme writes
-            ## impact-excitation lines, not photo-excitation ones.
+            # Was "zzz-cascade-photoexcitation-computations-...", a copy-paste artefact: this scheme writes
+            # impact-excitation lines, not photo-excitation ones.
             filename = "zzz-cascade-impact-excitation-computations-" * string(Dates.now())[1:13] * ".jld"
             println("\n* Write all results to disk; use:\n   JLD2.save(''$filename'', results) \n   using JLD2 " *
                     "\n   results = JLD2.load(''$filename'')    ... to load the results back from file.")
@@ -225,6 +225,6 @@ function perform(scheme::ImpactExcitationScheme, comp::Cascade.Computation; outp
             Cascade.writeDataFile(filename, results)
         end
     end
-    ## return( results isa Dict{String,Any} ? Basics.PerformResults(results) : results )
+    # return( results isa Dict{String,Any} ? Basics.PerformResults(results) : results )
     return( results isa Dict{String,Any} ? Basics.PerformResults(results) : results )
 end

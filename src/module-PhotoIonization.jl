@@ -466,13 +466,13 @@ function  computeAmplitudesPropertiesPlasma(line::PhotoIonization.Line, nm::Nucl
     # -- 174.7 at omega = 1 keV, and growing as omega falls. It now uses the SAME factor as
     # PhotoIonization.computeCrossSection, which is what the field-free path uses and which is validated against
     # Stobbe's closed-form 1s cross section.
-    #
+
     # WHY THE OLD FACTOR LOOKED RIGHT: 4 pi^2 alpha omega |d|^2 IS the textbook photoionization cross section --
     # for a DIPOLE MATRIX ELEMENT. JAC's multipole amplitude is not one: it is built on j_L(alpha omega r), whose
     # leading term is (alpha omega r)^L/(2L+1)!!, so an E1 amplitude ALREADY carries one power of alpha omega and
     # |M|^2 carries two. The prefactor must therefore go as 1/(alpha omega), not as alpha omega. The old line was a
     # correct formula applied to the wrong object.
-    #
+
     # MEASURED, both routes in one session on the same case (Ne 1s^2 2s^2 2p^6 -> 1s 2s^2 2p^6, omega = 1000 eV,
     # E1, Coulomb, NoPlasmaModel so that only the route differs):
     #        route                                  channels   sum |amp|^2      sigma/sum
@@ -481,7 +481,7 @@ function  computeAmplitudesPropertiesPlasma(line::PhotoIonization.Line, nm::Nucl
     # The summed amplitudes agree to six figures and the channel counts are equal, so the ENTIRE difference was the
     # prefactor. In barn: 0.2291 Mb against 0.001311 Mb, and 0.229 Mb is the right order for Ne K-shell just above
     # its 870 eV edge, which the old value was not.
-    #
+
     # WHY IT SURVIVED SO LONG: examples/example-Jb.jl branch b is the only caller, and it runs ALL FOUR of its
     # plasma models -- including the "field-free" NoPlasmaModel() -- through THIS function. Its checks are
     # monotonicity in screening strength, absence of discontinuities, and convergence to the field-free limit;
@@ -566,14 +566,14 @@ function computeCrossSection(partialWaves::Array{PhotoIonization.PartialWave,1},
     end
     # THE CROSS SECTION IS AVERAGED OVER THE INITIAL MAGNETIC SUBLEVELS, hence the 1/(2J_i+1); this is the
     # convention of every published table, and the quantity a measurement on an unpolarized target returns.
-    #
+
     # CORRECTED 10-Sep-2026, and the correction is a clean factor.  Hydrogen 1s, point nucleus, E1 only, against
     # Stobbe's closed form at x = omega/omega_th = 1.5, 2, 3 gave 4.18259, 1.86266 and 0.57673 Mb against
     # Stobbe's 2.09124, 0.93133 and 0.28838 -- ratios 2.0000, 2.0000, 1.9999, and hydrogen 1s has J = 1/2.
     # Independently, the three (3)P levels of B+ 1s^2 2s2p, whose K-shell cross sections MUST be equal since they
     # share the same two 1s electrons, came out as exactly 1 : 3 : 5 for J = 0, 1, 2, and sigma/(2J+1) equal to
     # six figures AND equal to the J = 0 ground level.  Two independent routes, one factor.
-    #
+
     # WHY THE EARLIER CHECK MISSED IT, recorded because the reasoning was sound and still wrong: the 28-Aug-2026
     # comment here quoted the same Stobbe comparison with ratios 1.205, 1.101, 1.118 and called them "flat to
     # ~10 %".  A constant factor of two cannot be seen through a 10 % scatter, and the scatter was JAC's own --
@@ -1286,7 +1286,7 @@ function  displayResults(stream::IO, lines::Array{PhotoIonization.Line,1}, setti
                                             TableStrings.inUnits("cross section"); na=3)
     println(stream, sa);    println(stream, sb);    println(stream, "  ", TableStrings.hLine(nx)) 
 
-    wx = 1.0    ## the normalisation settled Aug-2023;  the alternatives tried were wx = 2.0 and wx = pi/2
+    wx = 1.0    # the normalisation settled Aug-2023;  the alternatives tried were wx = 2.0 and wx = pi/2
     for  line in lines
         sa  = "";    isym = LevelSymmetry( line.initialLevel.J, line.initialLevel.parity)
                         fsym = LevelSymmetry( line.finalLevel.J,   line.finalLevel.parity)
