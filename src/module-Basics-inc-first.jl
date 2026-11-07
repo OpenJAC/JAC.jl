@@ -29,6 +29,7 @@ export  EmGauge,   NoGauge,   Coulomb,  Babushkin,  Magnetic,  Velocity,  Length
 
 """
 `Basics.EmGauge(sa::String)`  ... constructor for a given String.
+        A gauge::Basics.EmGauge is returned.
 """
 function EmGauge(sa::String)
     if       sa in ["none", "NoGauge"]         wa = NoGauge
@@ -436,6 +437,7 @@ export  Parity,   plus,  minus
 
 """
 `Basics.Parity(sa::String)`  ... constructor for a given String.
+        A parity::Basics.Parity is returned.
 """
 function Parity(sa::String)
     if       sa == "+"    wa = plus
@@ -449,6 +451,7 @@ end
 
 """
 `Basics.invertParity(p::Parity)`  ... inverts the given parity plus <--> minus.
+        A parity::Basics.Parity is returned.
 """
 function invertParity(p::Parity)
     if       p == plus    return( minus )
@@ -541,6 +544,7 @@ end
 
 """
 `Basics.shellSplitIntoSubshells(sh::Shell)'  ... to convert a non-relativistic shell into a list of Subshell[..]
+        An Array{Subshell,1} is returned.
 """
 function shellSplitIntoSubshells(sh::Shell)
     subshells = Subshell[]
@@ -841,6 +845,7 @@ export  UseGauge,   UseCoulomb,  UseBabushkin
 
 """
 `Basics.UseGauge(sa::String)`  ... constructor for a given String.
+        A gauge::Basics.UseGauge is returned.
 """
 function UseGauge(sa::String)
     if       sa == "Coulomb"                   wa = UseCoulomb
@@ -1102,6 +1107,7 @@ end
 `Base.:(==)(confa::Configuration, confb::Configuration)`  
     ... compares (recursively) two non-relativistic configurations and return true if all subfields are equal, 
         and false otherwise
+        A value::Bool is returned.
 """
 function  Base.:(==)(confa::Configuration, confb::Configuration)
     if   confa.NoElectrons  != confb.NoElectrons    return( false )    end
@@ -1195,6 +1201,7 @@ end
 `Base.:(==)(confa::ConfigurationR, confb::ConfigurationR)`  
     ... compares (recursively) two relativistic configurations and return true if all subfields are equal, 
         and false otherwise
+        A value::Bool is returned.
 """
 function  Base.:(==)(confa::ConfigurationR, confb::ConfigurationR)
     # THE COMPARISON RUNS OVER BOTH KEY SETS AND TREATS A MISSING SUBSHELL AS ONE OF OCCUPATION ZERO, exactly as

@@ -51,7 +51,10 @@ reading a sample of what it changes.
        A four-line window saw an opening backtick with no closing one and reported 148 docstrings
        as carrying no signature where 88 do -- and the 60 extra were the very docstrings this
        project had just corrected to reproduce the function's full typed header.
-   14. AN APPENDED `##` IN A DATA TABLE IS A ROW INDEX.  `module-LSjj-inc.jl` alone carries
+   14. A GENERIC `function name end` DECLARATION HAS NO BODY and therefore no return value and no
+       signature of its own;  `module-Basics.jl` holds 103 of them, some with a docstring.  They
+       were excluded from the missing-docstring count and not from the others.
+   15. AN APPENDED `##` IN A DATA TABLE IS A ROW INDEX.  `module-LSjj-inc.jl` alone carries
        20541 of them, numbering the jj-LS coefficient rows against the published tables.
        They are reported separately from ordinary appended comments and are never swept.
 """
@@ -199,7 +202,10 @@ def audit(path):
         while j < len(L) and '"""' not in L[j]:  j += 1
         k = j+1
         while k < len(L) and L[k].strip() == "":  k += 1
-        if k < len(L) and FUNCOL.match(L[k]):
+        ## A GENERIC `function name end` DECLARATION HAS NO BODY, so it can state no return value
+        ## and has no signature of its own.  `module-Basics.jl` holds 103 of them, several carrying
+        ## a docstring, and counting them put the missing-return figure one too high per docstring.
+        if k < len(L) and FUNCOL.match(L[k]) and not GENDEC.match(L[k]):
             r["funcDocs"] += 1
             ## THE WHITESPACE IS NORMALISED BEFORE THE SEARCH.  A docstring may wrap its own return
             ## statement across a line break -- "Nothing is\n              returned." -- and 83 of

@@ -88,6 +88,7 @@ end
 """
 `Base.:(==)(wa::Kronecker, wb::Kronecker)`  
     ... compares two (symbolic) Kronecker deltas and return true if all subfields are equal under permutation, and false otherwise.
+        A value::Bool is returned.
 """
 function  Base.:(==)(wa::Kronecker, wb::Kronecker)
     if  (wa.i == wb.i  &&  wa.k == wb.k)   ||    (wa.i == wb.k  &&  wa.k == wb.i)    return( true )
@@ -128,6 +129,7 @@ end
 `Base.:(==)(wa::Triangle, wb::Triangle)`  
     ... compares two (symbolic) Triangle deltas and return true if all subfields are equal under permutation, 
         and false otherwise.
+        A value::Bool is returned.
 """
 function  Base.:(==)(wa::Triangle, wb::Triangle)
     wasymbols = [wa.ja, wa.jb, wa.jc];    wbsymbols = [wb.ja, wb.jb, wb.jc]
@@ -174,6 +176,7 @@ end
 """
 `Base.:(==)(wa::W3j, wb::W3j)`  
     ... compares two (symbolic) Wigner 3-j symbols and return true if all subfields are equal, and false otherwise.
+        A value::Bool is returned.
 """
 function  Base.:(==)(wa::W3j, wb::W3j)
     if   wa.ja != wb.ja   ||   wa.jb != wb.jb   ||   wa.jc != wb.jc   ||   
@@ -221,6 +224,7 @@ end
 """
 `Base.:(==)(wa::W6j, wb::W6j)`  
     ... compares two (symbolic) Wigner 6j symbols and return true if all subfields are equal, and false otherwise.
+        A value::Bool is returned.
 """
 function  Base.:(==)(wa::W6j, wb::W6j)
     if   wa.a != wb.a   ||   wa.b != wb.b   ||   wa.c != wb.c   ||   
@@ -273,6 +277,7 @@ end
 """
 `Base.:(==)(wa::W9j, wb::W9j)`  
     ... compares two (symbolic) Wigner 6j symbols and return true if all subfields are equal, and false otherwise.
+        A value::Bool is returned.
 """
 function  Base.:(==)(wa::W9j, wb::W9j)
     if   wa.a != wb.a   ||   wa.b != wb.b   ||   wa.c != wb.c   ||   
@@ -336,6 +341,7 @@ end
 `Base.:(==)(ya::Ylm, yb::Ylm)`  
     ... compares two (symbolic) spherical harmonics Y_lm (theta,phi) and return true if all subfields are equal, 
         and false otherwise.
+        A value::Bool is returned.
 """
 function  Base.:(==)(ya::Ylm, yb::Ylm)
     if   ya.l != yb.l   ||   ya.m != yb.m   ||   ya.theta != yb.theta   ||   ya.phi != yb.phi    return( false )    
@@ -379,6 +385,7 @@ end
 `Base.:(==)(da::Djpq, db::Djpq)`  
     ... compares two (symbolic) small Wigner rotation matrices d^(j)_pq (beta) and return true if all subfields are equal, 
         and false otherwise.
+        A value::Bool is returned.
 """
 function  Base.:(==)(da::Djpq, db::Djpq)
     if   da.j != db.j   ||   da.p != db.p   ||   da.q != db.q   ||   da.beta != db.beta     return( false )    
@@ -409,6 +416,7 @@ end
 """
 `Base.:(==)(ntga::Integral, ntgb::Integral)`  
     ... compares two (symbolic) integrals and return true if all subfields are equal, and false otherwise.
+        A value::Bool is returned.
 """
 function  Base.:(==)(ntga::Integral, ntgb::Integral)
     if   ntga.var != ntgb.var   ||   ntga.low != ntgb.low   ||   ntga.up != ntgb.up     return( false )    
@@ -533,6 +541,7 @@ end
 """
 `Base.:(==)(rexa::RacahExpression, rexb::RacahExpression)`  
     ... compares two (symbolic) Racah expressions and return true if all subfields are equal, and false otherwise.
+        A value::Bool is returned.
 """
 function  Base.:(==)(rexa::RacahExpression, rexb::RacahExpression)
     if   rexa.phase  != rexb.phase   ||   rexa.weight  != rexb.weight       return( false )     end
@@ -756,6 +765,7 @@ end
 """
 `RacahAlgebra.evaluate(wj::Union{W3j,W6j,W9j})`  
     ... attempts to evaluate a symbolic Wigner 3j, 6j or 9j symbols by means of special values.
+        Either the special value, a rex::RacahExpression, or nothing where no special value is known, is returned.
 """
 function  evaluate(wj::Union{W3j,W6j,W9j})
     wa = RacahAlgebra.specialValue(wj)
@@ -769,6 +779,7 @@ end
 """
 `RacahAlgebra.evaluate(ylm::Ylm)`  
     ... attempts to evaluate a symbolic spherical harmonic by means of special values.
+        Either the special value, a rex::RacahExpression, or nothing where no special value is known, is returned.
 """
 function  evaluate(ylm::Ylm)
     error("not yet implemented")
@@ -783,6 +794,7 @@ end
 """
 `RacahAlgebra.evaluate(djpq::Djpq)`  
     ... attempts to evaluate a symbolic (small) Wigner rotation matrix by means of special values.
+        Either the special value, a rex::RacahExpression, or nothing where no special value is known, is returned.
 """
 function  evaluate(djpq::Djpq)
     error("not yet implemented")
