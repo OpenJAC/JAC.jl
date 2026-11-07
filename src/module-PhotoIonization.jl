@@ -96,15 +96,19 @@ end
 
 
 """
-`PhotoIonization.Settings(set::PhotoIonization.Settings;`
-
-        multipoles=..,                      gauges=..,                  photonEnergies=..,          electronEnergies=..,
-        thetas=..,                          calcAnisotropy=..,          calcPartialCs..,            calcTimeDelay=..,
-        calcNonE1AngleDifferentialCS=..,    calcTensors=..,             calcBiorthogonal=..,        printBefore=..,
-        lineSelection=..,                   stokes=..,                  freeElectronShift=..,       lValues=..,
-        continuumExchange=.. )
+`PhotoIonization.Settings(set::PhotoIonization.Settings;
+    multipoles::Union{Nothing,Array{EmMultipole,1}}=nothing,                gauges::Union{Nothing,Array{UseGauge,1}}=nothing,
+    photonEnergies::Union{Nothing,Array{Float64,1}}=nothing,                electronEnergies::Union{Nothing,Array{Float64,1}}=nothing,
+    thetas::Union{Nothing,Array{Float64,1}}=nothing,                        calcAnisotropy::Union{Nothing,Bool}=nothing,
+    calcPartialCs::Union{Nothing,Bool}=nothing,                             calcTimeDelay::Union{Nothing,Bool}=nothing,
+    calcNonE1AngleDifferentialCS::Union{Nothing,Bool}=nothing,              calcTensors::Union{Nothing,Bool}=nothing,
+    calcBiorthogonal::Union{Nothing,Bool}=nothing,                          printBefore::Union{Nothing,Bool}=nothing,
+    lineSelection::Union{Nothing,LineSelection}=nothing,
+    stokes::Union{Nothing,ExpStokes}=nothing,                               freeElectronShift::Union{Nothing,Float64}=nothing,
+    lValues::Union{Nothing,Array{Int64,1}}=nothing,                         continuumExchange::Union{Nothing,Bool}=nothing)`
 
     ... constructor for modifying the given PhotoIonization.Settings by 'overwriting' the previously selected parameters.
+        A `settings::PhotoIonization.Settings` is returned.
 """
 function Settings(set::PhotoIonization.Settings;
     multipoles::Union{Nothing,Array{EmMultipole,1}}=nothing,                gauges::Union{Nothing,Array{UseGauge,1}}=nothing,

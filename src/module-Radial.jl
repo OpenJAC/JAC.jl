@@ -190,15 +190,18 @@ end
 
 
 """
-`Radial.Grid(gr::Radial.Grid;`
+`Radial.Grid(gr::Radial.Grid;
+    rnt::Union{Nothing,Float64}=nothing,        h::Union{Nothing,Float64}=nothing,      hp::Union{Nothing,Float64}=nothing,
+    rbox::Union{Nothing,Float64}=nothing,       orderL::Union{Nothing,Int64}=nothing,
+    orderS::Union{Nothing,Int64}=nothing,       orderGL::Union{Nothing,Int64}=nothing,  printout::Bool=false)`
 
-        rnt=..,     h=..,       hp=..,      rbox=..,    orderL=..,  orderS=..,  orderGL=..,  printout=..)
     ... constructor for modifying the given Radial.Grid by 'overwriting' the previously selected parameters.
 
         The keyword nth= was removed on 12-Aug-2026.  It was accepted and then silently dropped: the spacing
         of the B-spline break points is set by orderGL in Radial.determineGrid, and Grid(gr; nth=3) left the
         grid unchanged.  Nothing in src/, examples/ or test/ ever passed it.  A second knob for the same
         quantity is not restored here; use orderGL.
+            A `grid::Radial.Grid` is returned.
 """
 function Grid(gr::Radial.Grid;
     rnt::Union{Nothing,Float64}=nothing,        h::Union{Nothing,Float64}=nothing,      hp::Union{Nothing,Float64}=nothing,

@@ -211,9 +211,8 @@ end
 
 
 """
-`Plasma.estimateCollisionalRadiativeCost(scheme::Plasma.CollisionalRadiativeScheme, computation::Plasma.Computation;`
-
-        referencePair::Tuple{Int64,Int64}=(1,2))
+`Plasma.estimateCollisionalRadiativeCost(scheme::Plasma.CollisionalRadiativeScheme, computation::Plasma.Computation;
+                                          referencePair::Tuple{Int64,Int64}=(1,2))`
 
     ... estimates, WITHOUT running ImpactExcitation for every level pair, whether a Plasma.
         CollisionalRadiativeScheme computation is tractable. Generates the real level set (mean-field basis

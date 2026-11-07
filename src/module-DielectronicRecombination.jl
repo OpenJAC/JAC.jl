@@ -397,17 +397,20 @@ end
 
 
 """
-` (set::DielectronicRecombination.Settings;`
-
-        multipoles=..,             gauges=..,
-        calcOnlyPassages=..,       calcRateAlpha=..,         calcHyperfineResolved=..,  hfDrivenCapture=..,
-        mergedBeamKT=..,           mergedBeamEnergies=..,
-        calcPhotonSpectrum=..,
-        printBefore=..,            pathwaySelection=..,      electronEnergyShift=..,   photonEnergyShift=..,
-        mimimumPhotonEnergy=..,    temperatures=..,          corrections=..,           augerOperator=..,
-        continuumExchange=..)
+` (set::DielectronicRecombination.Settings;
+    multipoles::Union{Nothing,Array{EmMultipole,1}}=nothing,               gauges::Union{Nothing,Array{UseGauge,1}}=nothing,
+    calcOnlyPassages::Union{Nothing,Bool}=nothing,                         calcRateAlpha::Union{Nothing,Bool}=nothing,
+    calcHyperfineResolved::Union{Nothing,Bool}=nothing,                     hfDrivenCapture::Union{Nothing,Bool}=nothing,
+    calcPhotonSpectrum::Union{Nothing,Bool}=nothing,
+    printBefore::Union{Nothing,Bool}=nothing,                              pathwaySelection::Union{Nothing,PathwaySelection}=nothing,
+    electronEnergyShift::Union{Nothing,Float64}=nothing,                   photonEnergyShift::Union{Nothing,Float64}=nothing,
+    mimimumPhotonEnergy::Union{Nothing,Float64}=nothing,                   temperatures::Union{Nothing,Array{Float64,1}}=nothing,
+    mergedBeamKT::Union{Nothing,Tuple{Float64,Float64}}=nothing,           mergedBeamEnergies::Union{Nothing,Array{Float64,1}}=nothing,
+    corrections::Union{Nothing,Array{AbstractCorrections,1}}=nothing,      augerOperator::Union{Nothing,AbstractEeInteraction}=nothing,
+    continuumExchange::Union{Nothing,Bool}=nothing)`
 
     ... constructor for modifying the given DielectronicRecombination.Settings by 'overwriting' the previously selected parameters.
+        A `settings:: (set::DielectronicRecombination.Settings` is returned.
 """
 function Settings(set::DielectronicRecombination.Settings;
     multipoles::Union{Nothing,Array{EmMultipole,1}}=nothing,               gauges::Union{Nothing,Array{UseGauge,1}}=nothing,

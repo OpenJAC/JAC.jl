@@ -32,12 +32,14 @@ end
 
 
 """
-`Einstein.Settings(set::Einstein.Settings;`
-
-        multipoles=..,        printBefore=..,      lineSelection=..,
-        photonEnergyShift=.., mimimumPhotonEnergy=..,  maximumPhotonEnergy=..)
+`Einstein.Settings(set::Einstein.Settings;
+        multipoles::Union{Nothing,Array{EmMultipole,1}}=nothing,
+        printBefore::Union{Nothing,Bool}=nothing,            lineSelection::Union{Nothing,LineSelection}=nothing,
+        photonEnergyShift::Union{Nothing,Float64}=nothing,
+        mimimumPhotonEnergy::Union{Nothing,Float64}=nothing, maximumPhotonEnergy::Union{Nothing,Float64}=nothing)`
 
     ... keyword copy-constructor for re-defining selected values of a settings::Einstein.Settings.
+        A `settings::Einstein.Settings` is returned.
 """
 function Settings(set::Einstein.Settings;
         multipoles::Union{Nothing,Array{EmMultipole,1}}=nothing,

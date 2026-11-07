@@ -326,12 +326,15 @@ end
 
 
 """
-`DispersionCoefficient.Settings(set::DispersionCoefficient.Settings;`
-
-        orders=.., multipoles=.., calcAtomWall=.., wallDielectric=.., wallResonance=.., gMultiplet=..,
-        partnerB=.., printBefore=.., levelSelection=..)
+`DispersionCoefficient.Settings(set::DispersionCoefficient.Settings;
+        orders::Union{Nothing,Array{Int64,1}}=nothing,       multipoles::Union{Nothing,Array{EmMultipole,1}}=nothing,
+        calcAtomWall::Union{Nothing,Bool}=nothing,           wallDielectric::Union{Nothing,Float64}=nothing,
+        wallResonance::Union{Nothing,Float64}=nothing,       gMultiplet::Union{Nothing,Multiplet}=nothing,
+        partnerB::Union{Nothing,DispersionCoefficient.Partner}=nothing,
+        printBefore::Union{Nothing,Bool}=nothing,            levelSelection::Union{Nothing,LevelSelection}=nothing)`
 
     ... keyword copy-constructor for re-defining selected values of a settings::DispersionCoefficient.Settings.
+        A `settings::DispersionCoefficient.Settings` is returned.
 """
 function Settings(set::DispersionCoefficient.Settings;
         orders::Union{Nothing,Array{Int64,1}}=nothing,       multipoles::Union{Nothing,Array{EmMultipole,1}}=nothing,

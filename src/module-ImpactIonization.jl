@@ -100,12 +100,16 @@ end
 
 
 """
-`ImpactIonization.Settings(set::ImpactIonization.Settings;`
-
-        model=..,           multipleN=..,       impactEnergies=..,
-        calcPartialCs=..,   calcTotalCs=..,     shellSelection=..)
+`ImpactIonization.Settings(set::ImpactIonization.Settings;
+        model          ::Union{Nothing,ImpactIonization.AbstractModel} = nothing,
+        multipleN      ::Union{Nothing,Int64}                          = nothing,
+        impactEnergies ::Union{Nothing,Array{Float64,1}}               = nothing,
+        calcPartialCs  ::Union{Nothing,Bool}                           = nothing,
+        calcTotalCs    ::Union{Nothing,Bool}                           = nothing,
+        shellSelection ::Union{Nothing,ShellSelection}                 = nothing)`
 
     ... keyword copy-constructor for re-defining selected values of a settings::ImpactIonization.Settings.
+        A `settings::ImpactIonization.Settings` is returned.
 """
 function Settings(set::ImpactIonization.Settings;
         model          ::Union{Nothing,ImpactIonization.AbstractModel} = nothing,

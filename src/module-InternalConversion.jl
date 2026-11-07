@@ -174,12 +174,14 @@ end
 
 
 """
-`InternalConversion.Settings(set::InternalConversion.Settings;`
-
-        multipoles=.., gammaEnergy=.., maxKappa=.., printBefore=.., lineSelection=..,
-        acceptUnvalidated=.., continuumExchange=..)
+`InternalConversion.Settings(set::InternalConversion.Settings;
+        multipoles::Union{Nothing,Array{EmMultipole,1}}=nothing,   gammaEnergy::Union{Nothing,Float64}=nothing,
+        maxKappa::Union{Nothing,Int64}=nothing,                    printBefore::Union{Nothing,Bool}=nothing,
+        lineSelection::Union{Nothing,LineSelection}=nothing,       acceptUnvalidated::Union{Nothing,Bool}=nothing,
+        continuumExchange::Union{Nothing,Bool}=nothing)`
 
     ... keyword copy-constructor for re-defining selected values of a settings::InternalConversion.Settings.
+        A `settings::InternalConversion.Settings` is returned.
 """
 function Settings(set::InternalConversion.Settings;
         multipoles::Union{Nothing,Array{EmMultipole,1}}=nothing,   gammaEnergy::Union{Nothing,Float64}=nothing,

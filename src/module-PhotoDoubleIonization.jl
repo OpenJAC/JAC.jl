@@ -313,14 +313,18 @@ end
 
 
 """
-`PhotoDoubleIonization.Settings(set::PhotoDoubleIonization.Settings;`
-
-        multipoles=..,          gauges=..,                  photonEnergies=..,
-        electronEnergyShift=.., NoEnergySharings=..,     NoIntermediateEnergies=..,   intermediateEnergyFactor=..,
-        maxKappa=..,            calcDifferentialCs..,       printBefore=..,             lineSelection=..,
-        eeInteraction=..,       gMultiplet=..,              continuumExchange=..)
+`PhotoDoubleIonization.Settings(set::PhotoDoubleIonization.Settings;
+    multipoles::Union{Nothing,Array{EmMultipole,1}}=nothing,                gauges::Union{Nothing,Array{UseGauge,1}}=nothing,
+    photonEnergies::Union{Nothing,Array{Float64,1}}=nothing,                electronEnergyShift::Union{Nothing,Float64}=nothing,
+    NoEnergySharings::Union{Nothing,Int64}=nothing,                         NoIntermediateEnergies::Union{Nothing,Int64}=nothing,
+    intermediateEnergyFactor::Union{Nothing,Float64}=nothing,
+    maxKappa::Union{Nothing,Int64}=nothing,                                 calcDifferentialCs::Union{Nothing,Bool}=nothing,
+    printBefore::Union{Nothing,Bool}=nothing,                               lineSelection::Union{Nothing,LineSelection}=nothing,
+    eeInteraction::Union{Nothing,AbstractEeInteraction}=nothing,            gMultiplet::Union{Nothing,Multiplet}=nothing,
+    continuumExchange::Union{Nothing,Bool}=nothing)`
 
     ... constructor for modifying the given PhotoDoubleIonization.Settings by 'overwriting' the previously selected parameters.
+        A `settings::PhotoDoubleIonization.Settings` is returned.
 """
 function Settings(set::PhotoDoubleIonization.Settings;
     multipoles::Union{Nothing,Array{EmMultipole,1}}=nothing,                gauges::Union{Nothing,Array{UseGauge,1}}=nothing,

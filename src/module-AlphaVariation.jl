@@ -35,11 +35,12 @@ end
 
 
 """
-`AlphaVariation.Settings(set::AlphaVariation.Settings;`
-
-        calcQ=.., variationX=.., printBefore=.., levelSelection=..)
+`AlphaVariation.Settings(set::AlphaVariation.Settings;
+        calcQ::Union{Nothing,Bool}=nothing,                variationX::Union{Nothing,Float64}=nothing,
+        printBefore::Union{Nothing,Bool}=nothing,          levelSelection::Union{Nothing,LevelSelection}=nothing)`
 
     ... keyword copy-constructor for re-defining selected values of a settings::AlphaVariation.Settings.
+        A `settings::AlphaVariation.Settings` is returned.
 """
 function Settings(set::AlphaVariation.Settings;
         calcQ::Union{Nothing,Bool}=nothing,                variationX::Union{Nothing,Float64}=nothing,

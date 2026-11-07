@@ -271,12 +271,16 @@ end
 
 
 """
-`StarkShift.Settings(set::StarkShift.Settings;`
-
-        calcEDM=.., calcEQM=.., calcStarkshifts=.., calcMagicWavelengths=.., gMultiplet=.., printBefore=..,
-        EField=.., omega=.., temperature=.., magicPartnerIndex=.., magicOmegas=.., levelSelection=..)
+`StarkShift.Settings(set::StarkShift.Settings;
+        calcEDM::Union{Nothing,Bool}=nothing,                   calcEQM::Union{Nothing,Bool}=nothing,
+        calcStarkshifts::Union{Nothing,Bool}=nothing,           calcMagicWavelengths::Union{Nothing,Bool}=nothing,
+        gMultiplet::Union{Nothing,Multiplet}=nothing,           printBefore::Union{Nothing,Bool}=nothing,
+        EField::Union{Nothing,Float64}=nothing,                 omega::Union{Nothing,Float64}=nothing,
+        temperature::Union{Nothing,Float64}=nothing,            magicPartnerIndex::Union{Nothing,Int64}=nothing,
+        magicOmegas::Union{Nothing,Array{Float64,1}}=nothing,   levelSelection::Union{Nothing,LevelSelection}=nothing)`
 
     ... keyword copy-constructor for re-defining selected values of a settings::StarkShift.Settings.
+        A `settings::StarkShift.Settings` is returned.
 """
 function Settings(set::StarkShift.Settings;
         calcEDM::Union{Nothing,Bool}=nothing,                   calcEQM::Union{Nothing,Bool}=nothing,

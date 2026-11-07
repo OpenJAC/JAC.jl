@@ -91,13 +91,21 @@ end
 
 
 """
-`ImpactExcitation.Settings(set::ImpactExcitation.Settings;`
-
-    lineSelection...,  electronEnergies..., energyShift..., maxKappa...,
-    calcRateCoefficient..., maxEnergyMultiplier..., numElectronEnergies..., temperatures...,
-    printBefore..., operator..., continuumExchange...)
+`ImpactExcitation.Settings(set::ImpactExcitation.Settings;
+    lineSelection::Union{Nothing, LineSelection} = nothing,
+    electronEnergies::Union{ Nothing, Array{Float64,1} } = nothing,
+    energyShift::Union{Nothing, Float64} = nothing,
+    maxKappa::Union{Nothing, Int64} = nothing,
+    calcRateCoefficient::Union{Nothing, Bool} = nothing,
+    maxEnergyMultiplier::Union{Nothing, Float64} = nothing,
+    numElectronEnergies::Union{Nothing, Int64} = nothing,
+    temperatures::Union{ Nothing, Array{Float64,1} } = nothing,
+    printBefore::Union{Nothing, Bool} = nothing,
+    operator::Union{Nothing, AbstractEeInteraction} = nothing,
+    continuumExchange::Union{Nothing, Bool} = nothing )`
 
     ... constructor for modifying the given ImpactExcitation.Settings by 'overwriting' the previously selected parameters.
+        A `settings::ImpactExcitation.Settings` is returned.
 """
 function Settings(set::ImpactExcitation.Settings;
     lineSelection::Union{Nothing, LineSelection} = nothing,

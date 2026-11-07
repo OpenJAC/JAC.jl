@@ -45,12 +45,13 @@ end
 
 
 """
-`CoulombExcitation.Settings(set::CoulombExcitation.Settings;`
+`CoulombExcitation.Settings(set::CoulombExcitation.Settings;
+    ionEnergies::Union{Nothing,Array{Float64,1}}=nothing,           calcAlignment::Union{Nothing,Bool}=nothing,    
+    printBefore::Union{Nothing,Bool}=nothing,                       lineSelection::Union{Nothing,LineSelection}=nothing,
+    zerosGL::Union{Nothing,Int64}=nothing)`
 
-        ionEnergies=..,         calcAlignment=..,           printBefore=..,         lineSelection=..,
-        zerosGL=..)
-                    
     ... constructor for modifying the given CoulombExcitation.Settings by 'overwriting' the previously selected parameters.
+        A `settings::CoulombExcitation.Settings` is returned.
 """
 function Settings(set::CoulombExcitation.Settings;    
     ionEnergies::Union{Nothing,Array{Float64,1}}=nothing,           calcAlignment::Union{Nothing,Bool}=nothing,    

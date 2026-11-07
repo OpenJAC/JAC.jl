@@ -54,13 +54,15 @@ end
 
 
 """
-`PhotoEmission.Settings(set::PhotoEmission.Settings;`
-
-        multipoles::=..,        gauges=..,                calcAnisotropy=..,          printBefore=..,
-        corePolarization=..,    lineSelection=..,         photonEnergyShift=..,
-        mimimumPhotonEnergy=.., maximumPhotonEnergy=..,   calcBiorthogonal=..)
+`PhotoEmission.Settings(set::PhotoEmission.Settings;
+    multipoles::Union{Nothing,Array{EmMultipole,1}}=nothing,    gauges::Union{Nothing,Array{UseGauge}}=nothing,
+    calcAnisotropy::Union{Nothing,Bool}=nothing,                printBefore::Union{Nothing,Bool}=nothing,
+    corePolarization::Union{Nothing,CorePolarization}=nothing,  lineSelection::Union{Nothing,LineSelection}=nothing,
+    photonEnergyShift::Union{Nothing,Float64}=nothing,          mimimumPhotonEnergy::Union{Nothing,Float64}=nothing,
+    maximumPhotonEnergy::Union{Nothing,Float64}=nothing,        calcBiorthogonal::Union{Nothing,Bool}=nothing)`
 
     ... constructor for modifying the given PhotoEmission.Settings by 'overwriting' the previously selected parameters.
+        A `settings::PhotoEmission.Settings` is returned.
 """
 function Settings(set::PhotoEmission.Settings;
     multipoles::Union{Nothing,Array{EmMultipole,1}}=nothing,    gauges::Union{Nothing,Array{UseGauge}}=nothing,

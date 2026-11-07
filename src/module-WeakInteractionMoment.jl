@@ -48,8 +48,9 @@ const sinThetaW2  = 0.23122
 
 
 """
-`WeakInteractionMoment.anapoleAmplitude(finalLevel::Level, initialLevel::Level, nm::Nuclear.Model, grid::Radial.Grid;`
-                                        `kappaAnapole::Float64=1.0, display::Bool=false)`
+`WeakInteractionMoment.anapoleAmplitude(finalLevel::Level, initialLevel::Level, nm::Nuclear.Model, grid::Radial.Grid;
+                          kappaAnapole::Float64=1.0, display::Bool=false)`
+
     ... to compute the anapole-moment amplitude <alpha_f J_f || H^(anapole) || alpha_i J_i> for the given final and initial level and for
         the nuclear density of the given nuclear model.  The operator is `(G_F/sqrt2) kappa_anapole alpha.I rho(r)`, of rank 1 and odd
         parity.  A value::ComplexF64 is returned, purely imaginary for real radial orbitals.
@@ -275,7 +276,7 @@ end
 
 """
 `WeakInteractionMoment.schiffMomentAmplitude(finalLevel::Level, initialLevel::Level, nm::Nuclear.Model, grid::Radial.Grid;`
-                                             `display::Bool=false)`
+
     ... to compute the Schiff-moment amplitude <alpha_f J_f || H^(Schiff) || alpha_i J_i> for the given final and initial level and for the
         nuclear density of the given nuclear model.  The operator is `4 pi S . grad rho(r)`, of rank 1 and odd parity, and -- being a
         function of position rather than a Dirac matrix -- it carries the ELECTRIC-multipole structure, i.e. <kappa_a||C^1||kappa_b> and the
@@ -353,7 +354,7 @@ end
 
 """
 `WeakInteractionMoment.weakChargeAmplitude(finalLevel::Level, initialLevel::Level, nm::Nuclear.Model, grid::Radial.Grid;`
-                                           `display::Bool=false)`
+
     ... to compute the weak-charge amplitude <alpha_f J_f || H^(weak-charge) || alpha_i J_i> for the given final and initial level and for
         the nuclear density of the given nuclear model.  A value::ComplexF64 is returned.
 

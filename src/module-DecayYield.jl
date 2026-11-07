@@ -41,11 +41,13 @@ end
 
 
 """
-`DecayYield.Settings(set::DecayYield.Settings;`
-
-        approach=.., printBefore=.., geant4=.., levelSelection=.., decayShells=..)
+`DecayYield.Settings(set::DecayYield.Settings;
+        approach::Union{Nothing,Basics.AbstractCascadeApproach}=nothing,   printBefore::Union{Nothing,Bool}=nothing,
+        geant4::Union{Nothing,Bool}=nothing,               levelSelection::Union{Nothing,LevelSelection}=nothing,
+        decayShells::Union{Nothing,Array{Shell,1}}=nothing)`
 
     ... keyword copy-constructor for re-defining selected values of a settings::DecayYield.Settings.
+        A `settings::DecayYield.Settings` is returned.
 """
 function Settings(set::DecayYield.Settings;
         approach::Union{Nothing,Basics.AbstractCascadeApproach}=nothing,   printBefore::Union{Nothing,Bool}=nothing,

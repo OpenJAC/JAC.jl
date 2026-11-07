@@ -1651,10 +1651,11 @@ end
 
 
 """
-`Continuum.checkMatchingRadius(cOrbital::Orbital, pot::Radial.Potential, l::Int64, Zbar::Float64, mtp::Int64;`
-                              `warn::Float64=CONT_MATCH_WARN, fatal::Float64=CONT_MATCH_FATAL,`
-                              `warnN::Float64=CONT_SCALE_WARN, fatalN::Float64=CONT_SCALE_FATAL,`
-                              `meshSound::Float64=CONT_MESH_SOUND)`
+`Continuum.checkMatchingRadius(cOrbital::Orbital, pot::Radial.Potential, l::Int64, Zbar::Float64, mtp::Int64;
+                             warn::Float64=CONT_MATCH_WARN,   fatal::Float64=CONT_MATCH_FATAL,
+                             warnN::Float64=CONT_SCALE_WARN,  fatalN::Float64=CONT_SCALE_FATAL,
+                             meshSound::Float64=CONT_MESH_SOUND)`
+
     ... asks whether the ONE radius at which `normalizeOrbitalCoulombFunctions` matches the orbital was a fair place to
         do it, and moves it if not.  TWO quantities are extracted by `Continuum.matchAtRadius` over the outer two
         wavelengths and BOTH must be constant there, because each is blind to what the other catches:
@@ -1705,6 +1706,7 @@ end
 
         A `(index, moved, declined, spread, jitter, scaleDrift, ppo, nProbes, inside, rTP, verdict)::NamedTuple` is
         returned, with `verdict` one of `:sound`, `:moved`, `:poor`, `:unfair` or `:tooFewPoints`.
+            A `checkMatchingRadius::Continuum.checkMatchingRadius` is returned.
 """
 function checkMatchingRadius(cOrbital::Orbital, pot::Radial.Potential, l::Int64, Zbar::Float64, mtp::Int64;
                              warn::Float64=CONT_MATCH_WARN,   fatal::Float64=CONT_MATCH_FATAL,

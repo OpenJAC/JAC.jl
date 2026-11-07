@@ -300,11 +300,14 @@ end
 
 
 """
-`Hfs.Settings(set::Hfs.Settings;`
-
-        calcM1=.., calcE2=.., calcM3=.., calcNondiagonal=.., calcHfMultiplet=.., printBefore=.., levelSelection=..)
+`Hfs.Settings(set::Hfs.Settings;
+        calcM1::Union{Nothing,Bool}=nothing,           calcE2::Union{Nothing,Bool}=nothing,
+        calcM3::Union{Nothing,Bool}=nothing,           calcNondiagonal::Union{Nothing,Bool}=nothing,
+        calcHfMultiplet::Union{Nothing,Bool}=nothing,  printBefore::Union{Nothing,Bool}=nothing,
+        levelSelection::Union{Nothing,LevelSelection}=nothing)`
 
     ... keyword copy-constructor for re-defining selected values of a settings::Hfs.Settings.
+        A `settings::Hfs.Settings` is returned.
 """
 function Settings(set::Hfs.Settings;
         calcM1::Union{Nothing,Bool}=nothing,           calcE2::Union{Nothing,Bool}=nothing,

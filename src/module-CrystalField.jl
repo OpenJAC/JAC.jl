@@ -244,11 +244,13 @@ end
 
 
 """
-`CrystalField.Settings(set::CrystalField.Settings;`
-
-        lattice=.., model=.., maxRank=.., includeJmixing=.., printBefore=.., levelSelection=..)
+`CrystalField.Settings(set::CrystalField.Settings;
+        lattice::Union{Nothing,Lattice}=nothing,                     model::Union{Nothing,AbstractCrystalFieldModel}=nothing,
+        maxRank::Union{Nothing,Int64}=nothing,                       includeJmixing::Union{Nothing,Bool}=nothing,
+        printBefore::Union{Nothing,Bool}=nothing,                    levelSelection::Union{Nothing,LevelSelection}=nothing)`
 
     ... keyword copy-constructor for re-defining selected values of a settings::CrystalField.Settings.
+        A `settings::CrystalField.Settings` is returned.
 """
 function Settings(set::CrystalField.Settings;
         lattice::Union{Nothing,Lattice}=nothing,                     model::Union{Nothing,AbstractCrystalFieldModel}=nothing,
@@ -621,9 +623,8 @@ end
 
 
 """
-`CrystalField.fitScaleField(levels::Array{Level,1}, lattice::CrystalField.Lattice, grid::Radial.Grid, targetSplitting::Float64, maxRank::Int64;`
-
-        tolerance::Float64=1.0e-6, maxIterations::Int64=20)
+`CrystalField.fitScaleField(levels::Array{Level,1}, lattice::CrystalField.Lattice, grid::Radial.Grid, targetSplitting::Float64, maxRank::Int64;
+                        tolerance::Float64=1.0e-6, maxIterations::Int64=20)`
 
     ... finds the CrystalField.PointChargeModel.scaleField value -- the S_xtal empirical rescaling
         parameter of Uldry, Vernay & Delley, Phys. Rev. B 85, 125133 (2012), Sec. IV -- for which

@@ -393,11 +393,15 @@ end
 
 
 """
-`MultipolePolarizibility.Settings(set::MultipolePolarizibility.Settings;`
-
-        multipoles=.., gMultiplet=.., omegas=.., helicity=.., printBefore=.., levelSelection=.., calcCore=..)
+`MultipolePolarizibility.Settings(set::MultipolePolarizibility.Settings;
+        multipoles::Union{Nothing,Array{EmMultipole,1}}=nothing,
+        gMultiplet::Union{Nothing,Multiplet}=nothing,
+        omegas::Union{Nothing,Array{Float64,1}}=nothing,   helicity::Union{Nothing,Int64}=nothing,
+        printBefore::Union{Nothing,Bool}=nothing,
+        levelSelection::Union{Nothing,LevelSelection}=nothing,   calcCore::Union{Nothing,Bool}=nothing)`
 
     ... keyword copy-constructor for re-defining selected values of a settings::MultipolePolarizibility.Settings.
+        A `settings::MultipolePolarizibility.Settings` is returned.
 """
 function Settings(set::MultipolePolarizibility.Settings;
         multipoles::Union{Nothing,Array{EmMultipole,1}}=nothing,

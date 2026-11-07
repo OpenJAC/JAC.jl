@@ -56,13 +56,17 @@ end
 
 
 """
-`PhotoExcitation.Settings(set::PhotoExcitation.Settings;`
+`PhotoExcitation.Settings(set::PhotoExcitation.Settings;
+    multipoles::Union{Nothing,Array{EmMultipole,1}}=nothing,        gauges::Union{Nothing,Array{UseGauge,1}}=nothing,  
+    calcForStokes::Union{Nothing,Bool}=nothing,                     calcPhotonDm::Union{Nothing,Bool}=nothing,    
+    calcTensors::Union{Nothing,Bool}=nothing,                       calcBiorthogonal::Union{Nothing,Bool}=nothing,
+    printBefore::Union{Nothing,Bool}=nothing,
+    lineSelection::Union{Nothing,LineSelection}=nothing,
+    photonEnergyShift::Union{Nothing,Float64}=nothing,              mimimumPhotonEnergy::Union{Nothing,Float64}=nothing,     
+    maximumPhotonEnergy::Union{Nothing,Float64}=nothing,            stokes::Union{Nothing,ExpStokes}=nothing)`
 
-        multipoles=..,          gauges=..,                  calcForStokes=..,           calcPhotonDm=..,
-        calcTensors=..,         calcBiorthogonal=..,        printBefore=..,             lineSelection=..,
-        photonEnergyShift=..,   mimimumPhotonEnergy=..,     maximumPhotonEnergy=..,     stokes=..)
-                    
     ... constructor for modifying the given PhotoExcitation.Settings by 'overwriting' the previously selected parameters.
+        A `settings::PhotoExcitation.Settings` is returned.
 """
 function Settings(set::PhotoExcitation.Settings;    
     multipoles::Union{Nothing,Array{EmMultipole,1}}=nothing,        gauges::Union{Nothing,Array{UseGauge,1}}=nothing,  

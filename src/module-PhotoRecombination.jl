@@ -48,13 +48,16 @@ end
 
 
 """
-`PhotoRecombination.Settings(set::PhotoRecombination.Settings;`
-
-        multipoles=..,          gauges=..,              electronEnergies=..,          ionEnergies=..,
-        useIonEnergies=..,      calcTotalCs..,          calcAnisotropy=..,            calcTensors=..,
-        printBefore=..,         maxKappa=..,            lineSelection=..,             continuumExchange=..)
+`PhotoRecombination.Settings(set::PhotoRecombination.Settings;
+    multipoles::Union{Nothing,Array{EmMultipole,1}}=nothing,                gauges::Union{Nothing,Array{UseGauge,1}}=nothing,
+    electronEnergies::Union{Nothing,Array{Float64,1}}=nothing,              ionEnergies::Union{Nothing,Array{Float64,1}}=nothing,
+    useIonEnergies::Union{Nothing,Bool}=nothing,                            calcTotalCs::Union{Nothing,Bool}=nothing,
+    calcAnisotropy::Union{Nothing,Bool}=nothing,                            calcTensors::Union{Nothing,Bool}=nothing,
+    printBefore::Union{Nothing,Bool}=nothing,                               maxKappa::Union{Nothing,Int64}=nothing,
+    lineSelection::Union{Nothing,LineSelection}=nothing,                    continuumExchange::Union{Nothing,Bool}=nothing)`
 
     ... constructor for modifying the given PhotoRecombination.Settings by 'overwriting' the previously selected parameters.
+        A `settings::PhotoRecombination.Settings` is returned.
 """
 function Settings(set::PhotoRecombination.Settings;
     multipoles::Union{Nothing,Array{EmMultipole,1}}=nothing,                gauges::Union{Nothing,Array{UseGauge,1}}=nothing,

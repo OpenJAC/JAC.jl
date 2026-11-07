@@ -81,12 +81,13 @@ end
 
 
 """
-`InternalRecombination.Settings(set::InternalRecombination.Settings;`
+`InternalRecombination.Settings(set::InternalRecombination.Settings;
+    rydbergShells::Union{Nothing,Array{Shell,1}}=nothing,    printBefore::Union{Nothing,Bool}=nothing, 
+    resonanceEnergyShift::Union{Nothing,Float64}=nothing,    gamma::Union{Nothing,Float64}=nothing,  
+    lineSelection::Union{Nothing,LineSelection}=nothing,     operator::Union{Nothing,String}=nothing)`
 
-        rydbergShells=..,           printBefore=..,             resonanceEnergyShift=..,    
-        gamma=..,                   lineSelection=..,           operator=..)
-                    
     ... constructor for modifying the given InternalRecombination.Settings by 'overwriting' the previously selected parameters.
+        A `settings::InternalRecombination.Settings` is returned.
 """
 function Settings(set::InternalRecombination.Settings;    
     rydbergShells::Union{Nothing,Array{Shell,1}}=nothing,    printBefore::Union{Nothing,Bool}=nothing, 

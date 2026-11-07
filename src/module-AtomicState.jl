@@ -191,12 +191,12 @@ end
 
 
 """
-`AtomicState.OneElectronSettings(settings::AtomicState.OneElectronSettings;`
+`AtomicState.OneElectronSettings(settings::AtomicState.OneElectronSettings;
+    nMax::Union{Nothing,Int64}=nothing,                             lValues::Union{Nothing,Array{Int64,1}}=nothing,
+    levelSelectionMean::Union{Nothing,LevelSelection}=nothing)`
 
-        nMax::Union{Nothing,Int64}=nothing,                             lValues::Union{Nothing,Array{Int64,1}}=nothing,
-        levelSelectionMean::Union{Nothing,LevelSelection}=nothing)
-                    
     ... constructor for modifying the given OneElectronSettings by 'overwriting' the explicitly selected parameters.
+        A `oneElectronSettings::AtomicState.OneElectronSettings` is returned.
 """
 function OneElectronSettings(settings::AtomicState.OneElectronSettings;
     nMax::Union{Nothing,Int64}=nothing,                             lValues::Union{Nothing,Array{Int64,1}}=nothing,
@@ -393,11 +393,12 @@ end
 
 
 """
-`AtomicState.RasSettings(set::AtomicState.RasSettings;`
+`AtomicState.RasSettings(set::AtomicState.RasSettings;
+    levelsScf::Union{Nothing,Array{Int64,1}}=nothing,                      scfRoute::Union{Nothing,Basics.AbstractScfRoute}=nothing,
+    accuracyScf::Union{Nothing,Float64}=nothing,                           eeInteractionCI::Union{Nothing,AbstractEeInteraction}=nothing,
+    levelSelectionCI::Union{Nothing,LevelSelection}=nothing,               freezing::Union{Nothing,Symbol}=nothing,
+    maxIterationsScf::Union{Nothing,Int64}=nothing)`
 
-        levelsScf=..,            scfRoute=..,             accuracyScf=..,
-        eeInteractionCI=..,      levelSelectionCI=..)
-                    
     ... constructor for modifying the given AtomicState.RasSettings by 'overwriting' the previously selected parameters; a
         settings::AtomicState.RasSettings is returned.
 
@@ -1242,11 +1243,11 @@ end
 
 
 """
-`AtomicState.CiSettings(settings::AtomicState.CiSettings;`
+`AtomicState.CiSettings(settings::AtomicState.CiSettings;
+    eeInteractionCI::Union{Nothing,AbstractEeInteraction}=nothing,        levelSelectionCI::Union{Nothing,LevelSelection}=nothing)`
 
-        eeInteractionCI::Union{Nothing,AbstractEeInteraction}=nothing,    levelSelectionCI::Union{Nothing,LevelSelection}=nothing)
-                    
     ... constructor for modifying the given CiSettings by 'overwriting' the explicitly selected parameters.
+        A `ciSettings::AtomicState.CiSettings` is returned.
 """
 function CiSettings(settings::AtomicState.CiSettings;
     eeInteractionCI::Union{Nothing,AbstractEeInteraction}=nothing,        levelSelectionCI::Union{Nothing,LevelSelection}=nothing)
@@ -1390,12 +1391,13 @@ end
 
 
 """
-`AtomicState.GreenSettings(settings::AtomicState.GreenSettings;`
-
-        nMax=..,            lValues=..,         dampingTau=..,      printBefore=..,
-        levelSelection=..,  scField=..)
+`AtomicState.GreenSettings(settings::AtomicState.GreenSettings;
+    nMax::Union{Nothing,Int64}=nothing,                     lValues::Union{Nothing,Array{Int64,1}}=nothing,
+    dampingTau::Union{Nothing,Float64}=nothing,             printBefore::Union{Nothing,Bool}=nothing,
+    levelSelection::Union{Nothing,LevelSelection}=nothing,  scField::Union{Nothing,AbstractScField}=nothing)`
 
     ... the standard JAC keyword copy-constructor.
+        A `greenSettings::AtomicState.GreenSettings` is returned.
 """
 function GreenSettings(settings::AtomicState.GreenSettings;
     nMax::Union{Nothing,Int64}=nothing,                     lValues::Union{Nothing,Array{Int64,1}}=nothing,

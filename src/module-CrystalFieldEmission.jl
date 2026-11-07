@@ -71,12 +71,15 @@ end
 
 
 """
-`CrystalFieldEmission.Settings(set::CrystalFieldEmission.Settings;`
-
-        multipoles=.., gauges=.., lattice=.., model=.., maxRank=.., includeJmixing=.., printBefore=..,
-        minEnergy=.., maxEnergy=..)
+`CrystalFieldEmission.Settings(set::CrystalFieldEmission.Settings;
+        multipoles::Union{Nothing,Array{EmMultipole,1}}=nothing,          gauges::Union{Nothing,Array{UseGauge,1}}=nothing,
+        lattice::Union{Nothing,CrystalField.Lattice}=nothing,             model::Union{Nothing,CrystalField.AbstractCrystalFieldModel}=nothing,
+        maxRank::Union{Nothing,Int64}=nothing,                            includeJmixing::Union{Nothing,Bool}=nothing,
+        printBefore::Union{Nothing,Bool}=nothing,
+        minEnergy::Union{Nothing,Float64}=nothing,                        maxEnergy::Union{Nothing,Float64}=nothing)`
 
     ... keyword copy-constructor for re-defining selected values of a settings::CrystalFieldEmission.Settings.
+        A `settings::CrystalFieldEmission.Settings` is returned.
 """
 function Settings(set::CrystalFieldEmission.Settings;
         multipoles::Union{Nothing,Array{EmMultipole,1}}=nothing,          gauges::Union{Nothing,Array{UseGauge,1}}=nothing,

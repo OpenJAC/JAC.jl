@@ -42,9 +42,15 @@ end
 
 
 """
-`RadiativeAuger.Settings(set::RadiativeAuger.Settings;`
-
-    multipoles..., gauges..., green..., NoEnergySharings..., maxKappa..., printBefore..., operator..., lineSelection...)
+`RadiativeAuger.Settings(set::RadiativeAuger.Settings;
+                        multipoles::Union{Nothing,Array{EmMultipole,1}} = nothing,
+                        gauges::Union{Nothing,Array{UseGauge,1}} = nothing,
+                        green::Union{Nothing,Array{GreenChannel,1}} = nothing,
+                        NoEnergySharings::Union{Nothing,Int64} = nothing,
+                        maxKappa::Union{Nothing,Int64} = nothing,
+                        printBefore::Union{Nothing,Bool} = nothing,
+                        operator::Union{Nothing,AbstractEeInteraction} = nothing,
+                        lineSelection::Union{Nothing,LineSelection} = nothing )`
 
     ... constructor for modifying the given RadiativeAuger.Settings by 'overwriting' the previously selected parameters.
         A settings::RadiativeAuger.Settings is returned.

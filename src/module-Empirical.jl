@@ -332,12 +332,13 @@ end
 
 
 """
-`Empirical.Computation(comp::Empirical.Computation;`
+`Empirical.Computation(comp::Empirical.Computation;
+    name::Union{Nothing,String}=nothing,               nuclearModel::Union{Nothing,Nuclear.Model}=nothing,
+    grid::Union{Nothing,Radial.Grid}=nothing,          configs::Union{Nothing,Array{Configuration,1}}=nothing,       settings::Union{Nothing,Any}=nothing,            
+    printout::Bool=false)`
 
-    name=..,                nuclearModel=..,            grid=..,                    configs=..,                   settings=..,  
-    printout::Bool=false)
-                    
     ... constructor for modifying the given Empirical.Computation by 'overwriting' the previously selected parameters.
+        A `computation::Empirical.Computation` is returned.
 """
 function Computation(comp::Empirical.Computation;
     name::Union{Nothing,String}=nothing,               nuclearModel::Union{Nothing,Nuclear.Model}=nothing,

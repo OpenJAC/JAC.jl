@@ -187,14 +187,19 @@ end
 
 
 """
-`ManyElectron.AsfSettings(settings::AsfSettings;`
-    
-            generateScf=..,       eeInteraction=..,       scField=..,            startScfFrom=..,           
-            scfRoute=..,          accuracyScf=..,         shellSequenceScf=..,   frozenSubshells=..,    
-            gridAccuracy=..,      gridStopper=..,         eeInteractionCI=..,    qedModel=..,            
-            jjLS=..,              levelSelectionCI=..,     
-            printout::Bool=false)
+`ManyElectron.AsfSettings(settings::AsfSettings;
+    generateScf::Union{Nothing,Bool}=nothing,                       eeInteraction::Union{Nothing,AbstractEeInteraction}=nothing,         
+    scField::Union{Nothing,AbstractScField}=nothing,                startScfFrom::Union{Nothing,AbstractStartOrbitals}=nothing,
+    scfRoute::Union{Nothing,Basics.AbstractScfRoute}=nothing,       accuracyScf::Union{Nothing,Float64}=nothing,     
+    shellSequenceScf::Union{Nothing,Array{Subshell,1}}=nothing,     frozenSubshells::Union{Nothing,Array{Subshell,1}}=nothing, 
+    gridAccuracy::Union{Nothing,Float64}=nothing,                   gridStopper::Union{Nothing,Bool}=nothing,
+    eeInteractionCI::Union{Nothing,AbstractEeInteraction}=nothing,  qedModel::Union{Nothing,AbstractQedModel}=nothing,              
+    jjLS::Union{Nothing,LSjjSettings}=nothing,  
+    levelSelectionCI::Union{Nothing,LevelSelection}=nothing,        printout::Bool=false,
+    maxIterationsScf::Union{Nothing,Int64}=nothing)`
+
     ... constructor for re-defining a settings::AsfSettings.
+        A `asfSettings::ManyElectron.AsfSettings` is returned.
 """
 function AsfSettings(settings::AsfSettings; 
     generateScf::Union{Nothing,Bool}=nothing,                       eeInteraction::Union{Nothing,AbstractEeInteraction}=nothing,         

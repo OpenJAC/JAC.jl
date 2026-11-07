@@ -114,14 +114,16 @@ end
 
 
 """
-`StarkBroadening.Settings(set::StarkBroadening.Settings;`
-
-        multipoles=..,            gauges=..,                   electronDensity=..,
-        electronTemperature=..,   perturberCutoffEnergy=..,    lineSelection=..,
-        method=..,                printBefore=..)
+`StarkBroadening.Settings(set::StarkBroadening.Settings;
+    multipoles::Union{Nothing,Array{EmMultipole,1}}=nothing,       gauges::Union{Nothing,Array{UseGauge,1}}=nothing,
+    electronDensity::Union{Nothing,Float64}=nothing,                electronTemperature::Union{Nothing,Float64}=nothing,
+    perturberCutoffEnergy::Union{Nothing,Float64}=nothing,          lineSelection::Union{Nothing,LineSelection}=nothing,
+    method::Union{Nothing,Basics.AbstractStarkBroadeningMethod,Missing}=missing,
+    printBefore::Union{Nothing,Bool}=nothing)`
 
     ... constructor for modifying the given StarkBroadening.Settings by 'overwriting' the previously
         selected parameters.
+            A `settings::StarkBroadening.Settings` is returned.
 """
 function  Settings(set::StarkBroadening.Settings;
     multipoles::Union{Nothing,Array{EmMultipole,1}}=nothing,       gauges::Union{Nothing,Array{UseGauge,1}}=nothing,

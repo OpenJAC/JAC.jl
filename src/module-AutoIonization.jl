@@ -95,15 +95,19 @@ end
 
 
 """
-`AutoIonization.Settings(set::AutoIonization.Settings;`
-
-        calcAnisotropy=..,      calcTeAuger..,              calcBiorthogonal=..,    printBefore=..,
-        augerEnergyShift=..,    minAugerEnergy=..,          maxAugerEnergy=..,      maxKappa=..,
-        operator=..,            gMultiplet=..,              gCoreMultiplet=..,
-        NoIntermediateEnergies=..,                          intermediateEnergyFactor=..,
-        continuumExchange=.. )
+`AutoIonization.Settings(set::AutoIonization.Settings;
+    calcAnisotropy::Union{Nothing,Bool}=nothing,            calcTeAuger::Union{Nothing,Bool}=nothing,
+    calcBiorthogonal::Union{Nothing,Bool}=nothing,          printBefore::Union{Nothing,Bool}=nothing,
+    lineSelection::Union{Nothing,LineSelection}=nothing,
+    augerEnergyShift::Union{Nothing,Float64}=nothing,
+    minAugerEnergy::Union{Nothing,Float64}=nothing,         maxAugerEnergy::Union{Nothing,Float64}=nothing,
+    maxKappa::Union{Nothing,Int64}=nothing,                 operator::Union{Nothing,AbstractEeInteraction}=nothing,
+    gMultiplet::Union{Nothing,Multiplet}=nothing,           gCoreMultiplet::Union{Nothing,Multiplet}=nothing,
+    NoIntermediateEnergies::Union{Nothing,Int64}=nothing,   intermediateEnergyFactor::Union{Nothing,Float64}=nothing,
+    continuumExchange::Union{Nothing,Bool}=nothing)`
 
     ... constructor for modifying the given AutoIonization.Settings by 'overwriting' the previously selected parameters.
+        A `settings::AutoIonization.Settings` is returned.
 """
 function Settings(set::AutoIonization.Settings;
     calcAnisotropy::Union{Nothing,Bool}=nothing,            calcTeAuger::Union{Nothing,Bool}=nothing,

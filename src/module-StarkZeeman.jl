@@ -168,12 +168,15 @@ end
 
 
 """
-`StarkZeeman.Settings(set::StarkZeeman.Settings;`
-
-        includeEField=.., includeBField=.., eField=.., eDirection=.., bField=.., bDirection=..,
-        includeSchwinger=.., printBefore=.., levelSelection=..)
+`StarkZeeman.Settings(set::StarkZeeman.Settings;
+        includeEField::Union{Nothing,Bool}=nothing,             includeBField::Union{Nothing,Bool}=nothing,
+        eField::Union{Nothing,Float64}=nothing,                 eDirection::Union{Nothing,NTuple{3,Float64}}=nothing,
+        bField::Union{Nothing,Float64}=nothing,                 bDirection::Union{Nothing,NTuple{3,Float64}}=nothing,
+        includeSchwinger::Union{Nothing,Bool}=nothing,          printBefore::Union{Nothing,Bool}=nothing,
+        levelSelection::Union{Nothing,LevelSelection}=nothing)`
 
     ... keyword copy-constructor for re-defining selected values of a settings::StarkZeeman.Settings.
+        A `settings::StarkZeeman.Settings` is returned.
 """
 function Settings(set::StarkZeeman.Settings;
         includeEField::Union{Nothing,Bool}=nothing,             includeBField::Union{Nothing,Bool}=nothing,

@@ -139,12 +139,15 @@ end
 
 
 """
-`HfsPaschenBack.Settings(set::HfsPaschenBack.Settings;`
-
-        includeBField=.., bField=.., bDirection=.., includeNuclearZeeman=.., includeEField=.., eField=..,
-        eDirection=.., includeSchwinger=.., hfMultiplets=.., printBefore=..)
+`HfsPaschenBack.Settings(set::HfsPaschenBack.Settings;
+        includeBField::Union{Nothing,Bool}=nothing,             bField::Union{Nothing,Float64}=nothing,
+        bDirection::Union{Nothing,NTuple{3,Float64}}=nothing,    includeNuclearZeeman::Union{Nothing,Bool}=nothing,
+        includeEField::Union{Nothing,Bool}=nothing,              eField::Union{Nothing,Float64}=nothing,
+        eDirection::Union{Nothing,NTuple{3,Float64}}=nothing,    includeSchwinger::Union{Nothing,Bool}=nothing,
+        hfMultiplets::Union{Nothing,Array{Hfs.HfMultiplet,1}}=nothing,   printBefore::Union{Nothing,Bool}=nothing)`
 
     ... keyword copy-constructor for re-defining selected values of a settings::HfsPaschenBack.Settings.
+        A `settings::HfsPaschenBack.Settings` is returned.
 """
 function Settings(set::HfsPaschenBack.Settings;
         includeBField::Union{Nothing,Bool}=nothing,             bField::Union{Nothing,Float64}=nothing,

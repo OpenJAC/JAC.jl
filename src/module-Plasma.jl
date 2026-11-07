@@ -268,16 +268,15 @@ end
 
 
 """
-`Plasma.AverageAtomScheme(scheme::Plasma.AverageAtomScheme;`
+`Plasma.AverageAtomScheme(scheme::Plasma.AverageAtomScheme;
+    nMax::Union{Nothing,Int64}=nothing,                          lMax::Union{Nothing,Int64}=nothing, 
+    scField::Union{Nothing,AbstractScField}=nothing,             calcPhotoionizationCs::Union{Nothing,Bool}=nothing, 
+    calcFormFactor::Union{Nothing,Bool}=nothing,                 calcScatteringFactor::Union{Nothing,Bool}=nothing, 
+    piSubshells::Union{Nothing,Array{Subshell,1}}=nothing,       omegas::Union{Nothing,AbstractArray{<:Real,1}}=nothing, 
+    qValues::Union{Nothing,AbstractArray{<:Real,1}}=nothing,     calcConductivity::Union{Nothing,Bool}=nothing, 
+    condOmegas::Union{Nothing,AbstractArray{<:Real,1}}=nothing,  condBroadening::Union{Nothing,Real}=nothing, 
+    condCollisionRate::Union{Nothing,Real}=nothing,      calcMeanOpacities::Union{Nothing,Bool}=nothing)`
 
-        `nMax=..,                lMax=..,                 scField=..,`
-        
-        `calcPhotoionizationCs=..,  calcFormFactor=..,    calcScatteringFactor=..,`
-        
-        `piSubshells=..,         omegas=..,               qValues=..,`
-        
-        `calcConductivity=..,    condOmegas=..,           condBroadening=..,       condCollisionRate=..)`
-                        
     ... constructor for modifying the given Plasma.AverageAtomScheme by 'overwriting' the previously selected
         parameters.  Everything not named is carried over unchanged, so a scheme is built by naming only what
         differs from the default -- which is what makes a thirteen-field scheme readable at the call site:
@@ -300,6 +299,7 @@ end
         **EVERY MESH AND MODEL PARAMETER TAKES WHOLE NUMBERS AS WELL AS DECIMALS**, so `qValues = [1, 2, 3]`
         and `condCollisionRate = -1` are accepted exactly as `[1., 2., 3.]` and `-1.0` are;  the conversion to
         Float64 happens on the way into the struct and the stored values are identical.
+            A `averageAtomScheme::Plasma.AverageAtomScheme` is returned.
 """
 function AverageAtomScheme(scheme::Plasma.AverageAtomScheme;
     nMax::Union{Nothing,Int64}=nothing,                          lMax::Union{Nothing,Int64}=nothing, 
@@ -534,13 +534,15 @@ end
 
 
 """
-`Plasma.SatelliteDiagnosticScheme(scheme::Plasma.SatelliteDiagnosticScheme;`
-
-        fromShells=..,        toShells=..,        intoShells=..,      decayShells=..,
-        drSettings=..,        ieSettings=..)
+`Plasma.SatelliteDiagnosticScheme(scheme::Plasma.SatelliteDiagnosticScheme;
+    fromShells::Union{Nothing,Array{Shell,1}}=nothing,     toShells::Union{Nothing,Array{Shell,1}}=nothing,
+    intoShells::Union{Nothing,Array{Shell,1}}=nothing,     decayShells::Union{Nothing,Array{Shell,1}}=nothing,
+    drSettings::Union{Nothing,DielectronicRecombination.Settings}=nothing,
+    ieSettings::Union{Nothing,ImpactExcitation.Settings}=nothing)`
 
     ... constructor for modifying the given Plasma.SatelliteDiagnosticScheme by 'overwriting' the previously
         selected parameters.
+            A `satelliteDiagnosticScheme::Plasma.SatelliteDiagnosticScheme` is returned.
 """
 function SatelliteDiagnosticScheme(scheme::Plasma.SatelliteDiagnosticScheme;
     fromShells::Union{Nothing,Array{Shell,1}}=nothing,     toShells::Union{Nothing,Array{Shell,1}}=nothing,
@@ -641,14 +643,18 @@ end
 
 
 """
-`Plasma.CollisionalRadiativeScheme(scheme::Plasma.CollisionalRadiativeScheme;`
-
-        NoExcitations=..,        upperShellNo=..,
-        ieSettings=..,           peSettings=..,           aiSettings=..,
-        levelsFilenames=..,      ratesFilenames=..,       cacheDirectory=..)
+`Plasma.CollisionalRadiativeScheme(scheme::Plasma.CollisionalRadiativeScheme;
+    NoExcitations::Union{Nothing,Int64}=nothing,            upperShellNo::Union{Nothing,Int64}=nothing,
+    ieSettings::Union{Nothing,ImpactExcitation.Settings}=nothing,
+    peSettings::Union{Nothing,PhotoEmission.Settings}=nothing,
+    aiSettings::Union{Nothing,AutoIonization.Settings}=nothing,
+    levelsFilenames::Union{Nothing,Array{String,1}}=nothing,
+    ratesFilenames::Union{Nothing,Array{String,1}}=nothing,
+    cacheDirectory::Union{Nothing,String}=nothing)`
 
     ... constructor for modifying the given Plasma.CollisionalRadiativeScheme by 'overwriting' the previously
         selected parameters.
+            A `collisionalRadiativeScheme::Plasma.CollisionalRadiativeScheme` is returned.
 """
 function CollisionalRadiativeScheme(scheme::Plasma.CollisionalRadiativeScheme;
     NoExcitations::Union{Nothing,Int64}=nothing,            upperShellNo::Union{Nothing,Int64}=nothing,
@@ -947,13 +953,18 @@ end
 
 
 """
-`Plasma.KineticChargeBalanceScheme(scheme::Plasma.KineticChargeBalanceScheme;`
-
-        chargeStages=..,          electronTemperatures=..,
-        peTreatment=..,           ieTreatment=..,           eiiTreatment=..,          rrTreatment=..,        tbrTreatment=..)
+`Plasma.KineticChargeBalanceScheme(scheme::Plasma.KineticChargeBalanceScheme;
+    chargeStages::Union{Nothing,Array{Plasma.ChargeStage,1}}=nothing,
+    electronTemperatures::Union{Nothing,Array{Float64,1}}=nothing,
+    peTreatment::Union{Nothing,Plasma.AbstractRateTreatment}=nothing,
+    ieTreatment::Union{Nothing,Plasma.AbstractRateTreatment}=nothing,
+    eiiTreatment::Union{Nothing,Plasma.AbstractRateTreatment}=nothing,
+    rrTreatment::Union{Nothing,Plasma.AbstractRateTreatment}=nothing,
+    tbrTreatment::Union{Nothing,Plasma.AbstractRateTreatment}=nothing)`
 
     ... constructor for modifying the given Plasma.KineticChargeBalanceScheme by 'overwriting' the previously selected
         parameters.
+            A `kineticChargeBalanceScheme::Plasma.KineticChargeBalanceScheme` is returned.
 """
 function KineticChargeBalanceScheme(scheme::Plasma.KineticChargeBalanceScheme;
     chargeStages::Union{Nothing,Array{Plasma.ChargeStage,1}}=nothing,
@@ -1418,11 +1429,12 @@ end
 
 
 """
-`Plasma.Settings(set::Plasma.Settings;`
+`Plasma.Settings(set::Plasma.Settings;
+    temperature::Union{Nothing,Float64}=nothing,                            density::Union{Nothing,Float64}=nothing,
+    useNumberDensity::Union{Nothing,Bool}=nothing)`
 
-        temperature=..,         density=..,         useNumberDensity =..)
-                    
     ... constructor for modifying the given Plasma.Settings by 'overwriting' the previously selected parameters.
+        A `settings::Plasma.Settings` is returned.
 """
 function Settings(set::Plasma.Settings;    
     temperature::Union{Nothing,Float64}=nothing,                            density::Union{Nothing,Float64}=nothing,
@@ -1476,13 +1488,15 @@ end
 
 
 """
-`Plasma.Computation(comp::Plasma.Computation;`
+`Plasma.Computation(comp::Plasma.Computation;
+    scheme::Union{Nothing,Plasma.AbstractPlasmaScheme}=nothing,                  
+    nuclearModel::Union{Nothing,Nuclear.Model}=nothing,                         grid::Union{Nothing,Radial.Grid}=nothing,      
+    refConfigs::Union{Nothing,Array{Configuration,1}}=nothing,                  asfSettings::Union{Nothing,AsfSettings}=nothing, 
+    settings::Union{Nothing,Plasma.Settings}=nothing, 
+    printout::Bool=false)`
 
-    scheme=..,                  nuclearModel=..,            grid=..,                refConfigs=..,              asfSettings=..,     
-    settings=..,
-    printout::Bool=false)
-                    
     ... constructor for modifying the given Plasma.Computation by 'overwriting' the previously selected parameters.
+        A `computation::Plasma.Computation` is returned.
 """
 function Computation(comp::Plasma.Computation;
     scheme::Union{Nothing,Plasma.AbstractPlasmaScheme}=nothing,                  

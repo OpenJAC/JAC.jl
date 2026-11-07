@@ -71,12 +71,18 @@ end
 
 
 """
-`RayleighCompton.Settings(set::RayleighCompton.Settings;`
-
-        multipoles=.., gauges=.., photonEnergies=.., green=.., calcRayleighRaman=.., calcAngular=..,
-        calcStokes=.., printBefore=.., incidentStokes=.., solidAngles=.., lineSelection=..)
+`RayleighCompton.Settings(set::RayleighCompton.Settings;
+        multipoles::Union{Nothing,Array{EmMultipole}}=nothing,
+        gauges::Union{Nothing,Array{UseGauge}}=nothing,
+        photonEnergies::Union{Nothing,Array{Float64,1}}=nothing,
+        green::Union{Nothing,Array{AtomicState.GreenChannel,1}}=nothing,
+        calcRayleighRaman::Union{Nothing,Bool}=nothing,    calcAngular::Union{Nothing,Bool}=nothing,
+        calcStokes::Union{Nothing,Bool}=nothing,           printBefore::Union{Nothing,Bool}=nothing,
+        incidentStokes::Union{Nothing,ExpStokes}=nothing,  solidAngles::Union{Nothing,Array{SolidAngle,1}}=nothing,
+        lineSelection::Union{Nothing,LineSelection}=nothing)`
 
     ... keyword copy-constructor for re-defining selected values of a settings::RayleighCompton.Settings.
+        A `settings::RayleighCompton.Settings` is returned.
 """
 function Settings(set::RayleighCompton.Settings;
         multipoles::Union{Nothing,Array{EmMultipole}}=nothing,

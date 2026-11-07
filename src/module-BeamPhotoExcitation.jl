@@ -44,12 +44,14 @@ end
 
 
 """
-`PhotoExcitation.Settings(set::BeamPhotoExcitation.Settings;`
+`PhotoExcitation.Settings(set::BeamPhotoExcitation.Settings;
+    beamType::Union{Nothing,Beam.AbstractBeamType}=nothing,         observable::Union{Nothing,Beam.AbstractObservable}=nothing,
+    multipoles::Union{Nothing,Array{EmMultipole,1}}=nothing,        gauges::Union{Nothing,Array{UseGauge,1}}=nothing,
+    printBefore::Union{Nothing,Bool}=nothing,                       lineSelection::Union{Nothing,LineSelection}=nothing,
+    photonEnergyShift::Union{Nothing,Float64}=nothing)`
 
-        beamType=..,            observable=..,              multipoles=..,          gauges=..,                  
-        printBefore=..,         lineSelection=..,           photonEnergyShift=..)
-                    
     ... constructor for modifying the given PhotoExcitation.Settings by 'overwriting' the previously selected parameters.
+        A `settings::PhotoExcitation.Settings` is returned.
 """
 function Settings(set::BeamPhotoExcitation.Settings;
     beamType::Union{Nothing,Beam.AbstractBeamType}=nothing,         observable::Union{Nothing,Beam.AbstractObservable}=nothing,

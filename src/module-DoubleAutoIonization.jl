@@ -50,10 +50,16 @@ end
 
 
 """
-`DoubleAutoIonization.Settings(set::DoubleAutoIonization.Settings;`
-
-    green..., NoEnergySharings..., printBefore..., minAugerEnergy..., maxAugerEnergy..., maxKappa..., operator...,
-    lineSelection..., continuumExchange...)
+`DoubleAutoIonization.Settings(set::DoubleAutoIonization.Settings;
+                        green::Union{Nothing,Array{GreenChannel,1}} = nothing,
+                        NoEnergySharings::Union{Nothing,Int64} = nothing,
+                        printBefore::Union{Nothing,Bool} = nothing,
+                        minAugerEnergy::Union{Nothing,Float64} = nothing,
+                        maxAugerEnergy::Union{Nothing,Float64} = nothing,
+                        maxKappa::Union{Nothing,Int64} = nothing,
+                        operator::Union{Nothing,AbstractEeInteraction} = nothing,
+                        lineSelection::Union{Nothing,LineSelection} = nothing,
+                        continuumExchange::Union{Nothing,Bool} = nothing )`
 
     ... constructor for modifying the given DoubleAutoIonization.Settings by 'overwriting' the previously selected parameters.
         A settings::DoubleAutoIonization.Settings is returned.

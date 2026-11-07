@@ -78,13 +78,16 @@ end
 
 
 """
-`ResonantInelastic.Settings(set::ResonantInelastic.Settings;`
+`ResonantInelastic.Settings(set::ResonantInelastic.Settings;
+    multipoles::Union{Nothing,Array{EmMultipole,1}}=nothing,    gauges::Union{Nothing,Array{UseGauge}}=nothing,
+    calcRixsCI::Union{Nothing,Bool}=nothing,                    printBefore::Union{Nothing,Bool}=nothing,
+    ciEnhancement::Union{Nothing,Float64}=nothing,              width::Union{Nothing,Float64}=nothing,      
+    pathwaySelection::Union{Nothing,PathwaySelection}=nothing, 
+    omegaInInterval::Union{Nothing,NamedTuple{(:lower, :upper), Tuple{Float64, Float64}} }=nothing,            
+    omegaOutInterval::Union{Nothing,NamedTuple{(:lower, :upper), Tuple{Float64, Float64}} }=nothing)`
 
-        multipoles::=..,        gauges=..,                calcRixsCI=..,            printBefore=..,
-        ciEnhancement=..,       width=..,                 pathwaySelection=..,      
-        omegaInInterval=..,       omegaOutInterval=..) 
-                    
     ... constructor for modifying the given ResonantInelastic.Settings by 'overwriting' the previously selected parameters.
+        A `settings::ResonantInelastic.Settings` is returned.
 """
 function Settings(set::ResonantInelastic.Settings;    
     multipoles::Union{Nothing,Array{EmMultipole,1}}=nothing,    gauges::Union{Nothing,Array{UseGauge}}=nothing,

@@ -196,11 +196,12 @@ end
 
 
 """
-`MultiPhotonTransition.TwoPhotonEmissionScheme(scheme::MultiPhotonTransition.TwoPhotonEmissionScheme;`
-
-        properties=..,      noSharings=..)
+`MultiPhotonTransition.TwoPhotonEmissionScheme(scheme::MultiPhotonTransition.TwoPhotonEmissionScheme;
+    properties::Union{Nothing,Array{MultiPhotonTransition.AbstractMultiPhotonProperty,1}}=nothing,
+    noSharings::Union{Nothing,Int64}=nothing)`
 
     ... the standard JAC keyword copy-constructor.
+        A `twoPhotonEmissionScheme::MultiPhotonTransition.TwoPhotonEmissionScheme` is returned.
 """
 function TwoPhotonEmissionScheme(scheme::MultiPhotonTransition.TwoPhotonEmissionScheme;
     properties::Union{Nothing,Array{MultiPhotonTransition.AbstractMultiPhotonProperty,1}}=nothing,
@@ -247,11 +248,11 @@ end
 
 
 """
-`MultiPhotonTransition.TwoPhotonAbsorptionScheme(scheme::MultiPhotonTransition.TwoPhotonAbsorptionScheme;`
-
-        properties=..)
+`MultiPhotonTransition.TwoPhotonAbsorptionScheme(scheme::MultiPhotonTransition.TwoPhotonAbsorptionScheme;
+    properties::Union{Nothing,Array{MultiPhotonTransition.AbstractMultiPhotonProperty,1}}=nothing)`
 
     ... the standard JAC keyword copy-constructor.
+        A `twoPhotonAbsorptionScheme::MultiPhotonTransition.TwoPhotonAbsorptionScheme` is returned.
 """
 function TwoPhotonAbsorptionScheme(scheme::MultiPhotonTransition.TwoPhotonAbsorptionScheme;
     properties::Union{Nothing,Array{MultiPhotonTransition.AbstractMultiPhotonProperty,1}}=nothing)
@@ -306,11 +307,12 @@ end
 
 
 """
-`MultiPhotonTransition.TwoPhotonAbsorptionBichromaticScheme(scheme::MultiPhotonTransition.TwoPhotonAbsorptionBichromaticScheme;`
-
-        properties=..,      omegaLess=..)
+`MultiPhotonTransition.TwoPhotonAbsorptionBichromaticScheme(scheme::MultiPhotonTransition.TwoPhotonAbsorptionBichromaticScheme;
+    properties::Union{Nothing,Array{MultiPhotonTransition.AbstractMultiPhotonProperty,1}}=nothing,
+    omegaLess::Union{Nothing,Float64}=nothing)`
 
     ... the standard JAC keyword copy-constructor.
+        A `twoPhotonAbsorptionBichromaticScheme::MultiPhotonTransition.TwoPhotonAbsorptionBichromaticScheme` is returned.
 """
 function TwoPhotonAbsorptionBichromaticScheme(scheme::MultiPhotonTransition.TwoPhotonAbsorptionBichromaticScheme;
     properties::Union{Nothing,Array{MultiPhotonTransition.AbstractMultiPhotonProperty,1}}=nothing,
@@ -414,11 +416,12 @@ end
 
 
 """
-`MultiPhotonTransition.ThreePhotonAbsorptionScheme(scheme::MultiPhotonTransition.ThreePhotonAbsorptionScheme;`
-
-        properties=..,      omega1=..,      omega2=..)
+`MultiPhotonTransition.ThreePhotonAbsorptionScheme(scheme::MultiPhotonTransition.ThreePhotonAbsorptionScheme;
+    properties::Union{Nothing,Array{MultiPhotonTransition.AbstractMultiPhotonProperty,1}}=nothing,
+    omega1::Union{Nothing,Float64}=nothing,                      omega2::Union{Nothing,Float64}=nothing)`
 
     ... the standard JAC keyword copy-constructor.
+        A `threePhotonAbsorptionScheme::MultiPhotonTransition.ThreePhotonAbsorptionScheme` is returned.
 """
 function ThreePhotonAbsorptionScheme(scheme::MultiPhotonTransition.ThreePhotonAbsorptionScheme;
     properties::Union{Nothing,Array{MultiPhotonTransition.AbstractMultiPhotonProperty,1}}=nothing,
@@ -523,13 +526,16 @@ end
 
 
 """
-`MultiPhotonTransition.Settings(set::MultiPhotonTransition.Settings;`
-
-        scheme=..,              multipoles=..,          gauges=..,          intermediateStates=..,
-        selfTolerance=..,       stokes=..,              printBefore=..,     calcOverview=..,
-        lineSelection=..,       photonEnergyShift=..)
+`MultiPhotonTransition.Settings(set::MultiPhotonTransition.Settings;
+    scheme::Union{Nothing,MultiPhotonTransition.AbstractMultiPhotonScheme}=nothing,
+    multipoles::Union{Nothing,Array{EmMultipole,1}}=nothing,     gauges::Union{Nothing,Array{UseGauge,1}}=nothing,
+    intermediateStates::Union{Nothing,Multiplet,Array{AtomicState.GreenChannel,1}}=nothing,
+    selfTolerance::Union{Nothing,Float64}=nothing,               stokes::Union{Nothing,ExpStokes}=nothing,
+    printBefore::Union{Nothing,Bool}=nothing,                    calcOverview::Union{Nothing,Bool}=nothing,
+    lineSelection::Union{Nothing,LineSelection}=nothing,         photonEnergyShift::Union{Nothing,Float64}=nothing)`
 
     ... the standard JAC keyword copy-constructor, which this Settings previously lacked.
+        A `settings::MultiPhotonTransition.Settings` is returned.
 """
 function Settings(set::MultiPhotonTransition.Settings;
     scheme::Union{Nothing,MultiPhotonTransition.AbstractMultiPhotonScheme}=nothing,

@@ -95,10 +95,11 @@ end
 
 
 """
-`CoulombIonization.Settings(set::CoulombIonization.Settings;`
-
-        ionEnergies=..,         electronEnergies=..,        calcAlignment=..,       printBefore=..,
-        lineSelection=..,       zerosGL=..,                 lValues=..,             continuumExchange=..)
+`CoulombIonization.Settings(set::CoulombIonization.Settings;
+    ionEnergies::Union{Nothing,Array{Float64,1}}=nothing,           electronEnergies::Union{Nothing,Array{Float64,1}}=nothing,
+    calcAlignment::Union{Nothing,Bool}=nothing,                     printBefore::Union{Nothing,Bool}=nothing,
+    lineSelection::Union{Nothing,LineSelection}=nothing,            zerosGL::Union{Nothing,Int64}=nothing,
+    lValues::Union{Nothing,Array{Int64,1}}=nothing,                 continuumExchange::Union{Nothing,Bool}=nothing)`
 
     ... constructor for modifying the given CoulombIonization.Settings by 'overwriting' the previously selected
         parameters.  A settings::CoulombIonization.Settings is returned.

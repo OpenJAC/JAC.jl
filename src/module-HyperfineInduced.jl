@@ -124,14 +124,17 @@ end
 
 
 """
-`HyperfineInduced.Settings(set::HyperfineInduced.Settings;`
-
-        multipoles=..,      hfMultipoles=..,    gauges=..,          isomers=..,
-        mixingLevels=..,    initialFvalues=..,
-        finalFvalues=..,    calcOverview=..,    printBefore=..,     calcLifetimes=..,
-        lineSelection=..,   photonEnergyShift=..)
+`HyperfineInduced.Settings(set::HyperfineInduced.Settings;
+    multipoles::Union{Nothing,Array{EmMultipole,1}}=nothing,    hfMultipoles::Union{Nothing,Array{EmMultipole,1}}=nothing,
+    gauges::Union{Nothing,Array{UseGauge,1}}=nothing,           isomers::Union{Nothing,Array{Nuclear.Isomer,1}}=nothing,
+    mixingLevels::Union{Nothing,Array{Int64,1}}=nothing,        initialFvalues::Union{Nothing,Array{AngularJ64,1}}=nothing,
+    finalFvalues::Union{Nothing,Array{AngularJ64,1}}=nothing,   calcOverview::Union{Nothing,Bool}=nothing,
+    printBefore::Union{Nothing,Bool}=nothing,
+    calcLifetimes::Union{Nothing,Bool}=nothing,
+    lineSelection::Union{Nothing,LineSelection}=nothing,        photonEnergyShift::Union{Nothing,Float64}=nothing)`
 
     ... the standard JAC keyword copy-constructor, which this Settings previously lacked.
+        A `settings::HyperfineInduced.Settings` is returned.
 """
 function Settings(set::HyperfineInduced.Settings;
     multipoles::Union{Nothing,Array{EmMultipole,1}}=nothing,    hfMultipoles::Union{Nothing,Array{EmMultipole,1}}=nothing,

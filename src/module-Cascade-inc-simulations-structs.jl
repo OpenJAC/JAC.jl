@@ -1068,11 +1068,13 @@ end
 
 
 """
-`Cascade.Simulation(sim::Cascade.Simulation;`
-    
-            name=..,               property=..,             method=..,              settings=..,     computationData=.. )
-            
+`Cascade.Simulation(sim::Cascade.Simulation;
+    name::Union{Nothing,String}=nothing,                                  property::Union{Nothing,Cascade.AbstractSimulationProperty}=nothing,
+    method::Union{Nothing,Cascade.AbstractSimulationMethod}=nothing,      settings::Union{Nothing,Cascade.SimulationSettings}=nothing,    
+    computationData::Union{Nothing,Array{Dict{String,Any},1}}=nothing )`
+
     ... constructor for re-defining the computation::Cascade.Simulation.
+        A `simulation::Cascade.Simulation` is returned.
 """
 function Simulation(sim::Cascade.Simulation;                              
     name::Union{Nothing,String}=nothing,                                  property::Union{Nothing,Cascade.AbstractSimulationProperty}=nothing,

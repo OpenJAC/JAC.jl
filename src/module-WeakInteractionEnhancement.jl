@@ -98,9 +98,10 @@ end
 
 
 """
-`WeakInteractionEnhancement.Settings(set::WeakInteractionEnhancement.Settings;`
-
-        calcPncE1=.., calcEdmEnhancement=.., gMultiplet=.., printBefore=.., levelSelection=..)
+`WeakInteractionEnhancement.Settings(set::WeakInteractionEnhancement.Settings;
+        calcPncE1::Union{Nothing,Bool}=nothing,            calcEdmEnhancement::Union{Nothing,Bool}=nothing,
+        gMultiplet::Union{Nothing,Multiplet}=nothing,      printBefore::Union{Nothing,Bool}=nothing,
+        levelSelection::Union{Nothing,LevelSelection}=nothing)`
 
     ... keyword copy-constructor for re-defining selected values of a settings::WeakInteractionEnhancement.Settings; a
         settings::WeakInteractionEnhancement.Settings is returned.
@@ -525,7 +526,7 @@ end
 
 """
 `WeakInteractionEnhancement.edmAmplitude(finalLevel::Level, initialLevel::Level, nm::Nuclear.Model, grid::Radial.Grid;`
-                                         `display::Bool=false)`
+
     ... to compute the electron-EDM amplitude <alpha_f J_f || H^(EDM) || alpha_i J_i> for a UNIT electron electric-dipole moment, in the
         nuclear field of the given model.  A value::ComplexF64 is returned.
 

@@ -264,11 +264,12 @@ end
 
 
 """
-`Nuclear.Model(nm::Nuclear.Model;`
-    
-            Z=..,         model=..,         mass=..,        radius=..,     
-            spinI=..,     mu=..,            Q=..,           Omega=..)
+`Nuclear.Model(nm::Nuclear.Model;
+    mass::Union{Nothing,Float64}=nothing,    radius::Union{Nothing,Float64}=nothing,     spinI::Union{Nothing,AngularJ64}=nothing,  
+    mu::Union{Nothing,Float64}=nothing,      Q::Union{Nothing,Float64}=nothing,          Omega::Union{Nothing,Float64}=nothing)`
+
     ... constructor for re-defining a nuclear model nm::Nuclear.Model.
+        A `model::Nuclear.Model` is returned.
 """
 function Model(nm::Nuclear.Model;            Z::Union{Nothing,Float64}=nothing,          model::Union{Nothing,AbstractNuclearModel}=nothing,         
     mass::Union{Nothing,Float64}=nothing,    radius::Union{Nothing,Float64}=nothing,     spinI::Union{Nothing,AngularJ64}=nothing,  
@@ -343,14 +344,16 @@ end
 
 
 """
-`Nuclear.Isomer(isomer::Nuclear.Isomer;`
-
-            spinI=..,        parity=..,       energy=..,       mu=..,
-            Q=..,            Omega=..,        multipoleM=..,   elementM=..)
+`Nuclear.Isomer(isomer::Nuclear.Isomer;
+    spinI::Union{Nothing,AngularJ64}=nothing,               parity::Union{Nothing,Parity}=nothing,
+    energy::Union{Nothing,Float64}=nothing,                 mu::Union{Nothing,Float64}=nothing,
+    Q::Union{Nothing,Float64}=nothing,                      Omega::Union{Nothing,Float64}=nothing,
+    multipoleM::Union{Nothing,Array{EmMultipole,1}}=nothing, elementM::Union{Nothing,Array{Float64,1}}=nothing)`
 
     ... constructor for re-defining an isomer::Nuclear.Isomer, i.e. the standard JAC keyword copy-constructor.
         Its absence is why every application script builds an Isomer from positional arguments, and why every one
         of them is now wrong against the eight-field struct.
+            A `isomer::Nuclear.Isomer` is returned.
 """
 function Isomer(isomer::Nuclear.Isomer;
     spinI::Union{Nothing,AngularJ64}=nothing,               parity::Union{Nothing,Parity}=nothing,

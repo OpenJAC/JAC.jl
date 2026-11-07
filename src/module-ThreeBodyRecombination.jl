@@ -83,12 +83,13 @@ end
 
 
 """
-`ThreeBodyRecombination.Settings(set::ThreeBodyRecombination.Settings;`
-
-        eiiModel=..,   electronTemperature=..,   lineSelection=..,   printBefore=..)
+`ThreeBodyRecombination.Settings(set::ThreeBodyRecombination.Settings;
+    eiiModel::Union{Nothing,ImpactIonization.AbstractModel}=nothing,   electronTemperature::Union{Nothing,Float64}=nothing,
+    lineSelection::Union{Nothing,LineSelection}=nothing,                printBefore::Union{Nothing,Bool}=nothing)`
 
     ... constructor for modifying the given ThreeBodyRecombination.Settings by 'overwriting' the previously
         selected parameters.
+            A `settings::ThreeBodyRecombination.Settings` is returned.
 """
 function  Settings(set::ThreeBodyRecombination.Settings;
     eiiModel::Union{Nothing,ImpactIonization.AbstractModel}=nothing,   electronTemperature::Union{Nothing,Float64}=nothing,

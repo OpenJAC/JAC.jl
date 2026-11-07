@@ -98,11 +98,13 @@ end
 
 
 """
-`PhotoIonizationInterference.Settings(set::PhotoIonizationInterference.Settings;`
-
-        multipoles=..,          gauges=..,              photonEnergies=..,     lValues=..,
-        augerOperator=..,       includePI=..,           includeResonance=..,   intermediateWidths=..,
-        calcAnisotropy=..,      printBefore=..,          pathwaySelection=..,  continuumExchange=..)
+`PhotoIonizationInterference.Settings(set::PhotoIonizationInterference.Settings;
+    multipoles::Union{Nothing,Array{EmMultipole,1}}=nothing,         gauges::Union{Nothing,Array{UseGauge,1}}=nothing,
+    photonEnergies::Union{Nothing,Array{Float64,1}}=nothing,         lValues::Union{Nothing,Array{Int64,1}}=nothing,
+    augerOperator::Union{Nothing,AbstractEeInteraction}=nothing,     includePI::Union{Nothing,Bool}=nothing,
+    includeResonance::Union{Nothing,Bool}=nothing,                   intermediateWidths::Union{Nothing,Dict{Int64,Float64}}=nothing,
+    calcAnisotropy::Union{Nothing,Bool}=nothing,                     printBefore::Union{Nothing,Bool}=nothing,
+    pathwaySelection::Union{Nothing,PathwaySelection}=nothing,        continuumExchange::Union{Nothing,Bool}=nothing)`
 
     ... keyword copy-constructor for re-defining selected values of a settings::PhotoIonizationInterference.Settings; a
         settings::Settings is returned.

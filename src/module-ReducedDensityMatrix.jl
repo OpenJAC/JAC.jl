@@ -46,9 +46,13 @@ end
 
 
 """
-`ReducedDensityMatrix.Settings(set::ReducedDensityMatrix.Settings;`
-
-    calcNatural..., calcDensity..., calcIpq..., calc2pRDM..., printBefore..., levelSelection...)
+`ReducedDensityMatrix.Settings(set::ReducedDensityMatrix.Settings;
+                        calcNatural::Union{Nothing,Bool} = nothing,
+                        calcDensity::Union{Nothing,Bool} = nothing,
+                        calcIpq::Union{Nothing,Bool} = nothing,
+                        calc2pRDM::Union{Nothing,Bool} = nothing,
+                        printBefore::Union{Nothing,Bool} = nothing,
+                        levelSelection::Union{Nothing,LevelSelection} = nothing )`
 
     ... constructor for modifying the given ReducedDensityMatrix.Settings by 'overwriting' the previously selected parameters.
         A settings::ReducedDensityMatrix.Settings is returned.

@@ -55,12 +55,16 @@ end
 
 
 """
-`ElectronCapture.Settings(set::ElectronCapture.Settings;`
-
-        printBefore=..,       minCaptureEnergy=..,       maxCaptureEnergy=..,       maxKappa=..,       operator=..,
-        beamType=..,          impactVectors=..,          continuumExchange=..)
+`ElectronCapture.Settings(set::ElectronCapture.Settings;
+    printBefore::Union{Nothing,Bool}=nothing,               lineSelection::Union{Nothing,LineSelection}=nothing,
+    minCaptureEnergy::Union{Nothing,Float64}=nothing,       maxCaptureEnergy::Union{Nothing,Float64}=nothing,
+    maxKappa::Union{Nothing,Int64}=nothing,                 operator::Union{Nothing,AbstractEeInteraction}=nothing,
+    calcAlignment::Union{Nothing,Bool}=nothing,
+    beamType::Union{Nothing,Beam.AbstractBeamType}=nothing, impactVectors::Union{Nothing,Array{Tuple{Float64,Float64},1}}=nothing,
+    continuumExchange::Union{Nothing,Bool}=nothing)`
 
     ... constructor for modifying the given ElectronCapture.Settings by 'overwriting' the previously selected parameters.
+        A `settings::ElectronCapture.Settings` is returned.
 """
 function Settings(set::ElectronCapture.Settings;
     printBefore::Union{Nothing,Bool}=nothing,               lineSelection::Union{Nothing,LineSelection}=nothing,

@@ -131,12 +131,15 @@ end
 
 
 """
-`NuclearShielding.Settings(set::NuclearShielding.Settings;`
-
-        calcE2=.., calcM1=.., fieldModel=.., nVirtualMax=.., selfConsistent=.., scfIterations=..,
-        scfMixing=.., printBefore=.., levelSelection=..)
+`NuclearShielding.Settings(set::NuclearShielding.Settings;
+        calcE2::Union{Nothing,Bool}=nothing,                calcM1::Union{Nothing,Bool}=nothing,
+        fieldModel::Union{Nothing,AbstractFieldModel}=nothing,  nVirtualMax::Union{Nothing,Int64}=nothing,
+        selfConsistent::Union{Nothing,Bool}=nothing,        scfIterations::Union{Nothing,Int64}=nothing,
+        scfMixing::Union{Nothing,Float64}=nothing,
+        printBefore::Union{Nothing,Bool}=nothing,           levelSelection::Union{Nothing,LevelSelection}=nothing)`
 
     ... keyword copy-constructor for re-defining selected values of a settings::NuclearShielding.Settings.
+        A `settings::NuclearShielding.Settings` is returned.
 """
 function Settings(set::NuclearShielding.Settings;
         calcE2::Union{Nothing,Bool}=nothing,                calcM1::Union{Nothing,Bool}=nothing,

@@ -1203,12 +1203,14 @@ end
 
 
 """
-`Cascade.Computation(comp::Cascade.Computation;`
-    
-            name=..,               nuclearModel=..,             grid=..,              asfSettings=..,     
-            scheme=..,             approach=..,                 initialConfigs=..,    initialMultiplets=..)
-            
+`Cascade.Computation(comp::Cascade.Computation;
+    name::Union{Nothing,String}=nothing,                                  nuclearModel::Union{Nothing,Nuclear.Model}=nothing,
+    grid::Union{Nothing,Radial.Grid}=nothing,                             asfSettings::Union{Nothing,AsfSettings}=nothing,  
+    scheme::Union{Nothing,Cascade.AbstractCascadeScheme}=nothing,         approach::Union{Nothing,Cascade.AbstractCascadeApproach}=nothing, 
+    initialConfigs::Union{Nothing,Array{Configuration,1}}=nothing,        initialMultiplets::Union{Nothing,Array{Multiplet,1}}=nothing)`
+
     ... constructor for re-defining the computation::Cascade.Computation.
+        A `computation::Cascade.Computation` is returned.
 """
 function Computation(comp::Cascade.Computation;                              
     name::Union{Nothing,String}=nothing,                                  nuclearModel::Union{Nothing,Nuclear.Model}=nothing,

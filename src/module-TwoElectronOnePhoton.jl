@@ -43,12 +43,14 @@ end
 
 
 """
-`TwoElectronOnePhoton.Settings(set::TwoElectronOnePhoton.Settings;`
+`TwoElectronOnePhoton.Settings(set::TwoElectronOnePhoton.Settings;
+    multipoles::Union{Nothing,Array{EmMultipole,1}}=nothing,    gauges::Union{Nothing,Array{UseGauge}}=nothing,
+    printBefore::Union{Nothing,Bool}=nothing,                   lineSelection::Union{Nothing,LineSelection}=nothing, 
+    photonEnergyShift::Union{Nothing,Float64}=nothing,          eeInteraction::Union{Nothing,AbstractEeInteraction}=nothing,
+    gMultiplet::Union{Nothing,Multiplet}=nothing)`
 
-        multipoles::=..,        gauges=..,                printBefore=..,         lineSelection=..,         
-        photonEnergyShift=..,   eeInteraction=..,         gMultiplet=..) 
-                    
     ... constructor for modifying the given TwoElectronOnePhoton.Settings by 'overwriting' the previously selected parameters.
+        A `settings::TwoElectronOnePhoton.Settings` is returned.
 """
 function Settings(set::TwoElectronOnePhoton.Settings;    
     multipoles::Union{Nothing,Array{EmMultipole,1}}=nothing,    gauges::Union{Nothing,Array{UseGauge}}=nothing,

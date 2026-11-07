@@ -94,12 +94,14 @@ end
 
 
 """
-`PhotoRecombinationInterference.Settings(set::PhotoRecombinationInterference.Settings;`
-
-        multipoles=..,          gauges=..,              electronEnergies=..,    maxKappa=..,
-        augerOperator=..,       includeRR=..,           includeDR=..,           intermediateWidths=..,
-        calcAnisotropy=..,      calcPolarization=..,    printBefore=..,         pathwaySelection=..,
-        continuumExchange=..)
+`PhotoRecombinationInterference.Settings(set::PhotoRecombinationInterference.Settings;
+    multipoles::Union{Nothing,Array{EmMultipole,1}}=nothing,         gauges::Union{Nothing,Array{UseGauge,1}}=nothing,
+    electronEnergies::Union{Nothing,Array{Float64,1}}=nothing,       maxKappa::Union{Nothing,Int64}=nothing,
+    augerOperator::Union{Nothing,AbstractEeInteraction}=nothing,     includeRR::Union{Nothing,Bool}=nothing,
+    includeDR::Union{Nothing,Bool}=nothing,                          intermediateWidths::Union{Nothing,Dict{Int64,Float64}}=nothing,
+    calcAnisotropy::Union{Nothing,Bool}=nothing,                     calcPolarization::Union{Nothing,Bool}=nothing,
+    printBefore::Union{Nothing,Bool}=nothing,                        pathwaySelection::Union{Nothing,PathwaySelection}=nothing,
+    continuumExchange::Union{Nothing,Bool}=nothing)`
 
     ... keyword copy-constructor for re-defining selected values of a settings::PhotoRecombinationInterference.Settings; a
         settings::Settings is returned.

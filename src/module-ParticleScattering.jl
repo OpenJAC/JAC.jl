@@ -90,14 +90,20 @@ end
 
 
 """
-`ParticleScattering.Settings(set::ParticleScattering.Settings;`
-
-        projectile=..,          process=..,                 interaction=..,         beamType=..,
-        polarization=..,        impactEnergies=..,          polarThetas=..,         polarPhis=..,
-        printBefore=..,         lineSelection=..,           epsPartialWave=..,      maxL=..,
-        multipoles=..,          gauges=.. )
+`ParticleScattering.Settings(set::ParticleScattering.Settings;
+    projectile::Union{Nothing,ParticleScattering.AbstractProjectile}=nothing,
+    process::Union{Nothing,ParticleScattering.AbstractScatteringProcess}=nothing,
+    interaction::Union{Nothing,ParticleScattering.AbstractInteractionModel}=nothing,
+    beamType::Union{Nothing,Beam.AbstractBeamType}=nothing,
+    polarization::Union{Nothing,Basics.AbstractPolarization}=nothing,
+    impactEnergies::Union{Nothing,Array{Float64,1}}=nothing,     polarThetas::Union{Nothing,Array{Float64,1}}=nothing,
+    polarPhis::Union{Nothing,Array{Float64,1}}=nothing,          printBefore::Union{Nothing,Bool}=nothing,
+    lineSelection::Union{Nothing,LineSelection}=nothing,         epsPartialWave::Union{Nothing,Float64}=nothing,
+    maxL::Union{Nothing,Int64}=nothing,                         multipoles::Union{Nothing,Array{EmMultipole,1}}=nothing,
+    gauges::Union{Nothing,Array{UseGauge,1}}=nothing)`
 
     ... constructor for modifying the given ParticleScattering.Settings by 'overwriting' the previously selected parameters.
+        A `settings::ParticleScattering.Settings` is returned.
 """
 function Settings(set::ParticleScattering.Settings;
     projectile::Union{Nothing,ParticleScattering.AbstractProjectile}=nothing,

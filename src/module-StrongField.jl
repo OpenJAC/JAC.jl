@@ -286,9 +286,14 @@ end
 
 
 """
-`StrongField.Settings(set::StrongField.Settings;`
-
-    multipoles..., gauge..., printAmplitudes..., coupledBasis..., hydrogenic..., hydrogenic1s..., mAverage...)
+`StrongField.Settings(set::StrongField.Settings;
+                        multipoles::Union{Nothing,Array{EmMultipole,1}} = nothing,
+                        gauge::Union{Nothing,String} = nothing,
+                        printAmplitudes::Union{Nothing,Bool} = nothing,
+                        coupledBasis::Union{Nothing,Bool} = nothing,
+                        hydrogenic::Union{Nothing,Bool} = nothing,
+                        hydrogenic1s::Union{Nothing,Bool} = nothing,
+                        mAverage::Union{Nothing,Bool} = nothing )`
 
     ... constructor for modifying the given StrongField.Settings by 'overwriting' the previously selected parameters.
         A settings::StrongField.Settings is returned.

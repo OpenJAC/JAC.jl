@@ -114,11 +114,13 @@ end
 
 
 """
-`MultiPhotonIonization.Settings(set::MultiPhotonIonization.Settings;`
-    
-        scheme=..,              gauges=..,              printBefore=..,         lineSelection=..,
-        intermediateStates=..)
-                    
+`MultiPhotonIonization.Settings(set::MultiPhotonIonization.Settings;
+    scheme::Union{Nothing,MultiPhotonIonization.AbstractMultiPhotonIonizationScheme}=nothing,
+    gauges::Union{Nothing,Array{UseGauge,1}}=nothing,
+    printBefore::Union{Nothing,Bool}=nothing,
+    lineSelection::Union{Nothing,LineSelection}=nothing,
+    intermediateStates::Union{Nothing,Multiplet,Array{AtomicState.GreenChannel,1}}=nothing)`
+
     ... constructor for modifying the given MultiPhotonIonization.Settings by 'overwriting' the previously selected
         parameters; a `settings::MultiPhotonIonization.Settings` is returned.
 """

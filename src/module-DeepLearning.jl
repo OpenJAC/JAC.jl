@@ -74,11 +74,12 @@ end
 
 
 """
-`DeepLearning.Application(app::DeepLearning.Application;`
-    
-            name=..,               atomicModel=..,          request=..)
-            
+`DeepLearning.Application(app::DeepLearning.Application;
+    name::Union{Nothing,String}=nothing,                                                         
+    atomicModel::Union{Nothing,AtomicFeatures.AtomicModel}=nothing,   request::Union{Nothing,AbstractNeuralNetworkRequest}=nothing)`
+
     ... constructor for re-defining the application::DeepLearning.Application.
+        A `application::DeepLearning.Application` is returned.
 """
 function Application(app::DeepLearning.Application;                              
     name::Union{Nothing,String}=nothing,                                                         

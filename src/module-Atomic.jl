@@ -71,14 +71,19 @@ end
 
 
 """
-`Atomic.Computation(comp::Atomic.Computation;`
+`Atomic.Computation(comp::Atomic.Computation;
+    name::Union{Nothing,String}=nothing,                                        nuclearModel::Union{Nothing,Nuclear.Model}=nothing,
+    grid::Union{Nothing,Radial.Grid}=nothing,                                   propertySettings::Union{Nothing,Array{Basics.AbstractPropertySettings,1},Any}=nothing,   
+    configs::Union{Nothing,Array{Configuration,1}}=nothing,                     asfSettings::Union{Nothing,AsfSettings}=nothing, 
+    initialConfigs::Union{Nothing,Array{Configuration,1}}=nothing,              initialAsfSettings::Union{Nothing,AsfSettings}=nothing, 
+    intermediateConfigs::Union{Nothing,Array{Configuration,1}}=nothing,         intermediateAsfSettings::Union{Nothing,AsfSettings}=nothing, 
+    finalConfigs::Union{Nothing,Array{Configuration,1}}=nothing,                finalAsfSettings::Union{Nothing,AsfSettings}=nothing, 
+    orbitalSource::Union{Nothing,Basics.AbstractOrbitalSource}=nothing,
+    processSettings::Union{Nothing,Any}=nothing,            
+    printout::Bool=false)`
 
-    name=..,                nuclearModel=..,            grid=..,                    configs=..,                   asfSettings=..,
-    initialConfigs=..,      initialAsfSettings=..,      intermediateConfigs=..,     intermediateAsfSettings=..,
-    finalConfigs=..,        finalAsfSettings=..,        propertySettings=..,
-    process=..,             processSettings=..,         printout::Bool=false)
-                    
     ... constructor for modifying the given Atomic.Computation by 'overwriting' the previously selected parameters.
+        A `computation::Atomic.Computation` is returned.
 """
 function Computation(comp::Atomic.Computation;
     name::Union{Nothing,String}=nothing,                                        nuclearModel::Union{Nothing,Nuclear.Model}=nothing,

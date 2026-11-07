@@ -102,8 +102,9 @@ end
 
 
 """
-`Statistical.Tensor(k::Int64, q::Int64, a::LevelKey, value::ComplexF64;` 
-                    `axis::Basics.AbstractQuantizationAxis=Basics.DefaultQuantizationAxis())`  
+`Statistical.Tensor(k::Int64, q::Int64, a::LevelKey, value::ComplexF64;
+                axis::Basics.AbstractQuantizationAxis=Basics.DefaultQuantizationAxis())`
+
     ... constructor for a DIAGONAL statistical tensor component from integer rank and projection, the usual case; a
         `tensor::Statistical.Tensor` is returned.
 """
@@ -143,8 +144,9 @@ end
 
 
 """
-`Statistical.computeTensors(kmax::Int64, amplitudes::Dict{AngularM64,ComplexF64}, a::LevelKey;`
-                            `axis::Basics.AbstractQuantizationAxis=Basics.DefaultQuantizationAxis())`  
+`Statistical.computeTensors(kmax::Int64, amplitudes::Dict{AngularM64,ComplexF64}, a::LevelKey;
+                        axis::Basics.AbstractQuantizationAxis=Basics.DefaultQuantizationAxis())`
+
     ... computes all statistical tensors rho_kq of ranks k = 0..kmax for an ensemble described by COHERENT amplitudes
         a_M, one per magnetic sublevel, i.e. for the density matrix rho_(M,M') = a_M conj(a_M').  This is the case of a
         single, fully specified initial state; where the initial sublevels are unobserved and must be summed over
@@ -175,8 +177,9 @@ end
 
 
 """
-`Statistical.computeTensors(kmax::Int64, densityMatrix::Dict{Tuple{AngularM64,AngularM64},ComplexF64}, a::LevelKey;`
-                            `axis::Basics.AbstractQuantizationAxis=Basics.DefaultQuantizationAxis())`  
+`Statistical.computeTensors(kmax::Int64, densityMatrix::Dict{Tuple{AngularM64,AngularM64},ComplexF64}, a::LevelKey;
+                        axis::Basics.AbstractQuantizationAxis=Basics.DefaultQuantizationAxis())`
+
     ... computes the statistical tensors rho_kq of ranks k = 0..kmax from the GENERAL density matrix rho(M,M') of the
         ensemble in the given level, which is the definition itself and of which the population and amplitude forms
         below are special cases.  A pair (M,M') that is absent from the dictionary is taken as zero, so only the
@@ -207,8 +210,9 @@ end
 
 
 """
-`Statistical.computeTensors(kmax::Int64, populations::Dict{AngularM64,Float64}, a::LevelKey;`
-                            `axis::Basics.AbstractQuantizationAxis=Basics.DefaultQuantizationAxis())`  
+`Statistical.computeTensors(kmax::Int64, populations::Dict{AngularM64,Float64}, a::LevelKey;
+                        axis::Basics.AbstractQuantizationAxis=Basics.DefaultQuantizationAxis())`
+
     ... computes the statistical tensors rho_kq of ranks k = 0..kmax for an ensemble given by its sublevel POPULATIONS
         sigma(M), i.e. for a density matrix that is diagonal in M.  This is the ordinary case in which the initial
         sublevels are unobserved and summed over incoherently, and it yields q = 0 components only, since coherence
@@ -321,8 +325,9 @@ end
 
 
 """
-`Statistical.rotate(tensors::Array{Statistical.Tensor,1}, alpha::Float64, beta::Float64, gamma::Float64;`
-                    `axis::Basics.AbstractQuantizationAxis=Basics.DefaultQuantizationAxis())`  
+`Statistical.rotate(tensors::Array{Statistical.Tensor,1}, alpha::Float64, beta::Float64, gamma::Float64;
+                axis::Basics.AbstractQuantizationAxis=Basics.DefaultQuantizationAxis())`
+
     ... rotates the given statistical tensors into a new frame obtained by the Euler angles (alpha, beta, gamma), using
         rho_kq(new) = SUM_q' rho_kq'(old) * conj( D^k_(q'q)(alpha,beta,gamma) ).  Each rank mixes only among its own
         2k+1 components, which is the property that makes the tensors worth forming at all, and the rank-0 component is

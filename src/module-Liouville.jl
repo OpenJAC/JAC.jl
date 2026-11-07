@@ -113,9 +113,8 @@ end
 
 
 """
-`Liouville.Settings(set::Liouville.Settings;`
-
-    printBefore...)
+`Liouville.Settings(set::Liouville.Settings;
+                        printBefore::Union{Nothing,Bool} = nothing )`
 
     ... constructor for modifying the given Liouville.Settings by 'overwriting' the previously selected parameters.
         A settings::Liouville.Settings is returned.
@@ -175,13 +174,16 @@ end
 
 
 """
-`Liouville.Computation(comp::Liouville.Computation;`
+`Liouville.Computation(comp::Liouville.Computation;
+    scheme::Union{Nothing,Liouville.AbstractLiouvilleScheme}=nothing,           approach::Union{Nothing,Liouville.AbstractEvolutionApproach}=nothing, 
+    freeTime::Union{Nothing,Float64}=nothing,                                   pulses::Union{Nothing,Vector{Pulse.AbstractPulse}}=nothing,           
+    nuclearModel::Union{Nothing,Nuclear.Model}=nothing,                         grid::Union{Nothing,Radial.Grid}=nothing,      
+    refConfigs::Union{Nothing,Array{Configuration,1}}=nothing,                  asfSettings::Union{Nothing,AsfSettings}=nothing, 
+    settings::Union{Nothing,Liouville.Settings}=nothing, 
+    printout::Bool=false)`
 
-    scheme=..,                  approach=..,                  freeTime=..,              pulses=..,                  
-    nuclearModel=..,            grid=..,                      refConfigs=..,            asfSettings=..,               
-    settings=..,                printout::Bool=false)
-                    
     ... constructor for modifying the given Liouville.Computation by 'overwriting' the previously selected parameters.
+        A `computation::Liouville.Computation` is returned.
 """
 function Computation(comp::Liouville.Computation;
     scheme::Union{Nothing,Liouville.AbstractLiouvilleScheme}=nothing,           approach::Union{Nothing,Liouville.AbstractEvolutionApproach}=nothing, 

@@ -143,15 +143,20 @@ end
 
 
 """
-`PhotonScattering.Settings(set::PhotonScattering.Settings;`
-
-        process=..,             approximation=..,           beamType=..,            photonEnergies=..,
-        multipoles=..,          gauges=..,                  polarThetas=..,         polarPhis=..,
-        incidentStokes=..,      maxKappa=..,                gMultiplet=..,          impactVectors=..,      width=..,
-        selfTolerance=..,
-        printBefore=..,         lineSelection=.. )
+`PhotonScattering.Settings(set::PhotonScattering.Settings;
+    process::Union{Nothing,PhotonScattering.AbstractPhotonProcess}=nothing,
+    approximation::Union{Nothing,PhotonScattering.AbstractScatteringApproximation}=nothing,
+    beamType::Union{Nothing,Beam.AbstractBeamType}=nothing,      photonEnergies::Union{Nothing,Array{Float64,1}}=nothing,
+    multipoles::Union{Nothing,Array{EmMultipole,1}}=nothing,     gauges::Union{Nothing,Array{UseGauge,1}}=nothing,
+    polarThetas::Union{Nothing,Array{Float64,1}}=nothing,        polarPhis::Union{Nothing,Array{Float64,1}}=nothing,
+    incidentStokes::Union{Nothing,ExpStokes}=nothing,            maxKappa::Union{Nothing,Int64}=nothing,
+    gMultiplet::Union{Nothing,Multiplet,Array{AtomicState.GreenChannel,1}}=nothing,
+    impactVectors::Union{Nothing,Array{Tuple{Float64,Float64},1}}=nothing,
+    width::Union{Nothing,Float64}=nothing,                       selfTolerance::Union{Nothing,Float64}=nothing,
+    printBefore::Union{Nothing,Bool}=nothing,                    lineSelection::Union{Nothing,LineSelection}=nothing)`
 
     ... constructor for modifying the given PhotonScattering.Settings by 'overwriting' the previously selected parameters.
+        A `settings::PhotonScattering.Settings` is returned.
 """
 function Settings(set::PhotonScattering.Settings;
     process::Union{Nothing,PhotonScattering.AbstractPhotonProcess}=nothing,

@@ -33,11 +33,12 @@ end
 
 
 """
-`FormFactor.Settings(set::FormFactor.Settings;`
-
-        qList=.., printBefore=.., levelSelection=..)
+`FormFactor.Settings(set::FormFactor.Settings;
+        qList::Union{Nothing,Array{Float64,1}}=nothing,
+        printBefore::Union{Nothing,Bool}=nothing,          levelSelection::Union{Nothing,LevelSelection}=nothing)`
 
     ... keyword copy-constructor for re-defining selected values of a settings::FormFactor.Settings.
+        A `settings::FormFactor.Settings` is returned.
 """
 function Settings(set::FormFactor.Settings;
         qList::Union{Nothing,Array{Float64,1}}=nothing,

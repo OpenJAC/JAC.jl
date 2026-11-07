@@ -59,10 +59,10 @@ end
 
 
 """
-`GeneralizedOscillatorStrength.Settings(set::GeneralizedOscillatorStrength.Settings;`
-
-        qValues=..,             calcOpticalLimit=..,        calcBiorthogonal=..,        printBefore=..,
-        lineSelection=..)
+`GeneralizedOscillatorStrength.Settings(set::GeneralizedOscillatorStrength.Settings;
+    qValues::Union{Nothing,Array{Float64,1}}=nothing,               calcOpticalLimit::Union{Nothing,Bool}=nothing,
+    calcBiorthogonal::Union{Nothing,Bool}=nothing,                  printBefore::Union{Nothing,Bool}=nothing,
+    lineSelection::Union{Nothing,LineSelection}=nothing)`
 
     ... keyword copy-constructor for re-defining selected values of a settings::GeneralizedOscillatorStrength.Settings;
         a settings::Settings is returned.
@@ -178,7 +178,7 @@ end
 
 """
 `GeneralizedOscillatorStrength.amplitude(L::Int64, q::Float64, finalLevel::Level, initialLevel::Level, grid::Radial.Grid;`
-                                         `display::Bool=false)`
+
     ... to compute the (many-electron) reduced matrix element <alpha_f J_f || Sum_j j_L(q r_j) C^L(j) || alpha_i J_i> of the L-th
         multipole component of the plane wave exp(i K.r), for the given final and initial level.  The single-electron kernel is
         the Grant reduced matrix element <kappa_a || C^L || kappa_b> -- which is the same for the large and the small components,
